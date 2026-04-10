@@ -1,0 +1,20 @@
+{
+  "name": "speech-to-prompt",
+  "version": "1.0.0",
+  "description": "Convierte dictados de voz en prompts optimizados para Claude Opus",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "express": "^4.21.2",
+    "multer": "^2.1.1",
+    "open": "^10.1.0"
+  }
+}
