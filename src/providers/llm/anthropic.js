@@ -6,8 +6,8 @@ export class AnthropicProvider extends LLMProvider {
 
   get models() {
     return [
-      { id: 'claude-sonnet-4-5', label: 'Claude Sonnet 4.5' },
-      { id: 'claude-opus-4-5', label: 'Claude Opus 4.5' },
+      { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+      { id: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
       { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5' },
     ];
   }
@@ -16,7 +16,7 @@ export class AnthropicProvider extends LLMProvider {
     return typeof this.apiKey === 'string' && this.apiKey.startsWith('sk-ant-');
   }
 
-  async distill(text, model = 'claude-sonnet-4-5', systemPrompt) {
+  async distill(text, model = 'claude-sonnet-4-6', systemPrompt) {
     const client = new Anthropic({ apiKey: this.apiKey });
 
     const message = await client.messages.create({

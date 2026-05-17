@@ -42,8 +42,8 @@ export async function renderSettings(container, { onClose, onSaved }) {
           <label class="settings-label">
             Modelo
             <select class="settings-select" id="llm-model">
-              <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
-              <option value="claude-opus-4-5">Claude Opus 4.5</option>
+              <option value="claude-sonnet-4-6">Claude Sonnet 4.6</option>
+              <option value="claude-opus-4-7">Claude Opus 4.7</option>
               <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
             </select>
           </label>
@@ -93,7 +93,7 @@ export async function renderSettings(container, { onClose, onSaved }) {
     if (config.api_keys.anthropic) keyAnthropicEl.placeholder = config.api_keys.anthropic;
     if (config.api_keys.groq) keyGroqEl.placeholder = config.api_keys.groq;
 
-    llmModelEl.value = config.defaults.llm_model || 'claude-sonnet-4-5';
+    llmModelEl.value = config.defaults.llm_model || 'claude-sonnet-4-6';
     sttModelEl.value = config.defaults.stt_model || 'whisper-large-v3';
 
     btnSave.addEventListener('click', async () => {

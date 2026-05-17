@@ -9,7 +9,7 @@ const DEFAULTS = {
   },
   defaults: {
     llm_provider: 'anthropic',
-    llm_model: 'claude-sonnet-4-5',
+    llm_model: 'claude-sonnet-4-6',
     stt_provider: 'groq',
     stt_model: 'whisper-large-v3',
   },
