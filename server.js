@@ -58,7 +58,21 @@ async function startServer(port = 3000) {
   });
 }
 
-startServer().catch(err => {
-  console.error('Error al iniciar el servidor:', err);
-  process.exit(1);
-});
+(async () => {
+  // Si ya hay una instancia corriendo, solo abrir el navegador y salir
+  try {
+    const res = await fetch('http://localhost:3000', { signal: AbortSignal.timeout(500) });
+    if (res.ok) {
+      console.log('Instancia ya en ejecución. Abriendo navegador...');
+      open('http://localhost:3000');
+      process.exit(0);
+    }
+  } catch {
+    // No hay instancia corriendo, arrancar normalmente
+  }
+
+  startServer().catch(err => {
+    console.error('Error al iniciar el servidor:', err);
+    process.exit(1);
+  });
+})();
