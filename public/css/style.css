@@ -260,6 +260,63 @@ html, body {
   padding: 0.5rem 0;
 }
 
+/* ---- Mic controls (selector + level meter) ---- */
+.mic-controls {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.mic-select-label {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.88rem; color: var(--fg-muted);
+}
+.mic-select {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-base);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.88rem;
+  max-width: 100%;
+}
+.mic-meter-wrap {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.mic-meter-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #34d399 0%, #34d399 60%, #fbbf24 80%, #f87171 100%);
+  transition: width 60ms linear;
+}
+.mic-status {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  min-height: 1.1em;
+}
+.mic-status-error {
+  color: var(--error);
+}
+
+/* ---- Warn box ---- */
+.warn-box {
+  padding: 1rem 1.25rem;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: var(--radius);
+  color: var(--fg);
+  font-size: 0.9rem; line-height: 1.55;
+}
+.warn-box p { margin: 0.5rem 0; }
+.warn-box strong { color: #fbbf24; }
+
 /* ---- Error box ---- */
 .error-box {
   padding: 0.75rem 1rem;

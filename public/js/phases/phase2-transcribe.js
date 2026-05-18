@@ -1,6 +1,10 @@
 import { api } from '../api-client.js';
 
-export async function renderPhase2(container, { sessionId, audioBlob, onComplete }) {
+// WebM/Opus of pure silence runs ~1-2 KB/s. Real speech is typically 4-8+ KB/s.
+// Below this threshold we suspect a muted mic and warn the user before spending Groq cuota.
+const MIN_BYTES_PER_SECOND = 2000;
+
+export async function renderPhase2(container, { sessionId, audioBlob, audioDuration = 0, onComplete }) {
   container.innerHTML = `
     <div class="phase-content phase-transcribe">
       <h2 class="phase-title">Transcripción</h2>
@@ -15,6 +19,7 @@ export async function renderPhase2(container, { sessionId, audioBlob, onComplete
           <button class="btn-primary" id="btn-continue">Revisar transcripción</button>
         </div>
       </div>
+      <div class="warn-box" id="warn-box" hidden></div>
       <div class="error-box" id="error-box" hidden></div>
     </div>
   `;
@@ -23,7 +28,38 @@ export async function renderPhase2(container, { sessionId, audioBlob, onComplete
   const resultArea = container.querySelector('#result-area');
   const preview = container.querySelector('#transcription-preview');
   const errorBox = container.querySelector('#error-box');
+  const warnBox = container.querySelector('#warn-box');
   const btnContinue = container.querySelector('#btn-continue');
+
+  // Audio sanity check before sending to Groq
+  const sizeBytes = audioBlob.size;
+  const seconds = Math.max(1, audioDuration);
+  const bytesPerSecond = sizeBytes / seconds;
+
+  console.log(`[transcribe] audio: ${sizeBytes} bytes, ${seconds}s, ${bytesPerSecond.toFixed(0)} B/s`);
+
+  if (bytesPerSecond < MIN_BYTES_PER_SECOND) {
+    spinnerArea.hidden = true;
+    warnBox.hidden = false;
+    warnBox.innerHTML = `
+      <strong>El audio parece silencioso.</strong>
+      <p>Tamaño: ${(sizeBytes / 1024).toFixed(1)} KB para ${seconds}s
+      (${bytesPerSecond.toFixed(0)} B/s; lo normal con voz es &gt; ${MIN_BYTES_PER_SECOND} B/s).</p>
+      <p>Whisper suele responder con frases inventadas como "Gracias por el vídeo." cuando el audio está mudo.
+      Revisa el micrófono seleccionado en la pantalla anterior y vuelve a grabar.</p>
+      <div class="phase-actions">
+        <button class="btn-primary" id="btn-send-anyway">Enviar igualmente</button>
+      </div>
+    `;
+    const btnAnyway = warnBox.querySelector('#btn-send-anyway');
+    await new Promise((resolve) => {
+      btnAnyway.addEventListener('click', () => {
+        warnBox.hidden = true;
+        spinnerArea.hidden = false;
+        resolve();
+      });
+    });
+  }
 
   try {
     const result = await api.transcribe(sessionId, audioBlob);
@@ -39,13 +75,12 @@ export async function renderPhase2(container, { sessionId, audioBlob, onComplete
     errorBox.textContent = `Error en la transcripción: ${err.message}`;
     errorBox.hidden = false;
 
-    // Add retry button
     const retryBtn = document.createElement('button');
     retryBtn.className = 'btn-ghost';
     retryBtn.textContent = 'Reintentar';
     retryBtn.style.marginTop = '1rem';
     retryBtn.addEventListener('click', () => {
-      renderPhase2(container, { sessionId, audioBlob, onComplete });
+      renderPhase2(container, { sessionId, audioBlob, audioDuration, onComplete });
     });
     errorBox.after(retryBtn);
   }

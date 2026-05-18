@@ -9,8 +9,9 @@ export class AudioRecorder {
     this.onTimeUpdate = null; // callback(seconds)
   }
 
-  async start() {
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  async start(deviceId = null) {
+    const audioConstraints = deviceId ? { deviceId: { exact: deviceId } } : true;
+    this.stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
 
     // Prefer WebM/Opus for Groq compatibility
     const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')

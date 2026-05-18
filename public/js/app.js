@@ -41,8 +41,9 @@ async function goToPhase(phase) {
   switch (phase) {
     case 1:
       renderPhase1(phaseContainer, {
-        onComplete: async (audioBlob) => {
+        onComplete: async (audioBlob, meta = {}) => {
           state.audioBlob = audioBlob;
+          state.audioDuration = meta.durationSeconds || 0;
           const session = await api.createSession();
           state.sessionId = session.id;
           goToPhase(2);
@@ -54,6 +55,7 @@ async function goToPhase(phase) {
       await renderPhase2(phaseContainer, {
         sessionId: state.sessionId,
         audioBlob: state.audioBlob,
+        audioDuration: state.audioDuration,
         onComplete: (transcriptionRaw) => {
           state.transcriptionRaw = transcriptionRaw;
           goToPhase(3);
