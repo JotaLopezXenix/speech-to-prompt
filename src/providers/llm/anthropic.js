@@ -20,6 +20,7 @@ export class AnthropicProvider extends LLMProvider {
     const client = new Anthropic({ apiKey: this.apiKey });
 
     const message = await client.messages.create({
+      model,
       // 16k da margen de sobra para el prompt destilado de un speech largo
       // (el límite anterior de 2048 truncaba a media palabra en dictados de ~40 min).
       // Se mantiene por debajo de ~16k para no arriesgar timeouts HTTP del SDK sin streaming;
@@ -41,6 +42,9 @@ export class AnthropicProvider extends LLMProvider {
 
     return {
       prompt,
+      // El destilador debería autolimitarse muy por debajo del tope; si aun así
+      // llega a max_tokens, la salida está cortada y hay que avisar (no guardar en silencio).
+      truncated: message.stop_reason === 'max_tokens',
       usage: {
         input_tokens: message.usage.input_tokens,
         output_tokens: message.usage.output_tokens,

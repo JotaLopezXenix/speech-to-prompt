@@ -42,7 +42,7 @@ router.post('/:id/distill', async (req, res) => {
     }
 
     const provider = createLLMProvider(llmProvider, config.api_keys[llmProvider]);
-    const { prompt, usage } = await provider.distill(textToDistill, llmModel, systemPrompt);
+    const { prompt, usage, truncated } = await provider.distill(textToDistill, llmModel, systemPrompt);
 
     const updated = updateSession(id, {
       prompt_distilled: prompt,
@@ -50,7 +50,7 @@ router.post('/:id/distill', async (req, res) => {
       llm_model: llmModel,
     });
 
-    res.json({ prompt_distilled: prompt, usage, session: updated });
+    res.json({ prompt_distilled: prompt, usage, truncated: !!truncated, session: updated });
   } catch (err) {
     console.error('Distillation error:', err);
     res.status(500).json({ error: { code: 'LLM_FAILED', message: err.message } });

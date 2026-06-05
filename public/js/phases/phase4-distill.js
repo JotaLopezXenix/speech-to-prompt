@@ -11,6 +11,7 @@ export async function renderPhase4(container, { sessionId, onComplete }) {
       <div class="result-area" id="result-area" hidden>
         <p class="phase-desc">Destilación completada. Continúa para revisar el prompt.</p>
         <div class="usage-info" id="usage-info"></div>
+        <div class="warn-box" id="truncate-warn" hidden></div>
         <div class="phase-actions">
           <button class="btn-primary" id="btn-continue">Revisar prompt</button>
         </div>
@@ -31,6 +32,15 @@ export async function renderPhase4(container, { sessionId, onComplete }) {
 
     if (result.usage) {
       usageInfo.textContent = `Tokens usados: ${result.usage.input_tokens} entrada / ${result.usage.output_tokens} salida — Proveedor: ${result.session.llm_provider} / ${result.session.llm_model}`;
+    }
+
+    if (result.truncated) {
+      const warn = container.querySelector('#truncate-warn');
+      warn.innerHTML = `
+        <strong>La destilación alcanzó el límite de longitud y puede estar incompleta.</strong>
+        <p>Revisa el final del prompt. Si se ha cortado, prueba a dividir el dictado en partes más cortas.</p>
+      `;
+      warn.hidden = false;
     }
 
     resultArea.hidden = false;
