@@ -17,7 +17,7 @@ export function renderPhase1(container, { onComplete }) {
   container.innerHTML = `
     <div class="phase-content phase-capture">
       <h2 class="phase-title">Grabación</h2>
-      <p class="phase-desc">Habla libremente. No hay límite de tiempo ni estructura impuesta.</p>
+      <p class="phase-desc">Habla con naturalidad y el detalle que quieras. Para sesiones muy largas (más de ~2 h) conviene dividir el dictado en varias grabaciones.</p>
 
       <div class="mic-controls">
         <label class="mic-select-label">

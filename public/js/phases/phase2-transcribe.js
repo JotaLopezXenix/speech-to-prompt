@@ -4,6 +4,10 @@ import { api } from '../api-client.js';
 // Below this threshold we suspect a muted mic and warn the user before spending Groq cuota.
 const MIN_BYTES_PER_SECOND = 2000;
 
+// Groq (tier gratuito) rechaza archivos de más de ~25 MB con un 413.
+// Avisamos por debajo de ese límite para no gastar el intento en un envío que fallará.
+const MAX_SAFE_BYTES = 24 * 1024 * 1024;
+
 export async function renderPhase2(container, { sessionId, audioBlob, audioDuration = 0, onComplete }) {
   container.innerHTML = `
     <div class="phase-content phase-transcribe">
@@ -61,6 +65,29 @@ export async function renderPhase2(container, { sessionId, audioBlob, audioDurat
     });
   }
 
+  // Size guard: a recording over Groq's limit would fail with a 413 after a long upload.
+  if (sizeBytes > MAX_SAFE_BYTES) {
+    spinnerArea.hidden = true;
+    warnBox.hidden = false;
+    warnBox.innerHTML = `
+      <strong>La grabación es muy larga para el plan gratuito de Groq.</strong>
+      <p>Tamaño: ${(sizeBytes / 1024 / 1024).toFixed(1)} MB (el límite de Groq es ~25 MB).</p>
+      <p>Para evitar el error, divide el dictado en dos grabaciones más cortas.
+      Si aun así quieres intentarlo, puedes enviarlo igualmente.</p>
+      <div class="phase-actions">
+        <button class="btn-primary" id="btn-send-oversize">Enviar igualmente</button>
+      </div>
+    `;
+    const btnOversize = warnBox.querySelector('#btn-send-oversize');
+    await new Promise((resolve) => {
+      btnOversize.addEventListener('click', () => {
+        warnBox.hidden = true;
+        spinnerArea.hidden = false;
+        resolve();
+      });
+    });
+  }
+
   try {
     const result = await api.transcribe(sessionId, audioBlob);
     spinnerArea.hidden = true;
@@ -72,7 +99,10 @@ export async function renderPhase2(container, { sessionId, audioBlob, audioDurat
     });
   } catch (err) {
     spinnerArea.hidden = true;
-    errorBox.textContent = `Error en la transcripción: ${err.message}`;
+    const isTooLarge = /413|too large|request_too_large/i.test(err.message);
+    errorBox.textContent = isTooLarge
+      ? 'La grabación supera el límite de tamaño de Groq (~25 MB). Divide el dictado en dos grabaciones más cortas y vuelve a intentarlo.'
+      : `Error en la transcripción: ${err.message}`;
     errorBox.hidden = false;
 
     const retryBtn = document.createElement('button');

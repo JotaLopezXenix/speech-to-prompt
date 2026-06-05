@@ -20,7 +20,11 @@ export class AudioRecorder {
       ? 'audio/webm'
       : 'audio/ogg;codecs=opus';
 
-    this.mediaRecorder = new MediaRecorder(this.stream, { mimeType });
+    // 32 kbps Opus: transparente para Whisper (que reduce a 16 kHz mono de todas
+    // formas) pero ~4x más ligero que el bitrate por defecto del navegador (~128 kbps).
+    // Evita superar el límite de tamaño de Groq en grabaciones largas: ~1,8 h
+    // de voz caben holgadamente bajo los 25 MB del tier gratuito.
+    this.mediaRecorder = new MediaRecorder(this.stream, { mimeType, audioBitsPerSecond: 32000 });
     this.chunks = [];
     this._elapsedBeforePause = 0;
     this.startTime = Date.now();

@@ -99,14 +99,22 @@ function resetApp() {
   goToPhase(1);
 }
 
-// Load a historical session at phase 5
+// Load a historical session, resuming at the phase that matches its state:
+//  - already distilled        → phase 5 (review final prompt)
+//  - transcribed, not distilled → phase 3 (review raw, then distill)
+//  - nothing yet               → phase 5 (empty, as before)
 async function loadHistoricalSession(sessionId) {
   try {
     const session = await api.getSession(sessionId);
     state.sessionId = session.id;
+    state.transcriptionRaw = session.transcription_edited || session.transcription_raw || null;
     state.promptDistilled = session.prompt_distilled || session.transcription_edited || session.transcription_raw || '';
-    state.transcriptionRaw = session.transcription_raw;
-    goToPhase(5);
+
+    if (!session.prompt_distilled && state.transcriptionRaw) {
+      goToPhase(3);
+    } else {
+      goToPhase(5);
+    }
   } catch (err) {
     alert(`No se pudo cargar la sesión: ${err.message}`);
   }
