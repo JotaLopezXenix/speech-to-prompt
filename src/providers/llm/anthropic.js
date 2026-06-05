@@ -20,8 +20,11 @@ export class AnthropicProvider extends LLMProvider {
     const client = new Anthropic({ apiKey: this.apiKey });
 
     const message = await client.messages.create({
-      model,
-      max_tokens: 2048,
+      // 16k da margen de sobra para el prompt destilado de un speech largo
+      // (el límite anterior de 2048 truncaba a media palabra en dictados de ~40 min).
+      // Se mantiene por debajo de ~16k para no arriesgar timeouts HTTP del SDK sin streaming;
+      // Sonnet 4.6 admite hasta 64k de salida si en el futuro hiciera falta más (con streaming).
+      max_tokens: 16000,
       system: systemPrompt,
       messages: [
         {
