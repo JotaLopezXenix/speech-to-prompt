@@ -1,6 +1,6 @@
 import { api } from '../api-client.js';
 
-export function renderPhase5(container, { sessionId, promptDistilled, onNewSession }) {
+export function renderPhase5(container, { sessionId, promptDistilled, onNewSession, onBackToTranscription, canReDistill }) {
   const wordCount = promptDistilled.trim().split(/\s+/).filter(Boolean).length;
 
   container.innerHTML = `
@@ -29,6 +29,7 @@ export function renderPhase5(container, { sessionId, promptDistilled, onNewSessi
       <div class="copy-feedback" id="copy-feedback" hidden>¡Copiado al portapapeles!</div>
       <div class="error-box" id="error-box" hidden></div>
       <div class="phase-actions">
+        ${canReDistill ? '<button class="btn-ghost" id="btn-back-transcription">Volver a la transcripción</button>' : ''}
         <button class="btn-ghost" id="btn-save">Guardar cambios</button>
         <button class="btn-primary" id="btn-new">Nueva sesión</button>
       </div>
@@ -75,4 +76,7 @@ export function renderPhase5(container, { sessionId, promptDistilled, onNewSessi
   });
 
   btnNew.addEventListener('click', onNewSession);
+
+  const btnBack = container.querySelector('#btn-back-transcription');
+  if (btnBack) btnBack.addEventListener('click', onBackToTranscription);
 }

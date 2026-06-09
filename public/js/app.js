@@ -88,6 +88,8 @@ async function goToPhase(phase) {
         sessionId: state.sessionId,
         promptDistilled: state.promptDistilled,
         onNewSession: resetApp,
+        onBackToTranscription: () => goToPhase(3),
+        canReDistill: !!state.transcriptionRaw,
       });
       break;
   }
