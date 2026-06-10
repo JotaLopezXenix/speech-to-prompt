@@ -12,6 +12,8 @@ if "%HTTP_STATUS%"=="200" (
     exit /b 0
 )
 
-REM Servidor no encontrado: arrancarlo desde el directorio del proyecto
+REM Servidor no encontrado: arrancarlo desde el directorio del proyecto.
+REM --watch reinicia el backend automaticamente al cambiar archivos de src/server
+REM (equivale a "npm run dev"). Los cambios de frontend en public/ se ven al refrescar.
 cd /d "%~dp0"
-node server.js
+node --watch server.js
