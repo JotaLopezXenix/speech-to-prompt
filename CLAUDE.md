@@ -17,13 +17,22 @@ No build step. No test suite. The frontend uses native ES modules served directl
 
 ### Data flow
 
-```
-Browser (MediaRecorder) → POST audio → /api/sessions/:id/transcribe
-  → Groq Whisper API → raw transcription saved to session JSON
+Sessions are **multi-segment**: one session holds an ordered array of audio
+segments (recorded or imported), each transcribed separately; the session-level
+transcription is the concatenation. Capture is iterative — record a segment, read
+the partial transcription, keep recording, all without losing the session.
 
-Browser (textarea) → POST → /api/sessions/:id/distill
+```
+Browser (MediaRecorder, per segment) → POST audio → /api/sessions/:id/segments
+  → audio-normalize (ffmpeg, optional) → Groq Whisper API
+  → segment appended; session.transcription_raw recomputed (= join of segments)
+
+Re-transcribe on-disk audio (rescue)  → POST → /api/sessions/:id/reprocess
+Browser (textarea, merged transcript) → POST → /api/sessions/:id/distill
   → Anthropic Claude API → distilled prompt saved to session JSON
 ```
+
+`/api/sessions/:id/transcribe` still exists as a back-compat alias of `/segments`.
 
 ### Provider abstraction (firm architectural requirement)
 
@@ -41,25 +50,56 @@ Adding a new provider = one new file extending the base class + one line in the 
 
 ### Frontend phase machine
 
-`public/js/app.js` is the main controller. It manages a 5-phase wizard state and renders phase modules into `#phase-container`. Each phase module exports a single `render*` function.
+`public/js/app.js` is the main controller. It manages a 4-phase wizard state and renders phase modules into `#phase-container`. Each phase module exports a single `render*` function.
 
-Phases: 1-capture → 2-transcribe → 3-review-raw → 4-distill → 5-result
+Phases: 1-capture → 3-review-raw → 4-distill → 5-result
+
+Internal phase numbers keep the gap (1/3/4/5) for code stability. **`phase1-capture.js` is now an iterative multi-segment workspace** that owns session creation (lazy, on the first committed segment), records/imports segments, transcribes each inline (the old standalone `phase2-transcribe` screen was retired), and shows the running merged transcript before advancing to review. Audio sanity guards (silent/oversize) live in the shared `public/js/audio-guards.js`.
 
 ### Persistence
 
 Sessions and audio are stored locally in `data/` (gitignored):
 ```
 data/
-  config.json          # API keys + provider/model defaults (never commit)
-  sessions/<id>.json   # One JSON file per session
-  audio/<id>.webm      # Raw audio per session
+  config.json                 # API keys + provider/model defaults (never commit)
+  sessions/<id>.json          # One JSON file per session (with a segments[] array)
+  audio/<id>__seg-N.webm      # One audio file per segment (1-based)
+  audio/<id>.webm             # Legacy: single audio of v1.0 sessions
 ```
 
 Session IDs are ISO timestamps with colons replaced by dashes (e.g. `2026-04-10T14-30-00`).
 
-### Audio format
+**Session schema (multi-segment, backward-compatible).** Each session has a
+`segments[]` array (`{ audio_file, transcription_raw, transcription_edited,
+duration_seconds, source, created_at }`). The session-level `transcription_raw`
+is a **materialized view** — the join of the segments — so existing consumers
+(`distill.js`, `listSessions`, the review/result phases) keep reading
+`transcription_raw`/`transcription_edited` unchanged. Old flat-field sessions (no
+`segments`) are handled by `getSegments(session)`, which synthesizes a single
+segment — **no data migration needed**.
 
-The app records in **WebM/Opus** via `MediaRecorder` and sends it directly to Groq. No conversion, no ffmpeg dependency. This is intentional for ARM Windows compatibility.
+`src/services/session-store.js` owns this model: `getSegments`,
+`recomputeTranscription`, `addSegment` (push + reproject derived fields),
+`replaceSegments` (used by reprocess + the `scripts/transcribe-file.js` rescue
+tool), and `nextSegmentNumber`. `updateSession` does a shallow merge, which is why
+adding `segments` was additive.
+
+### Audio format & normalization
+
+The app records in **WebM/Opus** via `MediaRecorder`. `src/services/audio-normalize.js`
+sanitizes each audio before sending it to Groq, using **ffmpeg only if present**
+(`detectFfmpeg()`): remux (`-c copy`, writes the duration that MediaRecorder's
+streaming WebM lacks), re-encode to 32 kbps Opus mono if oversized, and time-split
+into chunks if still over Groq's ~25 MB limit. **ffmpeg is optional** — if it's
+absent the audio is sent as-is (the original v1.0 behavior). This keeps ARM Windows
+compatibility by degrading gracefully instead of requiring the binary. The stored
+`audio_file` is always the raw upload; normalization outputs are temporary
+(transcription-only). `probeDuration` must measure the *normalized* file, not the
+raw one (the raw `.webm` reports no duration).
+
+> Note: a known recorder quirk was fixed — stopping while paused used to
+> double-count elapsed time, which fired a false "silent audio" warning. See
+> `audio-recorder.js#getElapsedSeconds`.
 
 ### Distillation system prompt
 
