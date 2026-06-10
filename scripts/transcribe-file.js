@@ -13,7 +13,7 @@
 import { readFileSync, existsSync } from 'fs';
 import { basename } from 'path';
 import { getConfig } from '../src/services/config-store.js';
-import { getSession, updateSession } from '../src/services/session-store.js';
+import { getSession, updateSession, replaceSegments } from '../src/services/session-store.js';
 import { createSTTProvider } from '../src/providers/stt/index.js';
 
 const [, , sessionId, audioPath, mimeArg] = process.argv;
@@ -49,10 +49,17 @@ console.log(`Transcribiendo ${basename(audioPath)} (${(buf.length / 1024 / 1024)
 const provider = createSTTProvider(sttProvider, apiKey);
 const { text } = await provider.transcribe(buf, mimeType, config.defaults.stt_model);
 
-updateSession(sessionId, {
-  // Mantiene la referencia al audio original de la sesión.
+// Guarda la sesión como un único segmento que apunta al audio rescatado.
+// replaceSegments reproyecta transcription_raw y audio_file automáticamente.
+replaceSegments(sessionId, [{
   audio_file: session.audio_file || `${sessionId}.webm`,
   transcription_raw: text,
+  transcription_edited: null,
+  duration_seconds: null,
+  source: 'recorded',
+  created_at: session.timestamp || null,
+}]);
+updateSession(sessionId, {
   stt_provider: sttProvider,
   stt_model: config.defaults.stt_model,
 });

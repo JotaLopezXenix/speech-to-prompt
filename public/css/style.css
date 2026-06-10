@@ -198,6 +198,10 @@ html, body {
   font-size: 2rem; font-weight: 700; letter-spacing: 0.1em;
   color: var(--text-muted); font-variant-numeric: tabular-nums;
 }
+.timer-caption {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-dim); margin-top: -0.4rem;
+}
 
 .btn-pause {
   display: inline-flex; align-items: center; justify-content: center;
@@ -410,6 +414,56 @@ html, body {
   border: 1px solid rgba(251, 191, 36, 0.25);
 }
 .empty-state { color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2rem 0; }
+.history-actions { display: flex; gap: 0.5rem; margin-top: 0.2rem; }
+.btn-reprocess {
+  padding: 0.25rem 0.6rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 0.72rem; font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.btn-reprocess:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-reprocess:disabled { opacity: 0.6; cursor: default; }
+
+/* ---- Capture workspace (multi-segmento) ---- */
+.capture-actions {
+  display: flex; gap: 0.75rem; flex-wrap: wrap;
+  justify-content: center;
+}
+.seg-transcribing {
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  padding: 1rem;
+  color: var(--text-muted); font-size: 0.9rem;
+}
+.seg-transcribing .spinner { width: 22px; height: 22px; border-width: 2px; }
+
+.session-zone {
+  display: flex; flex-direction: column; gap: 0.85rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+.session-summary { font-size: 0.85rem; color: var(--text-muted); }
+.session-summary strong { color: var(--text); }
+
+.segment-list { display: flex; flex-direction: column; gap: 0.4rem; }
+.segment-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 0.82rem;
+}
+.segment-idx {
+  font-weight: 700; color: var(--accent);
+  min-width: 1.8rem;
+}
+.segment-info { color: var(--text-muted); }
+
+.transcript-accum {
+  max-height: 320px; overflow-y: auto;
+}
 
 /* ---- Utilities ---- */
 [hidden] { display: none !important; }

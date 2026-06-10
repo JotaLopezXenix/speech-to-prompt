@@ -1,13 +1,25 @@
 import { AudioRecorder, formatTime } from '../audio-recorder.js';
+import { api } from '../api-client.js';
+import { checkAudio } from '../audio-guards.js';
 
 const PREFERRED_MIC_KEY = 'stp.preferredMicId';
 
+// Workspace de captura ITERATIVA y multi-segmento.
+// El usuario graba un tramo, lo detiene (= se transcribe y se añade como segmento),
+// lee lo acumulado y sigue grabando otro tramo — sin perder la sesión. También puede
+// importar un audio existente. Al terminar, "Revisar y destilar" pasa a la revisión
+// con la transcripción unificada de todos los segmentos.
+//
+// onComplete(sessionId, transcriptionRaw) → avanza a la fase de revisión.
 export function renderPhase1(container, { onComplete }) {
   const recorder = new AudioRecorder();
-  let audioBlob = null;
-  let recordedSeconds = 0;
 
-  // Preview state (independent of recording)
+  let sessionId = null;
+  let segments = [];          // [{ audio_file, transcription_raw, duration_seconds, source }]
+  let mergedTranscript = '';
+  let busy = false;           // transcribiendo un segmento
+
+  // Estado del preview de micrófono (independiente de la grabación)
   let previewStream = null;
   let previewCtx = null;
   let previewRafId = null;
@@ -16,8 +28,10 @@ export function renderPhase1(container, { onComplete }) {
 
   container.innerHTML = `
     <div class="phase-content phase-capture">
-      <h2 class="phase-title">Grabación</h2>
-      <p class="phase-desc">Habla con naturalidad y el detalle que quieras. Para sesiones muy largas (más de ~2 h) conviene dividir el dictado en varias grabaciones.</p>
+      <h2 class="phase-title">Captura</h2>
+      <p class="phase-desc">Graba por tramos. Pulsa <strong>Detener</strong> para ver lo transcrito y luego
+      <strong>Grabar</strong> de nuevo para continuar: la sesión no se pierde al revisar. También puedes
+      importar un audio ya guardado. Cuando termines, pasa a revisar y destilar.</p>
 
       <div class="mic-controls">
         <label class="mic-select-label">
@@ -40,17 +54,31 @@ export function renderPhase1(container, { onComplete }) {
               <line x1="8" y1="23" x2="16" y2="23"/>
             </svg>
           </span>
-          <span class="record-label" id="record-label">Pulsa para grabar</span>
+          <span class="record-label" id="record-label">Grabar</span>
         </button>
         <div class="timer" id="timer" aria-live="polite">00:00</div>
+        <div class="timer-caption">tramo actual</div>
         <button class="btn-pause" id="btn-pause" hidden aria-label="Pausar grabación">Pausar</button>
       </div>
 
+      <div class="warn-box" id="warn-box" hidden></div>
       <div class="error-box" id="error-box" hidden></div>
 
-      <div class="phase-actions" id="phase-actions" hidden>
-        <button class="btn-primary" id="btn-continue">Procesar esta grabación</button>
-        <button class="btn-ghost" id="btn-retry">Desechar esta grabación y grabar de nuevo</button>
+      <div class="seg-transcribing" id="seg-transcribing" hidden>
+        <div class="spinner"></div>
+        <span class="spinner-label">Transcribiendo segmento con Whisper…</span>
+      </div>
+
+      <div class="capture-actions">
+        <button class="btn-ghost" id="btn-import">Importar audio</button>
+        <input type="file" id="import-input" accept="audio/*" hidden />
+        <button class="btn-primary" id="btn-review" disabled>Revisar y destilar →</button>
+      </div>
+
+      <div class="session-zone" id="session-zone" hidden>
+        <div class="session-summary" id="session-summary"></div>
+        <div class="segment-list" id="segment-list"></div>
+        <div class="transcript-accum transcription-preview" id="transcript-accum"></div>
       </div>
     </div>
   `;
@@ -60,64 +88,198 @@ export function renderPhase1(container, { onComplete }) {
   const timer = container.querySelector('#timer');
   const btnPause = container.querySelector('#btn-pause');
   const errorBox = container.querySelector('#error-box');
-  const phaseActions = container.querySelector('#phase-actions');
-  const btnContinue = container.querySelector('#btn-continue');
-  const btnRetry = container.querySelector('#btn-retry');
+  const warnBox = container.querySelector('#warn-box');
+  const transcribingBox = container.querySelector('#seg-transcribing');
+  const btnImport = container.querySelector('#btn-import');
+  const importInput = container.querySelector('#import-input');
+  const btnReview = container.querySelector('#btn-review');
+  const sessionZone = container.querySelector('#session-zone');
+  const sessionSummary = container.querySelector('#session-summary');
+  const segmentList = container.querySelector('#segment-list');
+  const transcriptAccum = container.querySelector('#transcript-accum');
   const micSelect = container.querySelector('#mic-select');
   const meterBar = container.querySelector('#mic-meter-bar');
   const micStatus = container.querySelector('#mic-status');
 
-  function showError(msg) {
-    errorBox.textContent = msg;
-    errorBox.hidden = false;
-  }
+  function showError(msg) { errorBox.textContent = msg; errorBox.hidden = false; }
+  function hideError() { errorBox.hidden = true; }
+  function wordCount(text) { return (text || '').trim().split(/\s+/).filter(Boolean).length; }
 
-  function hideError() {
-    errorBox.hidden = true;
-  }
+  // --- UI de estado ----------------------------------------------------------
 
   function updateUI() {
-    if (recorder.isRecording) {
-      btnRecord.classList.add('recording');
-      btnRecord.classList.remove('paused');
-      recordLabel.textContent = 'Pulsa para detener';
+    const recording = recorder.isRecording;
+    const paused = recorder.isPaused;
+
+    btnRecord.classList.toggle('recording', recording);
+    btnRecord.classList.toggle('paused', paused);
+    btnRecord.disabled = busy;
+
+    if (recording || paused) {
+      recordLabel.textContent = 'Detener';
       btnPause.hidden = false;
-      btnPause.textContent = 'Pausar';
-      btnPause.setAttribute('aria-label', 'Pausar grabación');
-    } else if (recorder.isPaused) {
-      btnRecord.classList.remove('recording');
-      btnRecord.classList.add('paused');
-      recordLabel.textContent = 'Pulsa para detener';
-      btnPause.hidden = false;
-      btnPause.textContent = 'Reanudar';
-      btnPause.setAttribute('aria-label', 'Reanudar grabación');
+      btnPause.textContent = paused ? 'Reanudar' : 'Pausar';
+      btnPause.setAttribute('aria-label', paused ? 'Reanudar grabación' : 'Pausar grabación');
     } else {
-      btnRecord.classList.remove('recording', 'paused');
-      recordLabel.textContent = 'Pulsa para grabar';
+      recordLabel.textContent = busy ? 'Procesando…' : 'Grabar';
       btnPause.hidden = true;
-      timer.textContent = '00:00';
+      if (!busy) timer.textContent = '00:00';
+    }
+
+    // Importar/Revisar solo cuando no se está grabando ni transcribiendo.
+    const idle = !recording && !paused && !busy;
+    btnImport.disabled = !idle;
+    btnReview.disabled = !idle || segments.length === 0;
+  }
+
+  recorder.onTimeUpdate = (seconds) => { timer.textContent = formatTime(seconds); };
+
+  // --- Render de la sesión (segmentos + transcripción acumulada) -------------
+
+  function renderSession() {
+    if (segments.length === 0) { sessionZone.hidden = true; return; }
+    sessionZone.hidden = false;
+
+    const totalWords = wordCount(mergedTranscript);
+    const totalSecs = segments.reduce((a, s) => a + (s.duration_seconds || 0), 0);
+    sessionSummary.innerHTML =
+      `<strong>${segments.length}</strong> segmento(s) · `
+      + `<strong>${totalWords}</strong> palabras · `
+      + `<strong>${formatTime(totalSecs)}</strong> de audio`;
+
+    segmentList.innerHTML = segments.map((s, i) => {
+      const w = wordCount(s.transcription_edited || s.transcription_raw);
+      const dur = s.duration_seconds ? formatTime(s.duration_seconds) : '—';
+      const tag = s.source === 'imported' ? ' · importado' : '';
+      return `<div class="segment-item">
+        <span class="segment-idx">#${i + 1}</span>
+        <span class="segment-info">${dur} · ${w} palabras${tag}</span>
+      </div>`;
+    }).join('');
+
+    transcriptAccum.textContent = mergedTranscript || '(sin texto)';
+  }
+
+  // --- Aviso de audio sospechoso (silencio / tamaño) -------------------------
+  // Resuelve a true si hay que enviar, false si el usuario descarta.
+  function confirmSuspectAudio(message) {
+    return new Promise((resolve) => {
+      warnBox.hidden = false;
+      warnBox.innerHTML = `
+        <strong>Revisa este audio.</strong>
+        <p>${message}</p>
+        <div class="phase-actions">
+          <button class="btn-primary" id="btn-send-anyway">Enviar igualmente</button>
+          <button class="btn-ghost" id="btn-discard-seg">Descartar</button>
+        </div>
+      `;
+      warnBox.querySelector('#btn-send-anyway').addEventListener('click', () => { warnBox.hidden = true; resolve(true); });
+      warnBox.querySelector('#btn-discard-seg').addEventListener('click', () => { warnBox.hidden = true; resolve(false); });
+    });
+  }
+
+  // --- Confirmar y subir un segmento -----------------------------------------
+
+  async function commitSegment(blob, { source = 'recorded', seconds = 0, filename = 'audio.webm' }) {
+    hideError();
+
+    // Guard solo para grabaciones; un import es deliberado.
+    if (source === 'recorded') {
+      const verdict = checkAudio(blob.size, seconds);
+      if (verdict.level !== 'ok') {
+        const send = await confirmSuspectAudio(verdict.message);
+        if (!send) { updateUI(); return; }
+      }
+    }
+
+    busy = true;
+    transcribingBox.hidden = false;
+    updateUI();
+    // Pausar el preview/medidor durante la subida
+    stopPreview();
+
+    try {
+      if (!sessionId) {
+        const s = await api.createSession();
+        sessionId = s.id;
+      }
+      const res = await api.addSegment(sessionId, blob, { source, filename });
+      segments = (res.session && res.session.segments) || segments;
+      mergedTranscript = res.transcription_raw || mergedTranscript;
+      renderSession();
+    } catch (err) {
+      showError(`Error al transcribir el segmento: ${err.message}`);
+    } finally {
+      busy = false;
+      transcribingBox.hidden = true;
+      updateUI();
+      await startPreview(selectedDeviceId);
     }
   }
 
-  recorder.onTimeUpdate = (seconds) => {
-    timer.textContent = formatTime(seconds);
-  };
+  // --- Grabación -------------------------------------------------------------
 
-  // --- Mic preview / level meter ---
+  btnRecord.addEventListener('click', async () => {
+    if (busy) return;
+    hideError();
+
+    if (recorder.isRecording || recorder.isPaused) {
+      // Detener segmento → transcribir
+      const seconds = recorder.getElapsedSeconds();
+      btnRecord.disabled = true;
+      const blob = await recorder.stop();
+      if (blob && blob.size > 0) {
+        await commitSegment(blob, { source: 'recorded', seconds });
+      } else {
+        updateUI();
+        await startPreview(selectedDeviceId);
+      }
+    } else {
+      // Empezar un nuevo segmento
+      stopPreview();
+      try {
+        await recorder.start(selectedDeviceId || null);
+        updateUI();
+        attachMeterToStream(recorder.stream);
+      } catch (err) {
+        showError(err.name === 'NotAllowedError'
+          ? 'Se necesita acceso al micrófono. Permite el acceso y vuelve a intentarlo.'
+          : `Error al iniciar la grabación: ${err.message}`);
+        await startPreview(selectedDeviceId);
+      }
+    }
+  });
+
+  btnPause.addEventListener('click', () => {
+    if (recorder.isRecording) recorder.pause();
+    else if (recorder.isPaused) recorder.resume();
+    updateUI();
+  });
+
+  // --- Importar audio --------------------------------------------------------
+
+  btnImport.addEventListener('click', () => { if (!btnImport.disabled) importInput.click(); });
+  importInput.addEventListener('change', async () => {
+    const file = importInput.files && importInput.files[0];
+    importInput.value = ''; // permite reimportar el mismo archivo
+    if (!file) return;
+    await commitSegment(file, { source: 'imported', filename: file.name || 'import.webm' });
+  });
+
+  // --- Revisar y destilar ----------------------------------------------------
+
+  btnReview.addEventListener('click', () => {
+    if (segments.length === 0 || !sessionId) return;
+    stopPreview();
+    onComplete(sessionId, mergedTranscript);
+  });
+
+  // --- Mic preview / level meter (reutilizado) -------------------------------
 
   function stopPreview() {
-    if (previewRafId) {
-      cancelAnimationFrame(previewRafId);
-      previewRafId = null;
-    }
-    if (previewCtx) {
-      previewCtx.close().catch(() => {});
-      previewCtx = null;
-    }
-    if (previewStream) {
-      previewStream.getTracks().forEach(t => t.stop());
-      previewStream = null;
-    }
+    if (previewRafId) { cancelAnimationFrame(previewRafId); previewRafId = null; }
+    if (previewCtx) { previewCtx.close().catch(() => {}); previewCtx = null; }
+    if (previewStream) { previewStream.getTracks().forEach(t => t.stop()); previewStream = null; }
     meterBar.style.width = '0%';
   }
 
@@ -148,16 +310,11 @@ export function renderPhase1(container, { onComplete }) {
     function tick() {
       analyser.getByteTimeDomainData(data);
       let sum = 0;
-      for (let i = 0; i < data.length; i++) {
-        const x = (data[i] - 128) / 128;
-        sum += x * x;
-      }
+      for (let i = 0; i < data.length; i++) { const x = (data[i] - 128) / 128; sum += x * x; }
       const rms = Math.sqrt(sum / data.length);
-      const pct = Math.min(100, rms * 300);
-      meterBar.style.width = `${pct}%`;
+      meterBar.style.width = `${Math.min(100, rms * 300)}%`;
       if (rms > peakSinceReset) peakSinceReset = rms;
 
-      // After 3s of preview, if peak is still ~0, surface a hint
       if (!recorder.isRecording && Date.now() - previewStartedAt > 3000 && peakSinceReset < 0.01) {
         micStatus.textContent = 'Sin señal: este dispositivo parece mudo. Prueba con otro micrófono.';
         micStatus.classList.add('mic-status-error');
@@ -165,7 +322,27 @@ export function renderPhase1(container, { onComplete }) {
         micStatus.textContent = 'Micrófono detectado ✓';
         micStatus.classList.remove('mic-status-error');
       }
+      previewRafId = requestAnimationFrame(tick);
+    }
+    tick();
+  }
 
+  function attachMeterToStream(stream) {
+    if (previewRafId) cancelAnimationFrame(previewRafId);
+    if (previewCtx) { previewCtx.close().catch(() => {}); previewCtx = null; }
+    previewCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = previewCtx.createMediaStreamSource(stream);
+    const analyser = previewCtx.createAnalyser();
+    analyser.fftSize = 512;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+
+    function tick() {
+      analyser.getByteTimeDomainData(data);
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) { const x = (data[i] - 128) / 128; sum += x * x; }
+      const rms = Math.sqrt(sum / data.length);
+      meterBar.style.width = `${Math.min(100, rms * 300)}%`;
       previewRafId = requestAnimationFrame(tick);
     }
     tick();
@@ -174,7 +351,6 @@ export function renderPhase1(container, { onComplete }) {
   async function populateDeviceList() {
     let tmpStream = null;
     try {
-      // Permission needed to get device labels
       tmpStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
       showError(err.name === 'NotAllowedError'
@@ -182,7 +358,6 @@ export function renderPhase1(container, { onComplete }) {
         : `No se pudo acceder al micrófono: ${err.message}`);
       return;
     } finally {
-      // Release immediately; preview will reopen with the chosen device
       if (tmpStream) tmpStream.getTracks().forEach(t => t.stop());
     }
 
@@ -197,7 +372,6 @@ export function renderPhase1(container, { onComplete }) {
       micSelect.appendChild(opt);
     });
 
-    // Pick saved preference if still available, else default
     if (selectedDeviceId && mics.some(m => m.deviceId === selectedDeviceId)) {
       micSelect.value = selectedDeviceId;
     } else if (mics.length > 0) {
@@ -214,89 +388,7 @@ export function renderPhase1(container, { onComplete }) {
     await startPreview(selectedDeviceId);
   });
 
-  btnRecord.addEventListener('click', async () => {
-    hideError();
-
-    if (recorder.isRecording || recorder.isPaused) {
-      btnRecord.disabled = true;
-      btnPause.hidden = true;
-      recordLabel.textContent = 'Procesando...';
-      recordedSeconds = recorder.getElapsedSeconds();
-      audioBlob = await recorder.stop();
-      btnRecord.disabled = false;
-      updateUI();
-      phaseActions.hidden = false;
-      // Resume preview so the user can see the mic working before re-recording
-      await startPreview(selectedDeviceId);
-    } else {
-      // Stop preview before recording (avoid two getUserMedia on same device)
-      stopPreview();
-      try {
-        await recorder.start(selectedDeviceId || null);
-        updateUI();
-        phaseActions.hidden = true;
-        audioBlob = null;
-        // Attach meter to the recording stream too
-        attachMeterToStream(recorder.stream);
-      } catch (err) {
-        if (err.name === 'NotAllowedError') {
-          showError('Se necesita acceso al micrófono. Permite el acceso en el navegador y vuelve a intentarlo.');
-        } else {
-          showError(`Error al iniciar la grabación: ${err.message}`);
-        }
-        // Try to restore preview
-        await startPreview(selectedDeviceId);
-      }
-    }
-  });
-
-  function attachMeterToStream(stream) {
-    if (previewRafId) cancelAnimationFrame(previewRafId);
-    if (previewCtx) { previewCtx.close().catch(() => {}); previewCtx = null; }
-    previewCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = previewCtx.createMediaStreamSource(stream);
-    const analyser = previewCtx.createAnalyser();
-    analyser.fftSize = 512;
-    source.connect(analyser);
-    const data = new Uint8Array(analyser.frequencyBinCount);
-
-    function tick() {
-      analyser.getByteTimeDomainData(data);
-      let sum = 0;
-      for (let i = 0; i < data.length; i++) {
-        const x = (data[i] - 128) / 128;
-        sum += x * x;
-      }
-      const rms = Math.sqrt(sum / data.length);
-      meterBar.style.width = `${Math.min(100, rms * 300)}%`;
-      previewRafId = requestAnimationFrame(tick);
-    }
-    tick();
-  }
-
-  btnPause.addEventListener('click', () => {
-    if (recorder.isRecording) {
-      recorder.pause();
-    } else if (recorder.isPaused) {
-      recorder.resume();
-    }
-    updateUI();
-  });
-
-  btnContinue.addEventListener('click', () => {
-    if (audioBlob) {
-      stopPreview();
-      onComplete(audioBlob, { durationSeconds: recordedSeconds });
-    }
-  });
-
-  btnRetry.addEventListener('click', () => {
-    audioBlob = null;
-    recordedSeconds = 0;
-    phaseActions.hidden = true;
-    hideError();
-  });
-
-  // Kick off device enumeration + preview
+  // Arranque
+  updateUI();
   populateDeviceList();
 }

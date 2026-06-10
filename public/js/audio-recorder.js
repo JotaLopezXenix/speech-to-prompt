@@ -91,6 +91,9 @@ export class AudioRecorder {
 
   getElapsedSeconds() {
     if (!this.startTime) return 0;
+    // En pausa, el tramo en curso ya se acumuló en `_elapsedBeforePause`; sumar el
+    // delta contra `startTime` contaría doble (y añadiría el tiempo de pausa).
+    if (this.isPaused) return this._elapsedBeforePause;
     return this._elapsedBeforePause + Math.floor((Date.now() - this.startTime) / 1000);
   }
 }

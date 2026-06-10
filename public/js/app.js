@@ -1,6 +1,5 @@
 import { api } from './api-client.js';
 import { renderPhase1 } from './phases/phase1-capture.js';
-import { renderPhase2 } from './phases/phase2-transcribe.js';
 import { renderPhase3 } from './phases/phase3-review-raw.js';
 import { renderPhase4 } from './phases/phase4-distill.js';
 import { renderPhase5 } from './phases/phase5-result.js';
@@ -11,7 +10,6 @@ import { renderHistory } from './components/history-panel.js';
 let state = {
   phase: 1,
   sessionId: null,
-  audioBlob: null,
   transcriptionRaw: null,
 };
 
@@ -41,22 +39,10 @@ async function goToPhase(phase) {
   switch (phase) {
     case 1:
       renderPhase1(phaseContainer, {
-        onComplete: async (audioBlob, meta = {}) => {
-          state.audioBlob = audioBlob;
-          state.audioDuration = meta.durationSeconds || 0;
-          const session = await api.createSession();
-          state.sessionId = session.id;
-          goToPhase(2);
-        },
-      });
-      break;
-
-    case 2:
-      await renderPhase2(phaseContainer, {
-        sessionId: state.sessionId,
-        audioBlob: state.audioBlob,
-        audioDuration: state.audioDuration,
-        onComplete: (transcriptionRaw) => {
+        // El workspace de captura crea la sesión, graba/importa segmentos y los
+        // transcribe; al terminar devuelve el id y la transcripción unificada.
+        onComplete: (sessionId, transcriptionRaw) => {
+          state.sessionId = sessionId;
           state.transcriptionRaw = transcriptionRaw;
           goToPhase(3);
         },
@@ -97,7 +83,7 @@ async function goToPhase(phase) {
 
 // Reset to phase 1
 function resetApp() {
-  state = { phase: 1, sessionId: null, audioBlob: null, transcriptionRaw: null };
+  state = { phase: 1, sessionId: null, transcriptionRaw: null };
   goToPhase(1);
 }
 

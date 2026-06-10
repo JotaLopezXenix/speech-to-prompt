@@ -36,20 +36,56 @@ export async function renderHistory(container, { onClose, onLoadSession }) {
       return;
     }
 
-    list.innerHTML = sessions.map(s => `
+    list.innerHTML = sessions.map(s => {
+      // Una sesión con audio en disco pero sin transcripción es recuperable.
+      const needsRescue = s.has_audio && !s.has_transcription;
+      const badge = s.has_prompt
+        ? '<span class="badge-complete">Completada</span>'
+        : needsRescue
+        ? '<span class="badge-draft">Sin transcribir</span>'
+        : '<span class="badge-draft">Borrador</span>';
+      const reprocess = s.has_audio
+        ? `<button class="btn-reprocess" data-reprocess="${s.id}" title="Re-transcribe el audio guardado en disco">Reprocesar</button>`
+        : '';
+      return `
       <div class="history-item" data-id="${s.id}">
         <div class="history-meta">
           <span class="history-date">${formatDate(s.timestamp)}</span>
-          ${s.has_prompt ? '<span class="badge-complete">Completada</span>' : '<span class="badge-draft">Borrador</span>'}
+          ${badge}
         </div>
         <p class="history-preview">${s.preview ? escapeHtml(s.preview) + '…' : '(sin contenido)'}</p>
+        ${reprocess ? `<div class="history-actions">${reprocess}</div>` : ''}
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     list.querySelectorAll('.history-item').forEach(item => {
-      item.addEventListener('click', () => {
+      item.addEventListener('click', (e) => {
+        // Los clics en acciones internas no deben cargar la sesión.
+        if (e.target.closest('[data-reprocess]')) return;
         onLoadSession(item.dataset.id);
         onClose();
+      });
+    });
+
+    list.querySelectorAll('[data-reprocess]').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.reprocess;
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Reprocesando…';
+        try {
+          await api.reprocess(id);
+          btn.textContent = 'Hecho ✓';
+          // Recarga la lista para reflejar el nuevo estado/preview.
+          setTimeout(() => renderHistory(container, { onClose, onLoadSession }), 700);
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = original;
+          errorBox.textContent = `Error al reprocesar: ${err.message}`;
+          errorBox.hidden = false;
+        }
       });
     });
   } catch (err) {

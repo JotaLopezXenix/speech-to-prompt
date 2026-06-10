@@ -30,12 +30,17 @@ export const api = {
   getSession: (id) => request('GET', `/sessions/${id}`),
   updateSession: (id, payload) => request('PUT', `/sessions/${id}`, payload),
 
-  // Transcription
-  transcribe: (sessionId, audioBlob) => {
+  // Segments: sube un audio (grabado o importado), lo transcribe y lo añade
+  // como un nuevo segmento de la sesión. Devuelve { segment, transcription_raw, session }.
+  addSegment: (sessionId, audioBlob, { source = 'recorded', filename = 'audio.webm' } = {}) => {
     const form = new FormData();
-    form.append('audio', audioBlob, 'audio.webm');
-    return request('POST', `/sessions/${sessionId}/transcribe`, form, true);
+    form.append('audio', audioBlob, filename);
+    form.append('source', source);
+    return request('POST', `/sessions/${sessionId}/segments`, form, true);
   },
+
+  // Re-transcribe el audio ya guardado en disco de una sesión (rescate).
+  reprocess: (sessionId) => request('POST', `/sessions/${sessionId}/reprocess`),
 
   // Distillation
   distill: (sessionId) => request('POST', `/sessions/${sessionId}/distill`),
