@@ -42,11 +42,26 @@ export class AzureWhisperProvider extends STTProvider {
     form.append('response_format', 'verbose_json');
     form.append('timestamp_granularities[]', 'word');
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'api-key': this.apiKey },
-      body: form,
-    });
+    // Reintento ante 429 (rate limit). Los deployments Standard de Whisper traen
+    // un RPM bajo (p. ej. 3/min); en uso interactivo es fácil rozarlo. En vez de
+    // fallar, esperamos (Retry-After si viene, si no ~20 s) y reintentamos.
+    const MAX_ATTEMPTS = 3;
+    let response;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'api-key': this.apiKey },
+        body: form,
+      });
+
+      if (response.status === 429 && attempt < MAX_ATTEMPTS) {
+        const retryAfter = parseInt(response.headers.get('retry-after') || '', 10);
+        const waitMs = (Number.isFinite(retryAfter) ? retryAfter : 20) * 1000;
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      break;
+    }
 
     if (!response.ok) {
       const err = await response.text();
