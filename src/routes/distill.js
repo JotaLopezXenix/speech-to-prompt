@@ -1,21 +1,10 @@
 import { Router } from 'express';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { join, dirname } from 'path';
 import { getSession, updateSession } from '../services/session-store.js';
 import { getConfig } from '../services/config-store.js';
 import { createLLMProvider } from '../providers/llm/index.js';
+import { PROMPTS, resolveMode } from '../prompts/index.js';
 
 const router = Router();
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const SYSTEM_PROMPT_PATH = join(__dirname, '../prompts/distill-system.md');
-
-let systemPrompt;
-try {
-  systemPrompt = readFileSync(SYSTEM_PROMPT_PATH, 'utf-8');
-} catch {
-  systemPrompt = 'Eres un destilador de prompts. Transforma el texto recibido en un prompt limpio, denso y estructurado. Solo devuelve el prompt, sin preámbulo.';
-}
 
 router.post('/:id/distill', async (req, res) => {
   const { id } = req.params;
@@ -41,6 +30,15 @@ router.post('/:id/distill', async (req, res) => {
       });
     }
 
+    // Modo de destilación + system prompt efectivo.
+    //  - `mode`: completo | ligero | literal (desconocido/ausente → completo).
+    //  - `systemPrompt`: override editado "sobre la marcha" desde el front. Si viene
+    //    no vacío, manda; si no, se usa el prompt por defecto del modo. Los .md en
+    //    disco NUNCA se tocan — la edición solo vive en la petición y en el JSON.
+    const mode = resolveMode(req.body?.mode);
+    const override = req.body?.systemPrompt;
+    const systemPrompt = (typeof override === 'string' && override.trim()) ? override : PROMPTS[mode];
+
     const provider = createLLMProvider(llmProvider, config.api_keys[llmProvider]);
     const { prompt, usage, truncated } = await provider.distill(textToDistill, llmModel, systemPrompt);
 
@@ -48,6 +46,10 @@ router.post('/:id/distill', async (req, res) => {
       prompt_distilled: prompt,
       llm_provider: llmProvider,
       llm_model: llmModel,
+      distill_mode: mode,
+      // El system prompt EXACTO usado (override o default). Queda en el JSON para
+      // consultar/comparar después y para reusarlo/afinarlo al reabrir la sesión.
+      distill_prompt_used: systemPrompt,
     });
 
     res.json({ prompt_distilled: prompt, usage, truncated: !!truncated, session: updated });

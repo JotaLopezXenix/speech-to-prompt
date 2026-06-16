@@ -29,7 +29,8 @@ Browser (MediaRecorder, per segment) → POST audio → /api/sessions/:id/segmen
 
 Re-transcribe on-disk audio (rescue)  → POST → /api/sessions/:id/reprocess
 Browser (textarea, merged transcript) → POST → /api/sessions/:id/distill
-  → Anthropic Claude API → distilled prompt saved to session JSON
+  → body { mode, systemPrompt? } → Anthropic Claude API
+  → prompt + distill_mode + distill_prompt_used saved to session JSON
 ```
 
 `/api/sessions/:id/transcribe` still exists as a back-compat alias of `/segments`.
@@ -112,6 +113,28 @@ raw one (the raw `.webm` reports no duration).
 > double-count elapsed time, which fired a false "silent audio" warning. See
 > `audio-recorder.js#getElapsedSeconds`.
 
-### Distillation system prompt
+### Distillation modes + editable system prompt
 
-`src/prompts/distill-system.md` is loaded at server startup. It is calibrated for the user profile: Spanish-speaking software architect who code-switches heavily with English technical terms and dictates spoken acronyms (e.g. "ele ele eme" → "LLM"). Edit this file to tune distillation quality — no code change needed.
+Distillation has **three modes**, chosen on the review screen (phase 3), no fixed default:
+
+- **completo** — structured initiator prompt (`src/prompts/distill-system.md`). Original behavior.
+- **ligero** — light cleanup + polish, no titles/summary, preserves all ideas (`distill-light.md`).
+- **literal** — near-verbatim; only de-spells acronyms + fixes spelled letter/number artifacts (`distill-literal.md`).
+
+All three call the LLM. `src/prompts/index.js` loads the three `.md` files **once at
+startup** into a shared `PROMPTS` map (with per-mode fallback strings) and exports
+`resolveMode()` (unknown/missing mode → `completo`). Both `routes/distill.js` (uses them)
+and `routes/prompts.js` (`GET /api/prompts`, serves them to the front for viewing/editing)
+import this single source. Edit a `.md` to tune a mode's default — no code change needed.
+
+The front can **override the system prompt per distillation** (phase-3 inline editor): the
+edited text is sent in the `distill` body and used if non-empty (else the mode default).
+**Editing never writes the `.md` files** — the override lives only in the request and in the
+session JSON. The exact prompt used is persisted as `distill_prompt_used` alongside
+`distill_mode`. Reopening a session seeds the phase-3 editor with the stored prompt (via
+`app.js` state), so re-distilling reuses/tunes it. The editor state (mode + per-mode text)
+lives in `app.js` `state` because phase modules are re-rendered on every navigation.
+
+The prompts are calibrated for the user profile: Spanish-speaking software architect who
+code-switches heavily with English technical terms and dictates spoken acronyms (e.g. "ele
+ele eme" → "LLM").

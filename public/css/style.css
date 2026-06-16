@@ -465,5 +465,37 @@ html, body {
   max-height: 320px; overflow-y: auto;
 }
 
+/* ---- Distillation controls (modo + editor de prompt) ---- */
+.distill-controls {
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.mode-selector { display: flex; flex-direction: column; gap: 0.4rem; }
+.mode-option {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.mode-option:hover { border-color: var(--accent); }
+.mode-option input { margin-top: 0.2rem; accent-color: var(--accent); }
+.mode-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+.mode-text strong { color: var(--text); }
+
+.prompt-editor-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+.prompt-editor { display: flex; flex-direction: column; gap: 0.4rem; }
+.prompt-editor-label { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; }
+.prompt-textarea {
+  min-height: 200px;
+  font-family: 'Cascadia Code', 'Consolas', ui-monospace, monospace;
+  font-size: 0.82rem; line-height: 1.55;
+}
+.prompt-hint {
+  font-size: 0.8rem; color: var(--warning);
+}
+
 /* ---- Utilities ---- */
 [hidden] { display: none !important; }

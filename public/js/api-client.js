@@ -42,6 +42,11 @@ export const api = {
   // Re-transcribe el audio ya guardado en disco de una sesión (rescate).
   reprocess: (sessionId) => request('POST', `/sessions/${sessionId}/reprocess`),
 
-  // Distillation
-  distill: (sessionId) => request('POST', `/sessions/${sessionId}/distill`),
+  // Distillation. `mode` = completo|ligero|literal; `systemPrompt` = override
+  // editado en el front (opcional; si no, el backend usa el default del modo).
+  distill: (sessionId, { mode, systemPrompt } = {}) =>
+    request('POST', `/sessions/${sessionId}/distill`, { mode, systemPrompt }),
+
+  // System prompts por defecto de cada modo, para verlos/editarlos antes de destilar.
+  getPrompts: () => request('GET', '/prompts'),
 };

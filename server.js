@@ -8,6 +8,7 @@ import configRouter from './src/routes/config.js';
 import sessionsRouter from './src/routes/sessions.js';
 import transcribeRouter from './src/routes/transcribe.js';
 import distillRouter from './src/routes/distill.js';
+import promptsRouter from './src/routes/prompts.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +28,7 @@ app.use('/api/config', configRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', transcribeRouter);
 app.use('/api/sessions', distillRouter);
+app.use('/api/prompts', promptsRouter);
 
 // Fallback: serve index.html for any non-API route
 app.get('*', (req, res) => {

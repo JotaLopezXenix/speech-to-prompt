@@ -11,7 +11,31 @@ let state = {
   phase: 1,
   sessionId: null,
   transcriptionRaw: null,
+  distillMode: null,        // modo elegido para esta sesión (completo|ligero|literal)
+  distillPrompts: null,     // texto actual del editor por modo { completo, ligero, literal }
+  distillDefaults: null,    // prompts por defecto (para "Restablecer"), cargados una vez
 };
+
+// Carga (una vez por sesión de app) los prompts por defecto de cada modo y prepara
+// la copia editable. Tolerante a fallos: si el endpoint no responde, los editores
+// quedan vacíos y el backend cae al prompt por defecto del modo igualmente.
+async function ensureDistillPrompts() {
+  if (!state.distillDefaults) {
+    try {
+      state.distillDefaults = await api.getPrompts();
+    } catch {
+      state.distillDefaults = {};
+    }
+  }
+  if (!state.distillPrompts) {
+    state.distillPrompts = { ...state.distillDefaults };
+  } else {
+    // Rellena con el default los modos que no se hayan sembrado (p. ej. al reabrir).
+    for (const m of Object.keys(state.distillDefaults)) {
+      if (state.distillPrompts[m] == null) state.distillPrompts[m] = state.distillDefaults[m];
+    }
+  }
+}
 
 // DOM refs
 const phaseContainer = document.getElementById('phase-container');
@@ -50,10 +74,17 @@ async function goToPhase(phase) {
       break;
 
     case 3:
+      await ensureDistillPrompts();
       renderPhase3(phaseContainer, {
         sessionId: state.sessionId,
         transcriptionRaw: state.transcriptionRaw,
-        onComplete: () => {
+        mode: state.distillMode,
+        prompts: state.distillPrompts,
+        defaults: state.distillDefaults,
+        onModeChange: (mode) => { state.distillMode = mode; },
+        onPromptInput: (mode, text) => { state.distillPrompts[mode] = text; },
+        onComplete: (edited, mode) => {
+          state.distillMode = mode;
           goToPhase(4);
         },
       });
@@ -62,6 +93,8 @@ async function goToPhase(phase) {
     case 4:
       await renderPhase4(phaseContainer, {
         sessionId: state.sessionId,
+        mode: state.distillMode,
+        systemPrompt: state.distillPrompts?.[state.distillMode],
         onComplete: (promptDistilled) => {
           state.promptDistilled = promptDistilled;
           goToPhase(5);
@@ -81,9 +114,18 @@ async function goToPhase(phase) {
   }
 }
 
-// Reset to phase 1
+// Reset to phase 1. Conserva los defaults cacheados, pero limpia el modo y las
+// ediciones de prompt para que una sesión nueva empiece sin arrastres.
 function resetApp() {
-  state = { phase: 1, sessionId: null, transcriptionRaw: null };
+  const defaults = state.distillDefaults;
+  state = {
+    phase: 1,
+    sessionId: null,
+    transcriptionRaw: null,
+    distillMode: null,
+    distillPrompts: defaults ? { ...defaults } : null,
+    distillDefaults: defaults || null,
+  };
   goToPhase(1);
 }
 
@@ -97,6 +139,15 @@ async function loadHistoricalSession(sessionId) {
     state.sessionId = session.id;
     state.transcriptionRaw = session.transcription_edited || session.transcription_raw || null;
     state.promptDistilled = session.prompt_distilled || session.transcription_edited || session.transcription_raw || '';
+
+    // Siembra el modo y el prompt guardados (si los hay) para poder reusarlos/afinar
+    // al volver a la transcripción. Sesiones antiguas (sin estos campos) → defaults.
+    await ensureDistillPrompts();
+    state.distillPrompts = { ...state.distillDefaults };
+    state.distillMode = session.distill_mode || null;
+    if (state.distillMode && session.distill_prompt_used) {
+      state.distillPrompts[state.distillMode] = session.distill_prompt_used;
+    }
 
     if (!session.prompt_distilled && state.transcriptionRaw) {
       goToPhase(3);

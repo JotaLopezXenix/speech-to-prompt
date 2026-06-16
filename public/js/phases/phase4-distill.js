@@ -1,12 +1,16 @@
 import { api } from '../api-client.js';
 
-export async function renderPhase4(container, { sessionId, onComplete }) {
+const MODE_LABELS = { completo: 'Completo', ligero: 'Ligero', literal: 'Literal' };
+
+export async function renderPhase4(container, { sessionId, mode, systemPrompt, onComplete }) {
+  const modeLabel = MODE_LABELS[mode] || 'Completo';
+
   container.innerHTML = `
     <div class="phase-content phase-distill">
       <h2 class="phase-title">Destilación</h2>
       <div class="spinner-area" id="spinner-area">
         <div class="spinner"></div>
-        <p class="spinner-label">Destilando prompt con Claude Sonnet...</p>
+        <p class="spinner-label">Destilando en modo ${modeLabel}...</p>
       </div>
       <div class="result-area" id="result-area" hidden>
         <p class="phase-desc">Destilación completada. Continúa para revisar el prompt.</p>
@@ -27,7 +31,7 @@ export async function renderPhase4(container, { sessionId, onComplete }) {
   const btnContinue = container.querySelector('#btn-continue');
 
   try {
-    const result = await api.distill(sessionId);
+    const result = await api.distill(sessionId, { mode, systemPrompt });
     spinnerArea.hidden = true;
 
     if (result.usage) {
@@ -58,7 +62,7 @@ export async function renderPhase4(container, { sessionId, onComplete }) {
     retryBtn.textContent = 'Reintentar';
     retryBtn.style.marginTop = '1rem';
     retryBtn.addEventListener('click', () => {
-      renderPhase4(container, { sessionId, onComplete });
+      renderPhase4(container, { sessionId, mode, systemPrompt, onComplete });
     });
     errorBox.after(retryBtn);
   }
