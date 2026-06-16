@@ -1,0 +1,28 @@
+name: Deploy to Azure Web App - speech-to-prompt-xenix
+
+# Despliega a Azure App Service en cada push a la rama, y a mano (workflow_dispatch).
+# Usa un publish profile guardado como secret del repo (AZURE_WEBAPP_PUBLISH_PROFILE),
+# de modo que Azure no necesita permisos de escritura sobre GitHub.
+# La instalación de dependencias la hace Oryx en el servidor
+# (App Setting SCM_DO_BUILD_DURING_DEPLOYMENT=true), por eso no hay npm install aquí.
+
+on:
+  push:
+    branches:
+      - feat/azure-ready
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: speech-to-prompt-xenix
+          slot-name: Production
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
