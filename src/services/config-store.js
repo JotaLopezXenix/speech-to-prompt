@@ -36,13 +36,26 @@ function load() {
   }
 }
 
-// Read-time overlay only — env keys are never written back by save().
+// Provider/model defaults can also come from the environment (App Settings), so
+// the deployed server can pick e.g. azure-whisper without editing config.json.
+const ENV_DEFAULT_MAP = {
+  llm_provider: 'LLM_PROVIDER',
+  llm_model: 'LLM_MODEL',
+  stt_provider: 'STT_PROVIDER',
+  stt_model: 'STT_MODEL',
+};
+
+// Read-time overlay only — env values are never written back by save().
 function applyEnvOverrides(config) {
   const api_keys = { ...config.api_keys };
   for (const [provider, envVar] of Object.entries(ENV_KEY_MAP)) {
     if (process.env[envVar]) api_keys[provider] = process.env[envVar];
   }
-  return { ...config, api_keys };
+  const defaults = { ...config.defaults };
+  for (const [key, envVar] of Object.entries(ENV_DEFAULT_MAP)) {
+    if (process.env[envVar]) defaults[key] = process.env[envVar];
+  }
+  return { ...config, api_keys, defaults };
 }
 
 function save(config) {
