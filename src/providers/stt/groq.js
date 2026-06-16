@@ -20,7 +20,12 @@ export class GroqProvider extends STTProvider {
     form.append('file', blob, `audio.${ext}`);
     form.append('model', model);
     form.append('language', 'es');
-    form.append('response_format', 'json');
+    // verbose_json + granularidad de palabra: el campo `text` (y el `json` plano)
+    // de Groq tiene un bug de ensamblado que TRUNCA las palabras en la primera
+    // vocal acentuada ("política"→"pol", "está"→"est") y se come la puntuación.
+    // El array `words[]` decodifica bien, así que reconstruimos el texto desde ahí.
+    form.append('response_format', 'verbose_json');
+    form.append('timestamp_granularities[]', 'word');
 
     const response = await fetch(GROQ_STT_URL, {
       method: 'POST',
@@ -34,6 +39,21 @@ export class GroqProvider extends STTProvider {
     }
 
     const data = await response.json();
-    return { text: data.text };
+    return { text: textFromWords(data.words) ?? data.text };
   }
+}
+
+// Reconstruye el transcript uniendo `words[]`. Cada palabra ya trae pegada su
+// puntuación de cierre ("Platform,", "pasado.", "¿vale?"), así que basta con unir
+// por espacios y pegar la puntuación suelta. Devuelve null si no hay palabras
+// (fallback al campo `text`).
+function textFromWords(words) {
+  if (!Array.isArray(words) || words.length === 0) return null;
+  return words
+    .map(w => (w.word || '').trim())
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s+([,.;:!?…%)\]}»])/g, '$1')   // sin espacio ANTES de puntuación de cierre
+    .replace(/([(¡¿«[{])\s+/g, '$1')           // sin espacio DESPUÉS de apertura
+    .trim();
 }

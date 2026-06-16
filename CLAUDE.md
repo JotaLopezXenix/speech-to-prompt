@@ -44,6 +44,17 @@ All LLM and STT integrations go through abstract base classes:
 
 Adding a new provider = one new file extending the base class + one line in the registry.
 
+> **Groq Whisper `text`-field bug (workaround in `groq.js`).** Groq's assembled
+> `text` (and the plain `json` format) deterministically **truncates words at the
+> first accented vowel** ("política"→"pol", "está"→"est") and drops punctuation in
+> the affected spans — even at high confidence (`avg_logprob ≈ -0.06`), and
+> identically across `whisper-large-v3` and `-turbo` (shared encoder/tokenizer). The
+> `words[]` array from `verbose_json` + `timestamp_granularities[]=word` decodes
+> correctly, so `GroqProvider.transcribe` requests that and **reconstructs the text
+> from `words[]`** (joining + fixing spacing around punctuation), with a fallback to
+> `text` if no words are returned. Same API cost/latency. Re-running **Reprocesar**
+> on old sessions re-transcribes their on-disk audio through this fixed path.
+
 ### Single source of truth for paths
 
 `src/utils/paths.js` is the **only** place that defines where data lives (`data/` in the project root). All other modules import from it. If the data directory ever needs to change, only this file changes.
