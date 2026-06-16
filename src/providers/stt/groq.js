@@ -1,4 +1,5 @@
 import { STTProvider } from './base.js';
+import { textFromWords } from './words.js';
 
 const GROQ_STT_URL = 'https://api.groq.com/openai/v1/audio/transcriptions';
 
@@ -39,21 +40,7 @@ export class GroqProvider extends STTProvider {
     }
 
     const data = await response.json();
+    // Groq: `words[]` primero (su `text` trunca acentos), `text` como fallback.
     return { text: textFromWords(data.words) ?? data.text };
   }
-}
-
-// Reconstruye el transcript uniendo `words[]`. Cada palabra ya trae pegada su
-// puntuación de cierre ("Platform,", "pasado.", "¿vale?"), así que basta con unir
-// por espacios y pegar la puntuación suelta. Devuelve null si no hay palabras
-// (fallback al campo `text`).
-function textFromWords(words) {
-  if (!Array.isArray(words) || words.length === 0) return null;
-  return words
-    .map(w => (w.word || '').trim())
-    .filter(Boolean)
-    .join(' ')
-    .replace(/\s+([,.;:!?…%)\]}»])/g, '$1')   // sin espacio ANTES de puntuación de cierre
-    .replace(/([(¡¿«[{])\s+/g, '$1')           // sin espacio DESPUÉS de apertura
-    .trim();
 }

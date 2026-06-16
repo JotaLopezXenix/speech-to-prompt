@@ -67,8 +67,9 @@ async function handleAddSegment(req, res) {
     }
 
     const config = getConfig();
-    if (!config.api_keys.groq) {
-      return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: 'Falta la API key de Groq. Configúrala en Ajustes.' } });
+    const sttName = config.defaults.stt_provider;
+    if (!config.api_keys[sttName]) {
+      return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: `Falta la API key del proveedor STT (${sttName}). Configúrala en Ajustes.` } });
     }
 
     // Guarda el audio canónico del segmento: <id>__seg-N.webm
@@ -128,8 +129,9 @@ router.post('/:id/reprocess', async (req, res) => {
     }
 
     const config = getConfig();
-    if (!config.api_keys.groq) {
-      return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: 'Falta la API key de Groq. Configúrala en Ajustes.' } });
+    const sttName = config.defaults.stt_provider;
+    if (!config.api_keys[sttName]) {
+      return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: `Falta la API key del proveedor STT (${sttName}). Configúrala en Ajustes.` } });
     }
 
     const segments = getSegments(session);

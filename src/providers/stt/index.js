@@ -1,7 +1,9 @@
 import { GroqProvider } from './groq.js';
+import { AzureWhisperProvider } from './azure-whisper.js';
 
 const PROVIDERS = {
   groq: GroqProvider,
+  'azure-whisper': AzureWhisperProvider,
 };
 
 export function createSTTProvider(name, apiKey) {

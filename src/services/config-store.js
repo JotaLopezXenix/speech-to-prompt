@@ -6,6 +6,7 @@ const DEFAULTS = {
     anthropic: '',
     groq: '',
     google: '',
+    'azure-whisper': '',
   },
   defaults: {
     llm_provider: 'anthropic',
@@ -21,6 +22,7 @@ const ENV_KEY_MAP = {
   anthropic: 'ANTHROPIC_API_KEY',
   groq: 'GROQ_API_KEY',
   google: 'GOOGLE_API_KEY',
+  'azure-whisper': 'AZURE_OPENAI_API_KEY',
 };
 
 function load() {
@@ -75,5 +77,6 @@ export function getConfigMasked() {
 
 export function isConfigured() {
   const config = applyEnvOverrides(load());
-  return !!(config.api_keys.anthropic && config.api_keys.groq);
+  const hasSTT = config.api_keys.groq || config.api_keys['azure-whisper'];
+  return !!(config.api_keys.anthropic && hasSTT);
 }
