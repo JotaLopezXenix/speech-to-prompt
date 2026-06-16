@@ -180,3 +180,53 @@ La grabación por micrófono del navegador (`getUserMedia`) **solo funciona en c
 - Las sesiones y audios **persisten** tras reinicio/redepliegue del App Service.
 - Las **claves no están** en el repo ni en los ficheros desplegados (solo en App Settings).
 - El consumo de API se carga a la **cuenta corporativa** correcta.
+
+---
+
+## 13. Anexo — Despliegue real (as-deployed, 16-jun-2026)
+
+Lo que realmente se hizo y las desviaciones respecto al plan. La prueba quedó **operativa y validada de extremo a extremo**.
+
+### 13.1 Recursos creados
+
+- **App Service** Linux, runtime **Node 24 LTS** (en el portal ya no existía "Node 20"; 24 es válido — el código solo exige `>=20`). Plan **B1**, región **West Europe**.
+- Recurso `speech-to-prompt-xenix` en el grupo `rg-speech-to-prompt`.
+- **URL real:** `https://speech-to-prompt-xenix-hnc4ccfbfkdcdjem.westeurope-01.azurewebsites.net`. Azure ahora genera un **hostname único con sufijo aleatorio + segmento regional** (`-hnc4…westeurope-01`), desacoplado del nombre del recurso. El `app-name` del workflow usa el **nombre del recurso** (`speech-to-prompt-xenix`), no el hostname.
+- **Suscripción:** "Pay-As-You-Go MSDN -Agus" (confirmada como la del **crédito a 6 meses**; al superarlo, cobra al medio de pago).
+
+### 13.2 Despliegue: el Deployment Center falló → workflow manual
+
+- El **Centro de implementación del portal falló** al guardar: `BadRequest / Unable to create or update GitHub Action secret: "Bad credentials" 401`. Reautorizar GitHub **no lo resolvió**. Síntoma en el YAML que generaba: placeholders sin resolver (`${{ secrets.__clientidsecretname__ }}`), porque Azure no lograba escribir los secrets en el repo.
+- **Solución adoptada (fiable):** workflow **escrito a mano** en `.github/workflows/azure-deploy.yml`, con método **publish profile** (invierte la dirección: es GitHub quien se autentica contra Azure, así Azure no necesita permisos de escritura en GitHub).
+  - Se **habilitó Basic Auth publishing** en el App Service (venía desactivado) para poder **descargar el publish profile**.
+  - El publish profile se guardó como **secret de repositorio** `AZURE_WEBAPP_PUBLISH_PROFILE`.
+  - `azure/webapps-deploy@v3` con `package: .`; las dependencias las instala **Oryx en el servidor** (App Setting `SCM_DO_BUILD_DURING_DEPLOYMENT=true`), por eso el workflow no hace `npm install`.
+  - Disparo: **push a `feat/azure-ready`** (o `workflow_dispatch`).
+- *Warning inofensivo* en Actions: "Node.js 20 actions are deprecated" se refiere al runtime interno de las acciones de GitHub (p. ej. `actions/checkout`), **no** a la app.
+
+### 13.3 App Settings configuradas
+
+`ANTHROPIC_API_KEY`, `GROQ_API_KEY` (de momento **personales**), `DATA_DIR=/home/data`, `SCM_DO_BUILD_DURING_DEPLOYMENT=true`.
+
+### 13.4 Autenticación (Easy Auth)
+
+- Proveedor **Microsoft**, **inquilino único**, *Require authentication*, 302 al login.
+- Candado: en **Enterprise application** → **"Assignment required = Sí"** y **asignados solo** Jesús + Agustín (ambos en el **mismo directorio** Entra → sin necesidad de invitados B2B).
+
+### 13.5 Validaciones superadas
+
+- Arranque de la app en Azure (sirve el frontend en HTTPS). ✅
+- Grabar → transcribir (Groq) → destilar (Anthropic) con las claves desde App Settings. ✅
+- Login corporativo cerrado a los dos. ✅
+- **Persistencia:** la sesión sobrevivió a un **reinicio** del App Service (`DATA_DIR=/home/data`). ✅
+
+### 13.6 Gotchas y notas operativas
+
+- **"Failed to fetch" por pestaña vieja:** una pestaña cargada **antes** de activar Easy Auth no tiene cookie de sesión; sus `fetch` a `/api/...` se redirigen al login (otro dominio) → CORS → "Failed to fetch". **Solución: pestaña nueva + login.** (Avisar a Agustín.)
+- **ffmpeg:** no está en la imagen de App Service → **modo degradado** (sin remux/normalización/troceo). Válido para **audios cortos**; si hay dictados largos (>~25 MB de Groq), migrar a contenedor con ffmpeg.
+- **Rotación de claves:** cuando se obtengan las **corporativas**, **revocar las personales** y dejar solo las corporativas en App Settings.
+
+### 13.7 Decisiones abiertas (actualizadas)
+
+- Resueltas: región (**West Europe**), método de despliegue (**workflow manual + publish profile**), prioridad de claves (**entorno gana**), runtime (**Node 24**).
+- Pendientes: **merge `feat/azure-ready` → `main`** y si el despliegue automático pasa a seguir `main`; **ffmpeg** (degradado vs contenedor) según longitud real de audios; **datos de cliente** (residencia EU de Anthropic/Groq, o variantes **Azure-nativas**: Azure OpenAI Whisper / Claude en Foundry) y limpieza/retención tras la prueba.
