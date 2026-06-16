@@ -6,7 +6,10 @@ import { mkdirSync, existsSync, cpSync } from 'fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = join(__dirname, '../..');
 
-const BASE_DIR = join(PROJECT_ROOT, 'data');
+// Single source of truth for the data directory. In Azure App Service we set
+// DATA_DIR=/home/data (persistent disk, outside wwwroot). With no env var,
+// behaviour is identical to local: data/ inside the project root.
+const BASE_DIR = process.env.DATA_DIR || join(PROJECT_ROOT, 'data');
 const SESSIONS_DIR = join(BASE_DIR, 'sessions');
 const AUDIO_DIR = join(BASE_DIR, 'audio');
 const CONFIG_FILE = join(BASE_DIR, 'config.json');

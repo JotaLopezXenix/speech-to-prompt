@@ -60,21 +60,31 @@ async function startServer(port = 3000) {
   });
 }
 
-(async () => {
-  // Si ya hay una instancia corriendo, solo abrir el navegador y salir
-  try {
-    const res = await fetch('http://localhost:3000', { signal: AbortSignal.timeout(500) });
-    if (res.ok) {
-      console.log('Instancia ya en ejecución. Abriendo navegador...');
-      open('http://localhost:3000');
-      process.exit(0);
-    }
-  } catch {
-    // No hay instancia corriendo, arrancar normalmente
-  }
-
-  startServer().catch(err => {
-    console.error('Error al iniciar el servidor:', err);
-    process.exit(1);
+// In Azure App Service (WEBSITE_HOSTNAME is injected by the platform) run as a
+// plain service: listen on the injected PORT and 0.0.0.0, no browser auto-open,
+// no single-instance guard, no port fallback. Locally, behaviour is unchanged.
+if (process.env.WEBSITE_HOSTNAME) {
+  const port = process.env.PORT || 3000;
+  createServer(app).listen(port, '0.0.0.0', () => {
+    console.log(`🎙  Speech-to-Prompt escuchando en el puerto ${port} (Azure App Service)`);
   });
-})();
+} else {
+  (async () => {
+    // Si ya hay una instancia corriendo, solo abrir el navegador y salir
+    try {
+      const res = await fetch('http://localhost:3000', { signal: AbortSignal.timeout(500) });
+      if (res.ok) {
+        console.log('Instancia ya en ejecución. Abriendo navegador...');
+        open('http://localhost:3000');
+        process.exit(0);
+      }
+    } catch {
+      // No hay instancia corriendo, arrancar normalmente
+    }
+
+    startServer().catch(err => {
+      console.error('Error al iniciar el servidor:', err);
+      process.exit(1);
+    });
+  })();
+}
