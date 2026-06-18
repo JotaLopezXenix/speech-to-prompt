@@ -9,7 +9,7 @@ name: Deploy to Azure Web App - speech-to-prompt-xenix
 on:
   push:
     branches:
-      - feat/azure-ready
+      - main
   workflow_dispatch:
 
 jobs:
