@@ -1,12 +1,16 @@
 import { api } from '../api-client.js';
 
-// Metadatos de los cuatro modos de destilación (microcopy del front).
+// Metadatos de los cuatro modos de destilación (microcopy del front). El orden
+// aquí es el de la UI; `limpio` es el modo por defecto (primero y preseleccionado).
 const MODES = [
-  { id: 'completo', label: 'Completo', desc: 'Prompt estructurado para iniciar una conversación.' },
-  { id: 'ligero', label: 'Ligero', desc: 'Limpieza y pulido, sin títulos ni resumen.' },
-  { id: 'literal', label: 'Literal', desc: 'Casi textual; solo arregla siglas deletreadas.' },
-  { id: 'limpio', label: 'Limpio', desc: 'Limpia y estructura fielmente; marca dudas, sin resolver ni sintetizar.' },
+  { id: 'limpio', label: 'Limpio', desc: 'Limpia y estructura fielmente el audio, marca dudas, sin resolver ni sintetizar. Ideal para iniciar una conversación de análisis con toda la información del audio.' },
+  { id: 'completo', label: 'Completo', desc: 'Destilado agresivo: reestructura, resuelve dudas y sintetiza. El resultado ya incorpora interpretaciones y decisiones del modelo sobre lo que dijiste, no solo tu información en bruto.' },
+  { id: 'ligero', label: 'Ligero', desc: 'Limpieza y pulido, sin cambios de estructura ni valoraciones.' },
+  { id: 'literal', label: 'Literal', desc: 'Casi textual, solo puntúa y arregla siglas deletreadas.' },
 ];
+
+// Modo por defecto cuando la sesión no trae uno guardado.
+const DEFAULT_MODE = 'limpio';
 
 // Fase 3: revisar/editar el texto bruto, elegir el modo de destilación y, si se
 // quiere, ver/editar el system prompt que se enviará. El estado durable (modo +
@@ -14,7 +18,7 @@ const MODES = [
 export function renderPhase3(container, {
   sessionId,
   transcriptionRaw,
-  mode = null,            // modo preseleccionado (o null = elige cada vez)
+  mode = null,            // modo preseleccionado (null = usa el defecto, `limpio`)
   prompts = {},           // texto actual del editor por modo
   defaults = {},          // prompts por defecto (para "Restablecer")
   onModeChange,
@@ -26,12 +30,17 @@ export function renderPhase3(container, {
   // Copia local editable de los prompts por modo (se reporta a app.js al cambiar).
   const drafts = { ...prompts };
   const promptFor = (m) => (drafts[m] != null ? drafts[m] : (defaults[m] != null ? defaults[m] : ''));
-  let selectedMode = MODES.some(x => x.id === mode) ? mode : null;
+  let selectedMode = MODES.some(x => x.id === mode) ? mode : DEFAULT_MODE;
 
+  // Etiqueta y descripción apiladas: así todas las descripciones arrancan en la
+  // misma columna y envuelven alineadas aunque ocupen dos líneas.
   const modeRadios = MODES.map(m => `
     <label class="mode-option">
       <input type="radio" name="distill-mode" value="${m.id}" ${m.id === selectedMode ? 'checked' : ''}>
-      <span class="mode-text"><strong>${m.label}</strong> — ${m.desc}</span>
+      <span class="mode-text">
+        <span class="mode-label">${m.label}</span>
+        <span class="mode-desc">${m.desc}</span>
+      </span>
     </label>
   `).join('');
 
@@ -137,6 +146,10 @@ export function renderPhase3(container, {
       onModeChange?.(selectedMode);
     });
   });
+
+  // Sincroniza el estado durable (app.js) con el modo preseleccionado de inicio
+  // (el defecto `limpio`, o el guardado al reabrir una sesión del historial).
+  onModeChange?.(selectedMode);
 
   btnTogglePrompt.addEventListener('click', () => {
     promptEditor.hidden = !promptEditor.hidden;

@@ -482,8 +482,9 @@ html, body {
 }
 .mode-option:hover { border-color: var(--accent); }
 .mode-option input { margin-top: 0.2rem; accent-color: var(--accent); }
-.mode-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
-.mode-text strong { color: var(--text); }
+.mode-text { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.85rem; line-height: 1.4; }
+.mode-label { color: var(--text); font-weight: 600; }
+.mode-desc { color: var(--text-muted); }
 
 .prompt-editor-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
 .prompt-editor { display: flex; flex-direction: column; gap: 0.4rem; }

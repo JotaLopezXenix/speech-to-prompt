@@ -115,7 +115,7 @@ raw one (the raw `.webm` reports no duration).
 
 ### Distillation modes + editable system prompt
 
-Distillation has **four modes**, chosen on the review screen (phase 3), no fixed default:
+Distillation has **four modes**, chosen on the review screen (phase 3); **limpio** is the default selection:
 
 - **completo** — structured initiator prompt (`src/prompts/distill-system.md`). Original behavior.
 - **ligero** — light cleanup + polish, no titles/summary, preserves all ideas (`distill-light.md`).
