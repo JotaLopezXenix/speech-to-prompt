@@ -1,10 +1,11 @@
 import { api } from '../api-client.js';
 
-// Metadatos de los tres modos de destilación (microcopy del front).
+// Metadatos de los cuatro modos de destilación (microcopy del front).
 const MODES = [
   { id: 'completo', label: 'Completo', desc: 'Prompt estructurado para iniciar una conversación.' },
   { id: 'ligero', label: 'Ligero', desc: 'Limpieza y pulido, sin títulos ni resumen.' },
   { id: 'literal', label: 'Literal', desc: 'Casi textual; solo arregla siglas deletreadas.' },
+  { id: 'limpio', label: 'Limpio', desc: 'Limpia y estructura fielmente; marca dudas, sin resolver ni sintetizar.' },
 ];
 
 // Fase 3: revisar/editar el texto bruto, elegir el modo de destilación y, si se

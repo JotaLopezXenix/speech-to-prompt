@@ -1,6 +1,6 @@
 import { api } from '../api-client.js';
 
-const MODE_LABELS = { completo: 'Completo', ligero: 'Ligero', literal: 'Literal' };
+const MODE_LABELS = { completo: 'Completo', ligero: 'Ligero', literal: 'Literal', limpio: 'Limpio' };
 
 export async function renderPhase4(container, { sessionId, mode, systemPrompt, onComplete }) {
   const modeLabel = MODE_LABELS[mode] || 'Completo';

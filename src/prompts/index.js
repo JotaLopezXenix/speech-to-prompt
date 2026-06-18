@@ -26,9 +26,13 @@ const SOURCES = {
     file: 'distill-literal.md',
     fallback: 'Devuelve la transcripción palabra por palabra, corrigiendo solo las siglas deletreadas. No cambies nada más. Solo devuelve el texto.',
   },
+  limpio: {
+    file: 'distill-clean.md',
+    fallback: 'Eres un limpiador y estructurador de transcripciones. Limpia, ordena y densifica fielmente; marca ambigüedades e inferencias con [inferido] y recógelas en una sección final "❓ Preguntas abiertas / supuestos a confirmar". NO resuelvas ni sintetices nada. Solo devuelve el documento.',
+  },
 };
 
-// Modos válidos, en orden: ['completo', 'ligero', 'literal'].
+// Modos válidos, en orden: ['completo', 'ligero', 'literal', 'limpio'].
 export const DISTILL_MODES = Object.keys(SOURCES);
 
 function loadPrompt({ file, fallback }) {
@@ -39,7 +43,7 @@ function loadPrompt({ file, fallback }) {
   }
 }
 
-// Mapa { completo, ligero, literal } → string, cargado una vez al importar el módulo.
+// Mapa { completo, ligero, literal, limpio } → string, cargado una vez al importar el módulo.
 export const PROMPTS = Object.fromEntries(
   Object.entries(SOURCES).map(([mode, src]) => [mode, loadPrompt(src)]),
 );

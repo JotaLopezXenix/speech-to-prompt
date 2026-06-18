@@ -31,7 +31,7 @@ router.post('/:id/distill', async (req, res) => {
     }
 
     // Modo de destilación + system prompt efectivo.
-    //  - `mode`: completo | ligero | literal (desconocido/ausente → completo).
+    //  - `mode`: completo | ligero | literal | limpio (desconocido/ausente → completo).
     //  - `systemPrompt`: override editado "sobre la marcha" desde el front. Si viene
     //    no vacío, manda; si no, se usa el prompt por defecto del modo. Los .md en
     //    disco NUNCA se tocan — la edición solo vive en la petición y en el JSON.

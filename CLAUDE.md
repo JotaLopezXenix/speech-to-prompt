@@ -115,13 +115,14 @@ raw one (the raw `.webm` reports no duration).
 
 ### Distillation modes + editable system prompt
 
-Distillation has **three modes**, chosen on the review screen (phase 3), no fixed default:
+Distillation has **four modes**, chosen on the review screen (phase 3), no fixed default:
 
 - **completo** — structured initiator prompt (`src/prompts/distill-system.md`). Original behavior.
 - **ligero** — light cleanup + polish, no titles/summary, preserves all ideas (`distill-light.md`).
 - **literal** — near-verbatim; only de-spells acronyms + fixes spelled letter/number artifacts (`distill-literal.md`).
+- **limpio** — faithful cleaner+structurer (`distill-clean.md`): cleans/orders/densifies, flags ambiguities & inferences with `[inferido]` and a final "❓ Preguntas abiertas" section, but does NOT resolve or synthesize. Produces a `brief-crudo.md` for a later Socratic design interview.
 
-All three call the LLM. `src/prompts/index.js` loads the three `.md` files **once at
+All four call the LLM. `src/prompts/index.js` loads the `.md` files **once at
 startup** into a shared `PROMPTS` map (with per-mode fallback strings) and exports
 `resolveMode()` (unknown/missing mode → `completo`). Both `routes/distill.js` (uses them)
 and `routes/prompts.js` (`GET /api/prompts`, serves them to the front for viewing/editing)

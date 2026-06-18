@@ -11,8 +11,8 @@ let state = {
   phase: 1,
   sessionId: null,
   transcriptionRaw: null,
-  distillMode: null,        // modo elegido para esta sesión (completo|ligero|literal)
-  distillPrompts: null,     // texto actual del editor por modo { completo, ligero, literal }
+  distillMode: null,        // modo elegido para esta sesión (completo|ligero|literal|limpio)
+  distillPrompts: null,     // texto actual del editor por modo { completo, ligero, literal, limpio }
   distillDefaults: null,    // prompts por defecto (para "Restablecer"), cargados una vez
 };
 
