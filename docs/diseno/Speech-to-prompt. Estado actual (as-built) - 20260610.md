@@ -5,8 +5,8 @@
 **Propósito de este documento:** dar al proyecto de diseño en Claude una descripción precisa y completa de lo que existe HOY, más un análisis prospectivo de qué haría falta para convertirlo en un **servicio vendible a terceros** (app móvil Android/iOS + web pública), de modo que se pueda decidir con fundamento **evolucionar esta aplicación o rehacer una nueva** tomándola como aprendizaje.
 
 > **Trazabilidad.** Este documento sustituye al snapshot `Estado actual (as-built) - 20260605.md` (preservado en el historial de git) y continúa los dos documentos de diseño originales, en esta misma carpeta:
-> - `docs/Speech-to-prompt. Análisis y diseño inicial - 20260409.md`
-> - `docs/Speech-to-prompt. Diseño solo Windows en local - 20260410.md`
+> - `docs/diseno/Speech-to-prompt. Análisis y diseño inicial - 20260409.md`
+> - `docs/diseno/Speech-to-prompt. Diseño solo Windows en local - 20260410.md`
 >
 > **Cambio principal frente al 2026-06-05:** la sesión dejó de ser de "una grabación → una transcripción" y pasó a un modelo **multi-segmento** con **captura iterativa no destructiva** (grabar → ver lo transcrito → seguir grabando en la misma sesión), **importación** de audio existente, **reproceso** de audio desde disco, y una capa de **normalización con ffmpeg opcional**. El flujo dejó de tener 5 fases para tener **4** (la transcripción se hace inline dentro de la captura).
 

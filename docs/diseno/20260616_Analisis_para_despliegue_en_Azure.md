@@ -5,8 +5,8 @@
 **Propósito de este documento:** dejar por escrito el enfoque acordado para **publicar la herramienta online y compartirla con el socio** como prueba, **paso previo** a la gran evolución (app móvil + web pública). Es un documento de **decisión y plan**, para arrancar la implementación en una **sesión nueva**. No se ejecuta nada aquí.
 
 > **Trazabilidad.** Continúa y se apoya en:
-> - `docs/Speech-to-prompt. Estado actual (as-built) - 20260610.md` (estado del producto y análisis de salto a multiusuario, sección 11).
-> - `docs/Speech-to-prompt. Análisis y diseño inicial - 20260409.md` y `… Diseño solo Windows en local - 20260410.md`.
+> - `docs/diseno/Speech-to-prompt. Estado actual (as-built) - 20260610.md` (estado del producto y análisis de salto a multiusuario, sección 11).
+> - `docs/diseno/Speech-to-prompt. Análisis y diseño inicial - 20260409.md` y `… Diseño solo Windows en local - 20260410.md`.
 
 > **Nota de seguridad.** Este documento **no contiene ninguna API key ni secreto**. Las claves seguirán viviendo fuera del repo (en `data/config.json` en local y, en Azure, en **App Settings** / variables de entorno).
 
