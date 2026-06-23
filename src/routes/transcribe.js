@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { readFileSync, copyFileSync, unlinkSync, existsSync } from 'fs';
+import { readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { AUDIO_DIR } from '../utils/paths.js';
 import {
   getSession,
   getSegments,
@@ -14,7 +13,15 @@ import {
 } from '../services/session-store.js';
 import { getConfig } from '../services/config-store.js';
 import { createSTTProvider } from '../providers/stt/index.js';
+import { getBlobStore } from '../providers/storage/index.js';
+import { recordUsage } from '../services/usage-store.js';
 import { normalizeForUpload, probeDuration, DEFAULT_MAX_BYTES } from '../services/audio-normalize.js';
+
+// Registro de uso no bloqueante: si falla, se loguea y el flujo continúa
+// (no se pierde la transcripción/destilación, solo quizá un evento de coste).
+async function logUsageSafe(event) {
+  try { await recordUsage(event); } catch (e) { console.error('usage log failed:', e.message); }
+}
 
 const router = Router();
 const upload = multer({ dest: join(tmpdir(), 'stp-audio') });
@@ -61,7 +68,7 @@ async function handleAddSegment(req, res) {
   let cleanupNorm = () => {};
 
   try {
-    const session = getSession(id);
+    const session = await getSession(id, req.user.id);
     if (!session) {
       return res.status(404).json({ error: { code: 'SESSION_NOT_FOUND', message: 'Sesión no encontrada' } });
     }
@@ -72,23 +79,22 @@ async function handleAddSegment(req, res) {
       return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: `Falta la API key del proveedor STT (${sttName}). Configúrala en Ajustes.` } });
     }
 
-    // Guarda el audio canónico del segmento: <id>__seg-N.webm
+    // Guarda el audio canónico del segmento en el store (clave <id>__seg-N.webm).
     const n = nextSegmentNumber(session);
-    const audioFilename = `${id}__seg-${n}.webm`;
-    const audioDest = join(AUDIO_DIR, audioFilename);
-    copyFileSync(tmpPath, audioDest);
+    const audioKey = `${id}__seg-${n}.webm`;
+    const mimeType = req.file.mimetype || 'audio/webm';
+    await getBlobStore().put(audioKey, readFileSync(tmpPath), mimeType);
 
-    // Normaliza (remux/recodifica/trocea) solo para la transcripción.
-    const { files, cleanup } = await normalizeForUpload(audioDest, { maxBytes: DEFAULT_MAX_BYTES });
+    // Normaliza el temporal de multer (mismos bytes) solo para la transcripción.
+    const { files, cleanup } = await normalizeForUpload(tmpPath, { maxBytes: DEFAULT_MAX_BYTES });
     cleanupNorm = cleanup;
 
     const { provider, name, model } = resolveProvider(config);
-    const mimeType = req.file.mimetype || 'audio/webm';
     const text = await transcribeFiles(files, provider, model, mimeType);
     const duration = await sumDuration(files);
 
     const segment = {
-      audio_file: audioFilename,
+      audio_file: audioKey,
       transcription_raw: text,
       transcription_edited: null,
       duration_seconds: duration,
@@ -96,8 +102,9 @@ async function handleAddSegment(req, res) {
       created_at: new Date().toISOString(),
     };
 
-    addSegment(id, segment);
-    const updated = updateSession(id, { stt_provider: name, stt_model: model });
+    await addSegment(id, segment, req.user.id);
+    const updated = await updateSession(id, { stt_provider: name, stt_model: model }, req.user.id);
+    await logUsageSafe({ sessionId: id, kind: 'stt', provider: name, model, audioSeconds: duration });
 
     res.json({ segment, transcription_raw: updated.transcription_raw, session: updated });
   } catch (err) {
@@ -115,15 +122,40 @@ router.post('/:id/segments', upload.single('audio'), handleAddSegment);
 // --- POST /api/sessions/:id/transcribe (alias histórico) ---------------------
 router.post('/:id/transcribe', upload.single('audio'), handleAddSegment);
 
+// --- GET /api/sessions/:id/audio/:ordinal ------------------------------------
+// Sirve el audio de un segmento desde el store, con autorización por propietario
+// (el contenedor en Azure es privado: este es el único acceso al audio).
+router.get('/:id/audio/:ordinal', async (req, res) => {
+  try {
+    const session = await getSession(req.params.id, req.user.id);
+    if (!session) {
+      return res.status(404).json({ error: { code: 'SESSION_NOT_FOUND', message: 'Sesión no encontrada' } });
+    }
+    const seg = getSegments(session)[Number(req.params.ordinal) - 1];
+    const key = seg?.audio_file;
+    const store = getBlobStore();
+    if (!key || !(await store.exists(key))) {
+      return res.status(404).json({ error: { code: 'AUDIO_NOT_FOUND', message: 'Audio no encontrado' } });
+    }
+    res.setHeader('Content-Type', 'audio/webm');
+    const stream = await store.openReadStream(key);
+    stream.on('error', () => { if (!res.headersSent) res.status(500).end(); });
+    stream.pipe(res);
+  } catch (err) {
+    console.error('Serve audio error:', err);
+    if (!res.headersSent) res.status(500).json({ error: { code: 'AUDIO_FAILED', message: err.message } });
+  }
+});
+
 // --- POST /api/sessions/:id/reprocess ----------------------------------------
-// Re-transcribe el/los audio(s) que ya están en disco para esta sesión.
+// Re-transcribe el/los audio(s) ya guardados en el store para esta sesión.
 // Rescata sesiones cuyo audio quedó sin transcribir (o mal transcrito).
 router.post('/:id/reprocess', async (req, res) => {
   const { id } = req.params;
   const cleanups = [];
 
   try {
-    const session = getSession(id);
+    const session = await getSession(id, req.user.id);
     if (!session) {
       return res.status(404).json({ error: { code: 'SESSION_NOT_FOUND', message: 'Sesión no encontrada' } });
     }
@@ -134,25 +166,34 @@ router.post('/:id/reprocess', async (req, res) => {
       return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: `Falta la API key del proveedor STT (${sttName}). Configúrala en Ajustes.` } });
     }
 
+    const store = getBlobStore();
     const segments = getSegments(session);
-    const onDisk = segments.filter(s => s.audio_file && existsSync(join(AUDIO_DIR, s.audio_file)));
-    if (onDisk.length === 0) {
-      return res.status(400).json({ error: { code: 'NO_AUDIO', message: 'No hay audio en disco para reprocesar.' } });
+    // Qué segmentos tienen audio en el store (consulta una sola vez por segmento).
+    const present = await Promise.all(
+      segments.map((s) => (s.audio_file ? store.exists(s.audio_file) : Promise.resolve(false)))
+    );
+    if (!present.some(Boolean)) {
+      return res.status(400).json({ error: { code: 'NO_AUDIO', message: 'No hay audio para reprocesar.' } });
     }
 
     const { provider, name, model } = resolveProvider(config);
 
     const reprocessed = [];
-    for (const seg of segments) {
-      const audioPath = seg.audio_file ? join(AUDIO_DIR, seg.audio_file) : null;
-      if (!audioPath || !existsSync(audioPath)) {
+    for (let i = 0; i < segments.length; i++) {
+      const seg = segments[i];
+      if (!present[i]) {
         reprocessed.push(seg); // conserva lo que haya si el audio no está
         continue;
       }
-      const { files, cleanup } = await normalizeForUpload(audioPath, { maxBytes: DEFAULT_MAX_BYTES });
+      const tmpAudio = join(tmpdir(), `stp-reproc-${seg.audio_file}`);
+      await store.downloadToFile(seg.audio_file, tmpAudio);
+      cleanups.push(() => { try { unlinkSync(tmpAudio); } catch {} });
+
+      const { files, cleanup } = await normalizeForUpload(tmpAudio, { maxBytes: DEFAULT_MAX_BYTES });
       cleanups.push(cleanup);
       const text = await transcribeFiles(files, provider, model, 'audio/webm');
       const duration = await sumDuration(files);
+      await logUsageSafe({ sessionId: id, kind: 'stt', provider: name, model, audioSeconds: duration });
       reprocessed.push({
         ...seg,
         transcription_raw: text,
@@ -163,8 +204,8 @@ router.post('/:id/reprocess', async (req, res) => {
       });
     }
 
-    replaceSegments(id, reprocessed);
-    const updated = updateSession(id, { stt_provider: name, stt_model: model, transcription_edited: null });
+    await replaceSegments(id, reprocessed, req.user.id);
+    const updated = await updateSession(id, { stt_provider: name, stt_model: model, transcription_edited: null }, req.user.id);
 
     res.json({ transcription_raw: updated.transcription_raw, session: updated });
   } catch (err) {

@@ -3,6 +3,7 @@ import { getSession, updateSession } from '../services/session-store.js';
 import { getConfig } from '../services/config-store.js';
 import { createLLMProvider } from '../providers/llm/index.js';
 import { PROMPTS, resolveMode } from '../prompts/index.js';
+import { recordUsage } from '../services/usage-store.js';
 
 const router = Router();
 
@@ -10,7 +11,7 @@ router.post('/:id/distill', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const session = getSession(id);
+    const session = await getSession(id, req.user.id);
     if (!session) {
       return res.status(404).json({ error: { code: 'SESSION_NOT_FOUND', message: 'Sesión no encontrada' } });
     }
@@ -42,7 +43,7 @@ router.post('/:id/distill', async (req, res) => {
     const provider = createLLMProvider(llmProvider, config.api_keys[llmProvider]);
     const { prompt, usage, truncated } = await provider.distill(textToDistill, llmModel, systemPrompt);
 
-    const updated = updateSession(id, {
+    const updated = await updateSession(id, {
       prompt_distilled: prompt,
       llm_provider: llmProvider,
       llm_model: llmModel,
@@ -50,7 +51,21 @@ router.post('/:id/distill', async (req, res) => {
       // El system prompt EXACTO usado (override o default). Queda en el JSON para
       // consultar/comparar después y para reusarlo/afinarlo al reabrir la sesión.
       distill_prompt_used: systemPrompt,
-    });
+    }, req.user.id);
+
+    // Registro de uso (coste) no bloqueante: no debe tumbar la destilación.
+    try {
+      await recordUsage({
+        sessionId: id,
+        kind: 'llm',
+        provider: llmProvider,
+        model: llmModel,
+        inputTokens: usage?.input_tokens,
+        outputTokens: usage?.output_tokens,
+      });
+    } catch (e) {
+      console.error('usage log (llm) failed:', e.message);
+    }
 
     res.json({ prompt_distilled: prompt, usage, truncated: !!truncated, session: updated });
   } catch (err) {

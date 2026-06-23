@@ -5,8 +5,9 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --watch --env-file-if-exists=.env --env-file-if-exists=.env.dev server.js",
+    "migrate": "node --env-file-if-exists=.env scripts/migrate-db.js",
     "launch": "launcher.bat"
   },
   "engines": {
@@ -14,7 +15,10 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
+    "@azure/identity": "^4.5.0",
+    "@azure/storage-blob": "^12.26.0",
     "express": "^4.21.2",
+    "mssql": "^11.0.1",
     "multer": "^2.1.1",
     "open": "^10.1.0"
   }
