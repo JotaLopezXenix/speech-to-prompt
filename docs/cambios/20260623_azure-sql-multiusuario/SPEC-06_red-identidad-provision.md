@@ -8,7 +8,7 @@
 
 > **Nota de seguridad.** Este documento **no contiene ninguna API key ni secreto**. El objetivo del flujo es precisamente **eliminar los secretos** de App Settings (la app pasa a Managed Identity). Ninguna credencial se escribe en el repo.
 
-> **Forma del entregable (decisión 2026-06-25).** La provisión se hace por **runbook de portal** (guía de clicks reproducible en este SPEC), **no** por scripts `az`/Bicep. Donde un paso tenga su equivalente CLI evidente se anota como ayuda, pero el camino canónico es el portal.
+> **Forma del entregable (decisión 2026-06-25, revisada en sesión).** Se arrancó con **runbook de portal**; a mitad (tras crear el SQL server + DB a mano y resolver el `az login`) se cambió a **provisión conducida por CLI (`az`)**: Claude ejecuta los comandos y el usuario confirma cada creación/asignación/cierre de red. El usuario es **Owner** de la suscripción `Pay-As-You-Go MSDN -Agus` (crear recursos + asignar roles). Este documento conserva el runbook como referencia del *qué*; el *cómo* pasa a comandos `az` equivalentes.
 
 ---
 
