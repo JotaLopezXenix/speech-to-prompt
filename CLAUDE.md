@@ -2,18 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Metodología (JCC)
+
+Este proyecto se desarrolla con la metodología JCC. Doc: `C:\11.IA\ClaudeCode\metodologia-claude-code\docs\JCC_Agentic_Dev_Methodology_v1_1.md`.
+
+- **Fase actual:** implementación — cambio `azure-sql-multiusuario` (`docs/cambios/20260623_azure-sql-multiusuario/`). Flujos 1-5 implementados y verificados **en local**; **falta el flujo 6** (provisión Azure SQL/Storage + Private Endpoints/VNet + Managed Identity), que **aún NO tiene SPEC** (los flujos tienen SPEC-01/02/03/05; el 4 se documentó a posteriori en bitácora).
+- **Operas como COPILOTO.** En las transiciones de fase, recuerda y ofrece el command que toca (`/jcc-design`, `/jcc-spec`, `/jcc-implement`, `/jcc-review`); **no bloquees**, el usuario decide. Las decisiones **estructurales o difíciles de revertir** (modelo de datos, abstracciones, contratos, stack) van a la **mesa común**: no las absorbas en silencio.
+- **Reconciliación al arrancar.** Antes de seguir, contrasta la "Fase actual" de arriba con los artefactos reales del repo (¿qué SPEC existen?, ¿qué flujos están implementados/verificados?). Si no cuadran, **dilo**. Nota viva: el flujo 6 entra en implementación sin SPEC propio → lo coherente sería pasarlo antes por `/jcc-spec`.
+
 ## Commands
 
 ```bash
-npm start        # Start the server and auto-open browser at http://localhost:3000
-npm run dev      # Start with --watch (auto-restart on file changes)
+npm start          # Start the server (loads .env if present); opens the browser
+npm run dev        # --watch + loads .env and .env.dev (sets STP_NO_OPEN → no auto-open; open http://localhost:3000 manually)
+npm run migrate    # Apply pending SQL migrations (migrations/NNN_*.sql) to the DB; tracked in schema_migrations
+npm run seed-prompts  # Sync distillation prompts from src/prompts/<family>/<mode>.md into dbo.model_prompts (upsert)
 ```
+
+All scripts load env with `--env-file-if-exists` (Node 24). Locally, `.env` holds the SQL connection (`SQL_*`), a dev identity (`DEV_USER_*`), and the Azure processor config (`AZURE_OPENAI_*`, `LLM_PROVIDER`, `LLM_MODEL`); Azure uses App Settings instead (no `.env`). **A SQL Server database is required** (local: `db-speech-to-prompt`); on first setup run `npm run migrate` then `npm run seed-prompts`.
 
 No build step. No test suite. The frontend uses native ES modules served directly by Express — changes to `public/` are live on browser refresh.
 
 ## Architecture
 
 **Node.js + Express backend** serving a **vanilla JS single-page frontend** on localhost. Zero build tooling — the browser loads `.js` files as ES modules directly.
+
+> **Major evolution (2026-06).** The app moved from local JSON files + single user to **Azure SQL + Blob Storage + multiuser** (identity, owner isolation, cost tracking) and **Azure-native processors**. Design + specs: `docs/cambios/20260623_azure-sql-multiusuario/`.
 
 ### Data flow
 
@@ -24,13 +38,13 @@ the partial transcription, keep recording, all without losing the session.
 
 ```
 Browser (MediaRecorder, per segment) → POST audio → /api/sessions/:id/segments
-  → audio-normalize (ffmpeg, optional) → Groq Whisper API
-  → segment appended; session.transcription_raw recomputed (= join of segments)
+  → audio-normalize (ffmpeg, optional) → STT provider (Groq Whisper, or Azure OpenAI Whisper)
+  → audio stored via blob-store; segment appended; session.transcription_raw recomputed
 
-Re-transcribe on-disk audio (rescue)  → POST → /api/sessions/:id/reprocess
+Re-transcribe stored audio (rescue)   → POST → /api/sessions/:id/reprocess
 Browser (textarea, merged transcript) → POST → /api/sessions/:id/distill
-  → body { mode, systemPrompt? } → Anthropic Claude API
-  → prompt + distill_mode + distill_prompt_used saved to session JSON
+  → body { mode, systemPrompt? } → LLM provider (default Azure OpenAI gpt-4.1)
+  → prompt + distill_mode + distill_prompt_used persisted (SQL)
 ```
 
 `/api/sessions/:id/transcribe` still exists as a back-compat alias of `/segments`.
@@ -41,9 +55,12 @@ All LLM and STT integrations go through abstract base classes:
 
 - `src/providers/llm/base.js` — `LLMProvider` with `distill(text, model, systemPrompt)` → `{ prompt, usage }`
 - `src/providers/stt/base.js` — `STTProvider` with `transcribe(audioBuffer, mimeType, model)` → `{ text }`
-- `src/providers/llm/index.js` and `src/providers/stt/index.js` — registries/factories
+- `src/providers/storage/base.js` — `BlobStore` (file backend locally, Azure Blob in cloud)
+- `src/providers/{llm,stt,storage}/index.js` — registries/factories
 
 Adding a new provider = one new file extending the base class + one line in the registry.
+LLM providers: `azure-openai` (default), `anthropic` (disabled — see Distillation), `gemini` (stub).
+STT providers: `groq`, `azure-whisper`.
 
 > **Groq Whisper `text`-field bug (workaround in `groq.js`).** Groq's assembled
 > `text` (and the plain `json` format) deterministically **truncates words at the
@@ -55,10 +72,11 @@ Adding a new provider = one new file extending the base class + one line in the 
 > from `words[]`** (joining + fixing spacing around punctuation), with a fallback to
 > `text` if no words are returned. Same API cost/latency. Re-running **Reprocesar**
 > on old sessions re-transcribes their on-disk audio through this fixed path.
+> (Azure OpenAI Whisper does **not** have this bug; its `text` is used directly.)
 
 ### Single source of truth for paths
 
-`src/utils/paths.js` is the **only** place that defines where data lives (`data/` in the project root). All other modules import from it. If the data directory ever needs to change, only this file changes.
+`src/utils/paths.js` is the **only** place that defines where local data lives (`BASE_DIR = process.env.DATA_DIR || data/`). All other modules import from it.
 
 ### Frontend phase machine
 
@@ -68,44 +86,24 @@ Phases: 1-capture → 3-review-raw → 4-distill → 5-result
 
 Internal phase numbers keep the gap (1/3/4/5) for code stability. **`phase1-capture.js` is now an iterative multi-segment workspace** that owns session creation (lazy, on the first committed segment), records/imports segments, transcribes each inline (the old standalone `phase2-transcribe` screen was retired), and shows the running merged transcript before advancing to review. Audio sanity guards (silent/oversize) live in the shared `public/js/audio-guards.js`.
 
-### Persistence
+### Persistence (Azure SQL + Blob Storage)
 
-Sessions and audio are stored locally in `data/` (gitignored):
-```
-data/
-  config.json                 # API keys + provider/model defaults (never commit)
-  sessions/<id>.json          # One JSON file per session (with a segments[] array)
-  audio/<id>__seg-N.webm      # One audio file per segment (1-based)
-  audio/<id>.webm             # Legacy: single audio of v1.0 sessions
-```
+Sessions and audio live in **Azure SQL Database** + **Azure Blob Storage** (a major change from v1 local files — see `docs/cambios/20260623_azure-sql-multiusuario/`). Locally, dev runs against a SQL Server DB (`db-speech-to-prompt`) + a file-backed blob store (`AUDIO_DIR`); in Azure it's Azure SQL + a private Blob container, both via **Managed Identity** (secretless). `data/config.json` (API keys + provider/model defaults) and env still hold config; **secrets never go to the DB**. The old `data/sessions/*.json` + `data/audio/*.webm` are **v1 legacy** — the SQL DB started blank (not migrated); they stay on disk only as a rescue source.
 
-Session IDs are ISO timestamps with colons replaced by dashes (e.g. `2026-04-10T14-30-00`).
+Schema lives in `migrations/NNN_*.sql` (applied by `npm run migrate`, tracked in `schema_migrations`): `users` (JIT-provisioned on first login), `sessions` (per-`owner_id` isolation), `segments`, `session_shares` (schema-only hook, no feature yet), `usage_events` (append-only cost/usage), `model_prices`, and `model_prompts` + `llm_models` (see Distillation).
 
-**Session schema (multi-segment, backward-compatible).** Each session has a
-`segments[]` array (`{ audio_file, transcription_raw, transcription_edited,
-duration_seconds, source, created_at }`). The session-level `transcription_raw`
-is a **materialized view** — the join of the segments — so existing consumers
-(`distill.js`, `listSessions`, the review/result phases) keep reading
-`transcription_raw`/`transcription_edited` unchanged. Old flat-field sessions (no
-`segments`) are handled by `getSegments(session)`, which synthesizes a single
-segment — **no data migration needed**.
-
-`src/services/session-store.js` owns this model: `getSegments`,
-`recomputeTranscription`, `addSegment` (push + reproject derived fields),
-`replaceSegments` (used by reprocess + the `scripts/transcribe-file.js` rescue
-tool), and `nextSegmentNumber`. `updateSession` does a shallow merge, which is why
-adding `segments` was additive.
+**Session contract preserved.** The session object still exposes `segments[]` + a **materialized** `transcription_raw`/`transcription_edited` (the join of segments), so `distill.js`, the history list and the phases read it unchanged. `src/services/session-store.js` keeps its API (`getSegments`, `recomputeTranscription`, `addSegment`/`replaceSegments` — transactional in SQL, recomputing the materialized view atomically — and `updateSession` shallow merge) but is now **async/SQL**. **Owner isolation** is enforced in the data layer: get/list/update take a `callerId`; cross-owner access returns 404. Identity comes from Easy Auth headers in Azure (`src/middleware/identity.js`) or `DEV_USER_*` locally. Audio uses a storage abstraction (`src/providers/storage/{file,azure}.js`); `segments.audio_blob_path` is the store key, served via an authorized endpoint (never a public URL).
 
 ### Audio format & normalization
 
 The app records in **WebM/Opus** via `MediaRecorder`. `src/services/audio-normalize.js`
-sanitizes each audio before sending it to Groq, using **ffmpeg only if present**
+sanitizes each audio before sending it to STT, using **ffmpeg only if present**
 (`detectFfmpeg()`): remux (`-c copy`, writes the duration that MediaRecorder's
 streaming WebM lacks), re-encode to 32 kbps Opus mono if oversized, and time-split
 into chunks if still over Groq's ~25 MB limit. **ffmpeg is optional** — if it's
 absent the audio is sent as-is (the original v1.0 behavior). This keeps ARM Windows
 compatibility by degrading gracefully instead of requiring the binary. The stored
-`audio_file` is always the raw upload; normalization outputs are temporary
+audio is always the raw upload; normalization outputs are temporary
 (transcription-only). `probeDuration` must measure the *normalized* file, not the
 raw one (the raw `.webm` reports no duration).
 
@@ -117,21 +115,19 @@ raw one (the raw `.webm` reports no duration).
 
 Distillation has **four modes**, chosen on the review screen (phase 3); **limpio** is the default selection:
 
-- **completo** — structured initiator prompt (`src/prompts/distill-system.md`). Original behavior.
-- **ligero** — light cleanup + polish, no titles/summary, preserves all ideas (`distill-light.md`).
-- **literal** — near-verbatim; only de-spells acronyms + fixes spelled letter/number artifacts (`distill-literal.md`).
-- **limpio** — faithful cleaner+structurer (`distill-clean.md`): cleans/orders/densifies, flags ambiguities & inferences with `[inferido]` and a final "❓ Preguntas abiertas" section, but does NOT resolve or synthesize. Produces a `brief-crudo.md` for a later Socratic design interview.
+- **completo** — structured first-person initiator brief. Original behavior.
+- **ligero** — light cleanup + polish, no titles/summary, preserves all ideas.
+- **literal** — near-verbatim; only de-spells acronyms + fixes spelled letter/number artifacts.
+- **limpio** — faithful cleaner+structurer: cleans/orders/densifies, flags ambiguities & inferences with `[inferido]` and a final "❓ Preguntas abiertas" section, but does NOT resolve or synthesize. Produces a `brief-crudo.md` for a later Socratic design interview.
 
-All four call the LLM. `src/prompts/index.js` loads the `.md` files **once at
-startup** into a shared `PROMPTS` map (with per-mode fallback strings) and exports
-`resolveMode()` (unknown/missing mode → `completo`). Both `routes/distill.js` (uses them)
-and `routes/prompts.js` (`GET /api/prompts`, serves them to the front for viewing/editing)
-import this single source. Edit a `.md` to tune a mode's default — no code change needed.
+**Prompts are per model FAMILY × mode, stored in the DB** (`dbo.model_prompts`; families `openai`/`claude`/`gemini`). The git-versioned origin is `src/prompts/<family>/<mode>.md`; `npm run seed-prompts` upserts them into the DB, which is the runtime source (editable by SQL now, by a backoffice later). `src/services/prompts.js` reads/caches them; `src/prompts/index.js` now only exports `DISTILL_MODES`, `resolveMode()` and `FALLBACK_PROMPTS`. `routes/distill.js` loads the prompt for `(active model's family, mode)`.
+
+**Model selection + gating** (`dbo.llm_models` via `src/services/models.js`): each model maps to a family and carries `enabled`/`is_default`. The default LLM is **`azure-openai` / `gpt-4.1`**; a request routed to a disabled model is rejected (`400 MODEL_DISABLED`). **Claude is kept (its prompt family + a registry row) but disabled**: it's an Azure Marketplace model, not billable against the subscription credit, so the distiller moved to **Azure OpenAI GPT** (first-party, credit-billable). `routes/prompts.js` (`GET /api/prompts`) serves the active family's prompts to the front.
 
 The front can **override the system prompt per distillation** (phase-3 inline editor): the
-edited text is sent in the `distill` body and used if non-empty (else the mode default).
-**Editing never writes the `.md` files** — the override lives only in the request and in the
-session JSON. The exact prompt used is persisted as `distill_prompt_used` alongside
+edited text is sent in the `distill` body and used if non-empty (else the family/mode default).
+**Editing never writes the stored prompts** — the override lives only in the request and in the
+session record. The exact prompt used is persisted as `distill_prompt_used` alongside
 `distill_mode`. Reopening a session seeds the phase-3 editor with the stored prompt (via
 `app.js` state), so re-distilling reuses/tunes it. The editor state (mode + per-mode text)
 lives in `app.js` `state` because phase modules are re-rendered on every navigation.

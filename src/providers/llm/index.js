@@ -1,9 +1,11 @@
 import { AnthropicProvider } from './anthropic.js';
 import { GeminiProvider } from './gemini.js';
+import { AzureOpenAIProvider } from './azure-openai.js';
 
 const PROVIDERS = {
   anthropic: AnthropicProvider,
   gemini: GeminiProvider,
+  'azure-openai': AzureOpenAIProvider,
 };
 
 export function createLLMProvider(name, apiKey) {

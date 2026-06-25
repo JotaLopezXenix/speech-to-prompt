@@ -200,3 +200,14 @@ No es un cambio, son varios. Todos entran en esta iteración, pero conviene secu
 - **Backoffice de administración** (futuro): UI para gestionar usuarios/roles y **editar los precios de modelos** (tabla `model_prices`). De momento los precios se editan a mano por SQL.
 - **Paso a VPN** (superficie pública cero) según crezca el equipo o el nivel de exigencia.
 - **Evolución a SaaS** (web/móvil, API pública, billing/cuotas/BYOK, Entra External ID): aún sin decidir el "cómo".
+
+---
+
+## Addendum 2026-06-24 — cambios sobre el diseño original (implementados)
+
+El cuerpo de arriba es el diseño acordado el 23-jun. Durante la implementación del **flujo 4** surgieron dos cambios que **modifican decisiones de este DESIGN**; se registran aquí:
+
+- **D10 corregida — el LLM ya NO es Claude.** Restricción de facturación dura: los costes **deben** ir contra el **crédito de la suscripción**, sin cargos a tarjeta. Confirmado con docs de Microsoft: Claude (en Foundry o directo) es oferta de **Azure Marketplace** y **el crédito no lo cubre**; **Azure OpenAI es first-party y sí**. Por tanto el destilador pasa a **Azure OpenAI GPT (`gpt-4.1`)**, reutilizando el recurso `aoai-speech-to-prompt` (West Europe) del STT — un solo recurso/región/billing/auth. **STT (Azure OpenAI Whisper) sin cambios.** Proveedores: `src/providers/stt/azure-whisper.js` y el nuevo `src/providers/llm/azure-openai.js` (Chat Completions por REST; auth api-key o Managed Identity). (Se llegó a escribir y luego **retirar** un proveedor `foundry.js` para Claude-en-Foundry, descartado por la facturación; región de Claude además era solo East US 2 / Sweden Central.)
+- **Nuevo — prompts multi-modelo en BD.** Al validar gpt-4.1 se vio que los prompts (afinados para Claude) desvían en modo `completo`. Decisión: **prompts por FAMILIA de modelo × modo, en BD** (`model_prompts`, familias `openai`/`claude`/`gemini`), con un **registro de modelos** (`llm_models`) que marca `enabled`/`is_default` y permite **rechazar** modelos deshabilitados. **Claude se conserva (sus prompts) pero deshabilitado.** Selección de modelo **global** ahora (config/env), por usuario/cliente en el futuro SaaS. Origen versionado en `src/prompts/<familia>/<modo>.md`, sembrado a BD con `npm run seed-prompts`. Las **API keys siguen fuera de la BD** (env/`config.json`): la BD aloja solo config no-secreta (precios, prompts, registro de modelos).
+- **Migraciones añadidas:** `003_azure_openai_prices.sql` (precios gpt-4.1), `004_multimodel_prompts.sql` (`model_prompts` + `llm_models`). Servicios nuevos: `services/prompts.js`, `services/models.js`.
+- **Estado:** implementado y verificado en local (STT y LLM Azure, gating, prompts por familia, destilado gpt-4.1 validado en `limpio` y `completo`). **Pendiente:** flujo 6 (Private Endpoints + VNet + Managed Identity en Azure) y provisionar los recursos Azure reales de SQL/Storage.

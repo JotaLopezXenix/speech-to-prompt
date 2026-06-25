@@ -7,10 +7,11 @@ const DEFAULTS = {
     groq: '',
     google: '',
     'azure-whisper': '',
+    'azure-openai': '',
   },
   defaults: {
-    llm_provider: 'anthropic',
-    llm_model: 'claude-sonnet-4-6',
+    llm_provider: 'azure-openai',
+    llm_model: 'gpt-4.1',
     stt_provider: 'groq',
     stt_model: 'whisper-large-v3',
   },
@@ -23,6 +24,9 @@ const ENV_KEY_MAP = {
   groq: 'GROQ_API_KEY',
   google: 'GOOGLE_API_KEY',
   'azure-whisper': 'AZURE_OPENAI_API_KEY',
+  // Mismo recurso/clave que azure-whisper (un solo Azure OpenAI con deployments
+  // de whisper + GPT) → comparten AZURE_OPENAI_API_KEY.
+  'azure-openai': 'AZURE_OPENAI_API_KEY',
 };
 
 function load() {
@@ -91,5 +95,11 @@ export function getConfigMasked() {
 export function isConfigured() {
   const config = applyEnvOverrides(load());
   const hasSTT = config.api_keys.groq || config.api_keys['azure-whisper'];
-  return !!(config.api_keys.anthropic && hasSTT);
+  // LLM: anthropic/gemini necesitan clave; azure-openai puede autenticar por
+  // Managed Identity (endpoint sin clave), así que vale su clave o, si está
+  // seleccionado, el endpoint.
+  const aoaiOk = config.api_keys['azure-openai']
+    || (config.defaults.llm_provider === 'azure-openai' && !!process.env.AZURE_OPENAI_ENDPOINT);
+  const hasLLM = config.api_keys.anthropic || aoaiOk;
+  return !!(hasLLM && hasSTT);
 }
