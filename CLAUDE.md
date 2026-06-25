@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Este proyecto se desarrolla con la metodología JCC. Doc: `C:\11.IA\ClaudeCode\metodologia-claude-code\docs\JCC_Agentic_Dev_Methodology_v1_1.md`.
 
-- **Fase actual:** implementación — cambio `azure-sql-multiusuario` (`docs/cambios/20260623_azure-sql-multiusuario/`). Flujos 1-5 implementados y verificados **en local**; **falta el flujo 6** (provisión Azure SQL/Storage + Private Endpoints/VNet + Managed Identity), que **aún NO tiene SPEC** (los flujos tienen SPEC-01/02/03/05; el 4 se documentó a posteriori en bitácora).
+- **Fase actual:** especificación → implementación del **flujo 6** — cambio `azure-sql-multiusuario` (`docs/cambios/20260623_azure-sql-multiusuario/`). Flujos 1-5 implementados y verificados **en local** (el flujo 4 se commiteó el 25-jun, commit `e6d9398`, tras `/jcc-review` con veredicto limpio). El **flujo 6** (provisión Azure SQL/Storage + Private Endpoints/VNet + Managed Identity, secretless) **ya tiene SPEC**: `SPEC-06_red-identidad-provision.md` (runbook de portal; incluye un delta de código en `azure-whisper.js` para MI). Listo para `/jcc-implement`. SPEC del cambio: 01/02/03/05/06; el 4 se documentó a posteriori en bitácora.
 - **Operas como COPILOTO.** En las transiciones de fase, recuerda y ofrece el command que toca (`/jcc-design`, `/jcc-spec`, `/jcc-implement`, `/jcc-review`); **no bloquees**, el usuario decide. Las decisiones **estructurales o difíciles de revertir** (modelo de datos, abstracciones, contratos, stack) van a la **mesa común**: no las absorbas en silencio.
-- **Reconciliación al arrancar.** Antes de seguir, contrasta la "Fase actual" de arriba con los artefactos reales del repo (¿qué SPEC existen?, ¿qué flujos están implementados/verificados?). Si no cuadran, **dilo**. Nota viva: el flujo 6 entra en implementación sin SPEC propio → lo coherente sería pasarlo antes por `/jcc-spec`.
+- **Reconciliación al arrancar.** Antes de seguir, contrasta la "Fase actual" de arriba con los artefactos reales del repo (¿qué SPEC existen?, ¿qué flujos están implementados/verificados?). Si no cuadran, **dilo**. Nota viva: el flujo 6 ya pasó por `/jcc-spec` (SPEC-06); el siguiente paso coherente es `/jcc-implement` sobre ese SPEC.
 
 ## Commands
 
