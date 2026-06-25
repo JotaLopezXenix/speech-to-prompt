@@ -30,6 +30,9 @@ export const api = {
   getSession: (id) => request('GET', `/sessions/${id}`),
   updateSession: (id, payload) => request('PUT', `/sessions/${id}`, payload),
 
+  // Uso + coste estimado de una sesión → { events, cost: { currency, stt, llm, total, unpriced } }.
+  getSessionUsage: (id) => request('GET', `/sessions/${id}/usage`),
+
   // Segments: sube un audio (grabado o importado), lo transcribe y lo añade
   // como un nuevo segmento de la sesión. Devuelve { segment, transcription_raw, session }.
   addSegment: (sessionId, audioBlob, { source = 'recorded', filename = 'audio.webm' } = {}) => {

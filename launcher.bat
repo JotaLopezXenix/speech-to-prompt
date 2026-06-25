@@ -13,7 +13,8 @@ if "%HTTP_STATUS%"=="200" (
 )
 
 REM Servidor no encontrado: arrancarlo desde el directorio del proyecto.
-REM --watch reinicia el backend automaticamente al cambiar archivos de src/server
-REM (equivale a "npm run dev"). Los cambios de frontend en public/ se ven al refrescar.
+REM --watch reinicia el backend automaticamente al cambiar archivos de src/server.
+REM --env-file=.env carga las credenciales locales (SQL, usuario dev). NO carga
+REM .env.dev, asi que el navegador SI se abre (a diferencia de "npm run dev").
 cd /d "%~dp0"
-node --watch server.js
+node --watch --env-file-if-exists=.env server.js

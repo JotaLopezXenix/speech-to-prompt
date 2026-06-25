@@ -9,6 +9,8 @@ export function renderPhase5(container, { sessionId, promptDistilled, onNewSessi
       <p class="phase-desc">
         Revisa y edita el prompt final. Cuando esté listo, cópialo al portapapeles.
       </p>
+      <p class="session-cost-line" id="session-cost" hidden
+         style="font-size:0.85em;opacity:0.7;margin:-0.25rem 0 0.75rem;"></p>
       <div class="textarea-header">
         <span class="word-count" id="word-count">${wordCount} palabras</span>
         <button class="btn-copy" id="btn-copy" title="Copiar al portapapeles">
@@ -79,4 +81,20 @@ export function renderPhase5(container, { sessionId, promptDistilled, onNewSessi
 
   const btnBack = container.querySelector('#btn-back-transcription');
   if (btnBack) btnBack.addEventListener('click', onBackToTranscription);
+
+  // Coste estimado de la sesión (informativo; si falla, no se muestra).
+  const costEl = container.querySelector('#session-cost');
+  (async () => {
+    try {
+      const { cost } = await api.getSessionUsage(sessionId);
+      if (!cost) return;
+      const fmt = (n) => `$${Number(n).toFixed(4)}`;
+      let txt = `Coste estimado (aprox.): ${fmt(cost.total)} ${cost.currency} · STT ${fmt(cost.stt)} · LLM ${fmt(cost.llm)}`;
+      if (cost.unpriced) txt += ` · ${cost.unpriced} sin tarifa`;
+      costEl.textContent = txt;
+      costEl.hidden = false;
+    } catch {
+      /* el coste es informativo; si falla, no se muestra */
+    }
+  })();
 }

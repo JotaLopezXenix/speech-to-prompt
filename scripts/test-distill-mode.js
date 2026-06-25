@@ -1,10 +1,13 @@
-// Prueba puntual de un modo de destilado contra un texto de ejemplo.
-// La clave de Anthropic se lee de data/config.json (api_keys.anthropic).
+// Prueba puntual de un modo de destilado contra un texto de ejemplo, con el modelo
+// activo por defecto (gpt-4.1, Azure OpenAI) y el prompt de su familia (openai) leído de BD.
 //
-// Uso:  node scripts/test-distill-mode.js [modo]   (modo = completo|ligero|literal|limpio; def. limpio)
+// Uso (PowerShell, con .env para AZURE_OPENAI_ENDPOINT + conexión SQL):
+//   node --env-file-if-exists=.env scripts/test-distill-mode.js [modo]
+//   (modo = completo|ligero|literal|limpio; def. limpio)
 import { getConfig } from '../src/services/config-store.js';
-import { PROMPTS, resolveMode } from '../src/prompts/index.js';
-import { AnthropicProvider } from '../src/providers/llm/anthropic.js';
+import { resolveMode } from '../src/prompts/index.js';
+import { getPrompt } from '../src/services/prompts.js';
+import { AzureOpenAIProvider } from '../src/providers/llm/azure-openai.js';
 
 const mode = resolveMode(process.argv[2] || 'limpio');
 
@@ -17,14 +20,16 @@ sería Postgres. Lo de la autenticación lo metemos con, eh, el Auth ese de... e
 Board Protection creo que se llamaba, o algo así. Y nada, eh, o sea, que sea rápido. Ah, y los
 datos hay que guardarlos, digo, los eventos, durante un año, perdón, durante seis meses. Eso.`;
 
-const key = getConfig().api_keys.anthropic;
-if (!key) {
-  console.error('Falta api_keys.anthropic en data/config.json.');
+if (!process.env.AZURE_OPENAI_ENDPOINT) {
+  console.error('Falta AZURE_OPENAI_ENDPOINT (arranca con node --env-file-if-exists=.env ...).');
   process.exit(1);
 }
+const cfg = getConfig();
+const key = cfg.api_keys['azure-openai'] || cfg.api_keys['azure-whisper']; // mismo recurso
 
-console.log(`=== MODO: ${mode} ===\n`);
-const provider = new AnthropicProvider(key);
-const { prompt, usage } = await provider.distill(SAMPLE, 'claude-sonnet-4-6', PROMPTS[mode]);
+const systemPrompt = await getPrompt('openai', mode);
+console.log(`=== MODO: ${mode} (gpt-4.1 / familia openai) ===\n`);
+const provider = new AzureOpenAIProvider(key);
+const { prompt, usage } = await provider.distill(SAMPLE, 'gpt-4.1', systemPrompt);
 console.log(prompt);
 console.log(`\n--- usage: in=${usage.input_tokens} out=${usage.output_tokens} ---`);

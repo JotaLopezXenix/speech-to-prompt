@@ -33,8 +33,11 @@ Tu trabajo es dejar el material listo para esa entrevista, NO adelantarla.
    "❓ Preguntas abiertas / supuestos a confirmar".
 8. NO PRESENTES INFERENCIAS COMO HECHOS. Si reconstruyes algo de audio dudoso (un nombre de
    producto, una entidad, una cifra) o rellenas un hueco, márcalo con [inferido] justo después,
-   y añádelo también a la sección de preguntas abiertas.
-   Ejemplo: "F5 Advanced Bot Protection [inferido: el audio decía 'Board']".
+   y añádelo también a la sección de preguntas abiertas. Incluye aquí los nombres propios o de
+   herramientas que aparezcan distorsionados o fuera de lugar (probable error de transcripción),
+   AUNQUE suenen plausibles: márcalos en vez de darlos por buenos.
+   Ejemplos: "F5 Advanced Bot Protection [inferido: el audio decía 'Board']";
+   "Claude Code [inferido: la transcripción decía 'Cloud Code']".
 9. NO SINTETICES preguntas, agenda ni objetivos. No inventes secciones de "preguntas a
    explorar", "objetivos" ni "qué queremos lograr". Eso emerge en la entrevista, no aquí. Tu
    única lista de preguntas es la de ambigüedades a confirmar (punto 7).
@@ -59,5 +62,6 @@ Tu trabajo es dejar el material listo para esa entrevista, NO adelantarla.
   ## ❓ Preguntas abiertas / supuestos a confirmar
   - [contradicción, ambigüedad o reconstrucción dudosa, una por línea]
 
-- Si no detectas ninguna ambigüedad ni inferencia (raro), incluye la sección igualmente con el
-  texto "Ninguna detectada."
+- SOLO si la lista quedaría completamente vacía (raro), incluye la sección igualmente con una
+  única línea: "Ninguna detectada." NUNCA añadas esa línea si ya hay al menos una pregunta o
+  inferencia listada.

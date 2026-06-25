@@ -9,11 +9,17 @@ import sessionsRouter from './src/routes/sessions.js';
 import transcribeRouter from './src/routes/transcribe.js';
 import distillRouter from './src/routes/distill.js';
 import promptsRouter from './src/routes/prompts.js';
+import { identity } from './src/middleware/identity.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Ensure ~/.speech-to-prompt/ directories exist
 ensureDirectories();
+
+// Aviso temprano en local si no se cargó el .env (las llamadas a SQL fallarían).
+if (!process.env.WEBSITE_HOSTNAME && !process.env.SQL_SERVER) {
+  console.warn('⚠  Falta SQL_SERVER. Arranca con `npm start` o `npm run dev` (cargan .env); las llamadas a la BD fallarán.');
+}
 
 const app = express();
 
@@ -25,6 +31,9 @@ app.use(express.static(join(__dirname, 'public')));
 
 // API routes
 app.use('/api/config', configRouter);
+// Identidad + aislamiento: todo /api/sessions exige principal autenticado
+// (Easy Auth en Azure; usuario dev en local) y deja req.user disponible.
+app.use('/api/sessions', identity);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', transcribeRouter);
 app.use('/api/sessions', distillRouter);
@@ -54,7 +63,9 @@ async function startServer(port = 3000) {
       console.log(`\n🎙  Speech-to-Prompt`);
       console.log(`   Servidor: ${url}`);
       console.log(`   Presiona Ctrl+C para detener\n`);
-      open(url);
+      // STP_NO_OPEN (lo pone el script `dev` vía .env): no abrir navegador.
+      // Evita que cada reinicio de --watch abra una pestaña nueva.
+      if (!process.env.STP_NO_OPEN) open(url);
       resolve(server);
     });
   });
@@ -67,6 +78,14 @@ if (process.env.WEBSITE_HOSTNAME) {
   const port = process.env.PORT || 3000;
   createServer(app).listen(port, '0.0.0.0', () => {
     console.log(`🎙  Speech-to-Prompt escuchando en el puerto ${port} (Azure App Service)`);
+  });
+} else if (process.env.STP_NO_OPEN) {
+  // Modo desarrollo (`npm run dev` con --watch): sin single-instance guard ni
+  // apertura de navegador. --watch gestiona el proceso único, y así sus reinicios
+  // no abren pestañas nuevas. Abre tú http://localhost:3000 una vez.
+  startServer().catch(err => {
+    console.error('Error al iniciar el servidor:', err);
+    process.exit(1);
   });
 } else {
   (async () => {
