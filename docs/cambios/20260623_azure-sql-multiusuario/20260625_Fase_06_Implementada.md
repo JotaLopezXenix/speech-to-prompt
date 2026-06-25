@@ -5,6 +5,25 @@
 **Estado:** **implementado y verificado E2E en Azure** (https://speech-to-prompt-xenix-…westeurope-01.azurewebsites.net). Cierra el cambio `azure-sql-multiusuario` completo (flujos 1-6).
 **Método:** provisión **conducida por `az` CLI** (Claude ejecuta, usuario Owner confirma), no runbook de portal (decisión a mitad de sesión).
 
+---
+
+## Estado metodológico (cierre de sesión 2026-06-25)
+
+- **Fase actual:** **ninguna activa** — el cambio `azure-sql-multiusuario` está **COMPLETO** (flujos 1-6 implementados y verificados). No estamos a mitad de fase, sino en cierre de un cambio terminado.
+- **Siguiente command que toca:** **`/jcc-design`** — pero solo cuando se aborde un **trabajo nuevo** (no hay continuación de este cambio). Candidato inmediato: la limpieza de la UI de Ajustes (ver Pendientes §5).
+- **Restricciones activas para la próxima sesión:**
+  - **Secretless es invariante:** la app en Azure NO debe volver a llevar api-keys en App Settings; SQL/Storage/AOAI van por **Managed Identity**. Los secretos nunca al cliente ni a la BD.
+  - **Perímetro cerrado:** no reabrir acceso público de AOAI/Storage; SQL público solo con lista blanca de IPs. La app entra por **Private Endpoint**.
+  - **Contrato preservado** (de flujos previos): forma del objeto sesión (`segments[]` + `transcription_raw/edited` materializado), abstracción de proveedores, máquina de 4 fases del front, Easy Auth + aislamiento por propietario.
+  - **Dev → Azure:** migrar/seed contra el Azure SQL (Entra-only) se hace con `SQL_AUTH=entra-default` + `az login` (no hay SQL auth en el server Azure).
+  - **Pendiente que no se puede "saltar" silenciosamente:** la **UI de Ajustes** muestra proveedores legacy y se auto-abre; es cosmético pero confunde — está flagged como tarea.
+- **Evidencia del estado (para reconciliar al arrancar):**
+  - **Diseño:** `DESIGN.md` (+ Addendum 2026-06-24). **SPEC:** 01/02/03/05/06 presentes; flujo 4 documentado en bitácora `20260624_Fase_04_Implementada.md`.
+  - **Implementado/verificado:** flujos 1-5 (local), flujo 4 commit `e6d9398` tras `/jcc-review` limpio; **flujo 6 verificado E2E en Azure** (esta bitácora, §6).
+  - **Git:** todo en `main` (último relevante `806e804`); rama `feat/azure-sql-multiusuario` mergeada; árbol limpio.
+  - **Producción:** App Service `speech-to-prompt-xenix` desplegado y funcionando secretless por red privada.
+  - **Pendientes menores:** UI Ajustes (chip de tarea creado), IP de Agustín en firewall SQL/Storage.
+
 > **Nota de seguridad.** Sin secretos en el documento. El objetivo del flujo era **eliminar** los secretos: la app ya **no** tiene ninguna api-key en App Settings (solo el secreto propio de Easy Auth, gestionado por Azure). Acceso a SQL/Storage/AOAI por **Managed Identity**.
 
 ---
