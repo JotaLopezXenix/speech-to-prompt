@@ -22,6 +22,10 @@ function buildConfig() {
     server: process.env.SQL_SERVER,
     database: process.env.SQL_DATABASE,
     pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
+    // Serverless puede tardar en reanudar tras la auto-pausa; damos margen al
+    // connect (def. 15s) para que una sola tentativa pueda absorber el cold-start.
+    connectionTimeout: 30000,
+    requestTimeout: 30000,
     options: {
       encrypt: process.env.SQL_ENCRYPT !== 'false',
       trustServerCertificate: process.env.SQL_TRUST_SERVER_CERTIFICATE === 'true',
@@ -60,6 +64,9 @@ function buildConfig() {
 // Códigos de error transitorios de Azure SQL (incluido el "reanudando" de
 // Serverless tras la auto-pausa). Ante ellos, reintentamos.
 const TRANSIENT_NUMBERS = new Set([40613, 4060, 40197, 49918, 49919, 49920, 10928, 10929, 11001]);
+// Códigos de error de socket/conexión (string) del driver: el cold-start de
+// Serverless suele venir como un fallo de conexión, no con un número de error SQL.
+const TRANSIENT_CODES = new Set(['ETIMEOUT', 'ETIMEDOUT', 'ESOCKET', 'ECONNCLOSED', 'ECONNRESET', 'EREQUEST']);
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -68,7 +75,10 @@ function sleep(ms) {
 function isTransient(err) {
   const num = err?.number ?? err?.code;
   if (TRANSIENT_NUMBERS.has(num)) return true;
-  return /timeout|ETIMEOUT|ESOCKET|ECONNCLOSED|ECONNRESET|currently unavailable|not currently available/i.test(
+  if (typeof err?.code === 'string' && TRANSIENT_CODES.has(err.code)) return true;
+  // El timeout de conexión de tedious llega como "Failed to connect to host:1433
+  // in 15000ms" (sin la palabra "timeout"); lo tratamos como transitorio.
+  return /timeout|failed to connect|ETIMEOUT|ESOCKET|ECONNCLOSED|ECONNRESET|currently unavailable|not currently available/i.test(
     err?.message || ''
   );
 }
