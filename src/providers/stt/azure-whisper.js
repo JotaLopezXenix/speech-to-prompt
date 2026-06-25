@@ -1,12 +1,19 @@
+import { DefaultAzureCredential } from '@azure/identity';
 import { STTProvider } from './base.js';
 import { textFromWords } from './words.js';
 
 // Azure OpenAI – Whisper. Misma API estilo OpenAI que Groq, pero el endpoint es
-// el del *deployment* del recurso y la autenticación va por cabecera `api-key`.
-// La config del recurso (endpoint, deployment, api-version) llega por variables de
-// entorno (App Settings en Azure); la clave llega por el constructor como en el
-// resto de proveedores. Datos dentro de Azure/UE (confidencialidad + crédito).
+// el del *deployment* del recurso. La config del recurso (endpoint, deployment,
+// api-version) llega por variables de entorno (App Settings en Azure); la clave
+// llega por el constructor como en el resto de proveedores. Datos dentro de
+// Azure/UE (confidencialidad + crédito).
+//
+// Auth: cabecera `api-key`, o —sin clave— Entra ID / Managed Identity vía
+// DefaultAzureCredential (scope de Cognitive Services). Es el camino secretless
+// (D3), simétrico a azure-openai.js: el recurso AOAI es el mismo y, tras el
+// Private Endpoint del flujo 6, ambos proveedores autentican por MI.
 const DEFAULT_API_VERSION = '2024-06-01';
+const ENTRA_SCOPE = 'https://cognitiveservices.azure.com/.default';
 
 export class AzureWhisperProvider extends STTProvider {
   get name() { return 'azure-whisper'; }
@@ -14,6 +21,15 @@ export class AzureWhisperProvider extends STTProvider {
   get models() {
     // En Azure el modelo lo define el *deployment*; se expone una etiqueta única.
     return [{ id: 'whisper', label: 'Azure OpenAI Whisper' }];
+  }
+
+  async _authHeaders() {
+    if (this.apiKey) return { 'api-key': this.apiKey };
+    // Sin clave → Entra ID / Managed Identity. DefaultAzureCredential elige la
+    // mejor credencial del entorno (MI en Azure; `az login`/env en local).
+    const token = await new DefaultAzureCredential().getToken(ENTRA_SCOPE);
+    if (!token) throw new Error('Azure OpenAI Whisper: no se pudo obtener token de Managed Identity/Entra.');
+    return { Authorization: `Bearer ${token.token}` };
   }
 
   async transcribe(audioBuffer, mimeType, _model) {
@@ -26,11 +42,9 @@ export class AzureWhisperProvider extends STTProvider {
         'Azure OpenAI Whisper sin configurar: faltan AZURE_OPENAI_ENDPOINT y/o AZURE_OPENAI_STT_DEPLOYMENT.'
       );
     }
-    if (!this.apiKey) {
-      throw new Error('Azure OpenAI Whisper sin API key (AZURE_OPENAI_API_KEY).');
-    }
 
     const url = `${endpoint}/openai/deployments/${deployment}/audio/transcriptions?api-version=${apiVersion}`;
+    const authHeaders = await this._authHeaders();
 
     const form = new FormData();
     const blob = new Blob([audioBuffer], { type: mimeType });
@@ -50,7 +64,7 @@ export class AzureWhisperProvider extends STTProvider {
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       response = await fetch(url, {
         method: 'POST',
-        headers: { 'api-key': this.apiKey },
+        headers: { ...authHeaders },
         body: form,
       });
 
