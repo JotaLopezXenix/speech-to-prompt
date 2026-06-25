@@ -66,9 +66,9 @@ Internet (HTTPS) ── Easy Auth (Entra) ──► App Service  speech-to-promp
 
 ## 3. Estructura / Delta
 
-### 3.1 Código — MODIFIED (un único fichero)
+### 3.1 Código — MODIFIED
 
-**`src/providers/stt/azure-whisper.js` — añadir camino Managed Identity (hoy es api-key only).**
+**(a) `src/providers/stt/azure-whisper.js` — añadir camino Managed Identity (hoy es api-key only).**
 
 Estado actual: el provider **exige** `AZURE_OPENAI_API_KEY` (lanza si falta) y fuerza la cabecera `'api-key'`. Para ser secretless tras el PE de AOAI, debe **autenticar por Entra/MI cuando no hay clave**, igual que ya hace `azure-openai.js`:
 
@@ -78,7 +78,11 @@ Estado actual: el provider **exige** `AZURE_OPENAI_API_KEY` (lanza si falta) y f
   - si no → `Authorization: Bearer <token>` con `new DefaultAzureCredential().getToken('https://cognitiveservices.azure.com/.default')`.
 - Aplicar esas cabeceras al `fetch` (sustituye al `headers: { 'api-key': this.apiKey }` fijo de la línea 53), manteniendo intacto el resto (FormData, `verbose_json`, reintento 429, fallback `words[]`).
 
-> El resto de proveedores Azure **no cambian**: `azure-openai.js`, `storage/azure.js` y `db.js` ya tienen su camino MI escrito; este flujo los **verifica** contra Azure real.
+**(b) `src/services/db.js` — añadir camino Entra para dev (`SQL_AUTH=entra-default`).**
+
+Resuelve el riesgo del DESIGN §11 (la MI no existe fuera de Azure): un desarrollador/admin puede ejecutar `migrate`/`seed-prompts` y depurar contra el **Azure SQL real (Entra-only)** desde su máquina, usando su identidad Entra vía `az login` (`azure-active-directory-default`), **sin secretos**. Opt-in explícito por env var; **no** altera el camino local (SQL auth) ni el de Azure (MI app-service). Necesario porque `seed-prompts` es Node (no SQL puro) y el servidor Azure es Entra-only.
+
+> El resto de proveedores Azure **no cambian**: `azure-openai.js`, `storage/azure.js` y el camino MI de App Service de `db.js` ya estaban escritos; este flujo los **verifica** contra Azure real.
 
 ### 3.2 App Settings del App Service — MODIFIED
 

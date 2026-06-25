@@ -37,6 +37,18 @@ function buildConfig() {
     };
   }
 
+  // Dev → Azure SQL con identidad Entra del desarrollador (vía `az login`).
+  // Resuelve el riesgo del DESIGN §11 (la MI no existe fuera de Azure): permite
+  // ejecutar migrate/seed-prompts y depurar contra el Azure SQL real (Entra-only)
+  // desde la máquina del admin, sin secretos. Opt-in explícito con SQL_AUTH.
+  if (process.env.SQL_AUTH === 'entra-default') {
+    return {
+      ...base,
+      authentication: { type: 'azure-active-directory-default' },
+      options: { ...base.options, encrypt: true },
+    };
+  }
+
   return {
     ...base,
     user: process.env.SQL_USER,
