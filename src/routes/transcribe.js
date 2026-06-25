@@ -75,7 +75,10 @@ async function handleAddSegment(req, res) {
 
     const config = getConfig();
     const sttName = config.defaults.stt_provider;
-    if (!config.api_keys[sttName]) {
+    // azure-whisper puede autenticar por Managed Identity (sin clave), como el LLM
+    // azure-openai; el resto de proveedores STT sí exige api-key.
+    const sttMI = sttName === 'azure-whisper' && !config.api_keys[sttName];
+    if (!config.api_keys[sttName] && !sttMI) {
       return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: `Falta la API key del proveedor STT (${sttName}). Configúrala en Ajustes.` } });
     }
 
@@ -162,7 +165,10 @@ router.post('/:id/reprocess', async (req, res) => {
 
     const config = getConfig();
     const sttName = config.defaults.stt_provider;
-    if (!config.api_keys[sttName]) {
+    // azure-whisper puede autenticar por Managed Identity (sin clave), como el LLM
+    // azure-openai; el resto de proveedores STT sí exige api-key.
+    const sttMI = sttName === 'azure-whisper' && !config.api_keys[sttName];
+    if (!config.api_keys[sttName] && !sttMI) {
       return res.status(400).json({ error: { code: 'MISSING_API_KEY', message: `Falta la API key del proveedor STT (${sttName}). Configúrala en Ajustes.` } });
     }
 
