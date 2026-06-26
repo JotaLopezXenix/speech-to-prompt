@@ -30,9 +30,14 @@ export class AzureOpenAIProvider extends LLMProvider {
     // deployment real se fija por entorno (LLM_MODEL). gpt-4.1 es el destilador
     // recomendado (workhorse equivalente a Sonnet); ver memoria del proyecto.
     return [
-      { id: 'gpt-4.1', label: 'GPT-4.1 (Azure OpenAI)' },
+      { id: 'gpt-4.1',      label: 'GPT-4.1 (Azure OpenAI)' },
       { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini (Azure OpenAI)' },
-      { id: 'gpt-5.1', label: 'GPT-5.1 (Azure OpenAI)' },
+      { id: 'gpt-5.1',      label: 'GPT-5.1 (Azure OpenAI)' },
+      { id: 'o3',           label: 'o3 (Azure OpenAI)' },
+      { id: 'o3-pro',       label: 'o3-pro (Azure OpenAI)' },
+      { id: 'o4-mini',      label: 'o4-mini (Azure OpenAI)' },
+      { id: 'gpt-5',        label: 'GPT-5 (Azure OpenAI)' },
+      { id: 'gpt-5.4',      label: 'GPT-5.4 (Azure OpenAI)' },
     ];
   }
 
@@ -70,7 +75,7 @@ export class AzureOpenAIProvider extends LLMProvider {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: text },
       ],
-      max_tokens: 16000,
+      max_completion_tokens: 16000,
     };
 
     const response = await fetch(url, {
