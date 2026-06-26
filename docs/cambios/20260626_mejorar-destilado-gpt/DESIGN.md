@@ -1,92 +1,47 @@
 # DESIGN — Mejorar destilado GPT (modo `completo`)
 
-**Fecha:** 2026-06-26  
-**Carpeta:** `docs/cambios/20260626_mejorar-destilado-gpt/`  
-**Estado:** Análisis completado — pendiente especificación (`/jcc-spec`)
+**Fecha:** 2026-06-26
+**Carpeta:** `docs/cambios/20260626_mejorar-destilado-gpt/`
+**Estado:** Implementado y validado por evaluación (ver §Resultado).
+
+> **Nota de corrección.** La primera iteración de este cambio (sesión anterior, ejecutada por error con Sonnet/esfuerzo bajo) reescribió `completo` en dirección **neutra + `[inferido]` + preguntas abiertas**, lo que lo colapsaba con `limpio` y se alejaba del objetivo real. Esa reescritura se **revirtió**. Este DESIGN refleja el enfoque corregido.
 
 ---
 
 ## Objetivo y problema
 
-El destilador usa `azure-openai / gpt-4.1`. El modo `completo` produce resultados inferiores a los que producía Claude Sonnet: pierde ideas del dictado, resuelve ambigüedades por su cuenta (cuando deben preservarse explícitas) y escribe en primera persona (cuando el formato debe ser neutro).
+El destilador usa `azure-openai / gpt-4.1`. En modo `completo`, su salida quedaba por debajo de la que producía Claude Sonnet. Queremos un prompt `completo` (ejecutado por GPT) cuya salida sea **comparable en calidad a la de Sonnet** para este modo.
 
-El output de `completo` alimenta sesiones de desarrollo profundo en Claude Code — un brief de diseño que Claude usará como punto de partida socrático. Necesita fidelidad total al dictado y ambigüedades visibles, no un resumen ejecutivo resuelto.
+**Contexto del cambio Sonnet→GPT.** No fue una decisión de calidad: en el cambio `azure-sql-multiusuario` (despliegue Azure + multiusuario) se descubrió que **Claude/Anthropic (Marketplace) no es creditable** contra el crédito Azure de la suscripción —solo **Azure OpenAI (first-party)** lo es—. Por esa restricción de facturación se pasó a GPT y se eligió `gpt-4.1` "por parecido a Sonnet", **sin análisis real del modelo ni re-tuneo del prompt**. Este cambio aborda esa deuda ahora que se empieza a usar la app en serio.
 
-### Causa raíz identificada
+## El golden (definición empírica de "bueno")
 
-`src/prompts/openai/completo.md` fue adaptado en la dirección equivocada cuando se migró de Claude a GPT:
+Se toma como referencia la destilación que hizo **Sonnet** sobre un dictado largo guardado en `data/sessions/2026-06-06T10-12-24.json` (modo `completo`). Sus rasgos —que definen el objetivo del modo `completo`— son:
 
-| Aspecto | Lo que hace hoy | Lo que necesita |
-|---|---|---|
-| Ambigüedades | Las resuelve decisivamente | Preservarlas con `[inferido]` + sección de preguntas abiertas |
-| Formato | Primera persona ("Quiero montar…") | Neutro / estructurado (como era la versión Claude) |
-| Ideas del dictado | Puede perderlas al "resolver" | Fidelidad total — ninguna idea se descarta |
-| Destinatario del output | No especificado | Claude Code en sesión socrática de diseño |
+- **Primera persona** ("Quiero…", "Mi método actual…"): es el mensaje del propio usuario, listo para pegar.
+- **Brief cerrado:** resuelve ambigüedades manteniendo la interpretación más probable; **sin** `[inferido]` ni sección meta de "preguntas abiertas". Las dudas reales del usuario aparecen como contenido en 1ª persona.
+- **Corrige en silencio** los nombres mal transcritos por la voz a texto (Cloud→Claude, Antropic→Anthropic, Cloud Code→Claude Code…).
+- **Denso y reestructurado** por lógica; preserva todas las ideas sustantivas y los datos concretos.
 
----
+Esto distingue claramente `completo` de `limpio` (neutro, preserva ambigüedades, `[inferido]`, sección de preguntas, sin sintetizar). Ambos modos se mantienen y son distintos.
 
-## Usuarios y caso de uso
+## Destinatario del resultado
 
-**Usuario único:** Jesus Lopez — arquitecto de software, español con code-switching técnico en inglés, dicta en largo (sesiones de 10–40 min) para iniciar diseños de aplicaciones nuevas o cambios profundos.
+El brief `completo` se pega como **primer turno de una sesión de Claude Code** para arrancar un diseño/desarrollo profundo socrático. Por tanto: prompt destilador **afinado para GPT** (instrucciones explícitas y literales, porque GPT las sigue al pie de la letra), pero **artefacto de salida afinado para Claude Code**.
 
-**Caso de uso central:** Dictado largo → transcripción → `completo` → brief neutro y fiel → pegado en Claude Code como arranque de sesión de diseño profundo.
+## Enfoque
 
----
+1. **Afinar el prompt `src/prompts/openai/completo.md` para GPT**, codificando explícitamente lo que Sonnet hacía por criterio: corrección de nombres mal transcritos, objetivo de densidad proporcional al contenido (sin perder datos concretos), primera persona, brief cerrado.
+2. **Evaluación empírica** modelo × prompt contra el golden, vía script `scripts/eval-distill.mjs` (re-destila transcripciones reales de `data/sessions/` y guarda artefactos en `eval/`). Principio de selección de modelo: **el más barato que supere el listón del golden; escalar solo si los baratos no llegan.**
 
 ## Alcance
 
-### Dentro del alcance
+**Dentro:** reescribir `openai/completo.md`; script y artefactos de evaluación; elegir modelo.
+**Fuera:** modos `ligero`/`literal`/`limpio` (no se tocan); familia `claude` (deshabilitada); UI de ajustes; migración de sesiones históricas; despliegue a producción (decisión aparte).
 
-1. **Reescribir `src/prompts/openai/completo.md`** — formato neutro, preservación de ambigüedades, sección de preguntas abiertas, instrucciones calibradas para GPT pero output diseñado para Claude Code.
-2. **Añadir modelos al registro** (`dbo.llm_models`) para experimentar desde la app. Candidatos confirmados disponibles en `aoai-speech-to-prompt` (todo el catálogo Azure OpenAI): `o3`, `o3-pro`, `o4-mini`, `gpt-5`, `gpt-5.1`, `gpt-5.4`. La selección final (qué añadir, cuál dejar como default) se decide tras validar calidad + coste.
-3. **Iterar mediante la app** — re-destilar transcripciones existentes con el prompt revisado y/o modelos alternativos, sin cambios en la UI ni en el flujo.
+## Resultado
 
-### Fuera de alcance
-
-- Modos `ligero`, `literal`, `limpio` — no están rotos.
-- Prompts de familia `claude` — Claude está deshabilitado como destilador.
-- Cambios en UI de ajustes (proveedores legacy visibles) — deuda técnica separada.
-- Habilitar Claude como destilador — restricción dura: Azure OpenAI únicamente.
-- Migración de sesiones históricas.
-
----
-
-## Decisiones acordadas
-
-| Decisión | Valor | Tipo |
-|---|---|---|
-| Proveedor destilador | Azure OpenAI (sin cambio) | Restricción dura |
-| Formato del output | Neutro / estructurado (no primera persona) | Acordada |
-| Ambigüedades | Preservar con `[inferido]` + sección "❓ Preguntas abiertas" | Acordada |
-| Destinatario explícito en el prompt | Claude Code, sesión socrática de diseño | Acordada |
-| Experimentación de modelos | Añadir candidatos a `dbo.llm_models`; probar desde la app | Acordada |
-| Iteración | Desde la app (re-destilar transcripciones existentes) | Acordada |
-
----
-
-## Qué se preserva (superficie de regresión)
-
-- **Flujo de destilación** (`routes/distill.js`, `src/services/prompts.js`) — sin cambios.
-- **Esquema DB** (`dbo.model_prompts`, `dbo.llm_models`) — sin cambios estructurales; solo datos.
-- **Modos `ligero`, `literal`, `limpio`** — sin cambios.
-- **Override de system prompt por sesión** — sigue funcionando igual.
-- **`npm run seed-prompts`** — el re-seed con el prompt revisado es el mecanismo de despliegue; idempotente.
-- **Sesiones históricas** — no se tocan; `distill_prompt_used` guarda el prompt exacto de cada sesión.
-
----
-
-## Supuestos
-
-- El despliegue Azure OpenAI tiene o puede tener modelos `o3` / `o1` habilitados (a confirmar antes de añadirlos al registro).
-- El problema de calidad es principalmente del prompt, no del modelo — pero se experimentará con ambos en paralelo.
-- Re-destilar transcripciones largas existentes desde la app es suficiente para iterar sin necesidad de scripts adicionales.
-
-## Riesgos
-
-- GPT (incluso `o3`) puede tener un techo de calidad inferior a Claude Sonnet para este caso de uso — si tras iterar el resultado sigue siendo insuficiente, habrá que reconsiderar la restricción de proveedor.
-- Un prompt demasiado parecido al de `limpio` puede hacer que `completo` y `limpio` se solapen — hay que mantener la distinción clara (propósito, densidad, profundidad).
-
-## Preguntas abiertas
-
-- ~~¿Qué modelos están disponibles en `aoai-speech-to-prompt`?~~ **Resuelto:** catálogo completo Azure OpenAI disponible (o3, o3-pro, o4-mini, gpt-5, gpt-5.1, gpt-5.4, entre otros).
-- El modelo default se decide tras validar calidad + coste en pruebas iterativas desde la app.
+- **Modelo elegido: `gpt-4.1`** (el más barato de los probados). Con el prompt afinado (v3) **iguala el golden** en una evaluación sobre **5 sesiones** largas y de dominios distintos. Cumple el principio coste-primero.
+- `gpt-5.4` quedó **peor** para esta tarea pese a ser más caro: poco denso (transcript pulido en vez de brief) y con algún error factual. Los candidatos (`gpt-5`, `gpt-5.1`, `gpt-5.4`, `o3`, `o3-pro`, `o4-mini`) quedan en el registro con `enabled=0`.
+- **Debilidades residuales conocidas** de `gpt-4.1`: en dictados extremadamente largos tiende a comprimir (mitigado en v3 instruyendo preservar datos concretos), y falla la corrección de nombres de nicho (Qwen, LLaMA…). Asumibles: el usuario revisa el brief antes de pegarlo.
+- Detalle de la evaluación y artefactos: ver `SPEC-01`, `SPEC-02` y la carpeta `eval/`.

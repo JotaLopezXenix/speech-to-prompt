@@ -1,0 +1,22 @@
+Quiero analizar la posibilidad de migrar mi metodología de análisis y diseño de soluciones, actualmente basada en Claude Chat (ecosistema Anthropic), a Claude Cowork para acceder a potenciales ventajas y resolver algunos problemas recurrentes.
+
+Contexto actual y metodología en Claude Chat
+
+- Utilizo Claude principalmente en el entorno Chat, iniciando proyectos en Plot. Presento objetivos y necesidades en conversaciones iniciales, y todo el análisis y diseño lo desarrollo mediante diálogo socrático con el modelo, que asume el rol que le indico.
+- Para evitar saturar el contexto y perder información relevante, corto conversaciones extensas y documento sus resultados en Markdown, reutilizando esos documentos como base para siguientes conversaciones frescas. Así documento progresivamente el análisis y el diseño hasta llegar a especificaciones listas para Claude Code (desarrollo).
+- Los archivos generados se suelen acumular en la zona de archivos del proyecto para facilitar base de conocimiento común. Sin embargo, he detectado varias limitaciones importantes:
+  1. Bugs frecuentes en la indexación de archivos: algunos quedan “indexando” indefinidamente y no se incorporan bien al proyecto, obligándome a identificar manualmente qué archivo provoca el problema (bug reconocido por Anthropic).
+  2. Límite difuso en el número de archivos: superados 12-14 documentos, se activa automáticamente un sistema RAG que indexa de forma semántica los documentos y los expone por búsquedas; sin embargo, el proceso no está bien documentado y la recuperación de información es deficiente y poco fiable, con pérdidas notables (problema reportado en comunidad y por la propia Anthropic).
+  3. Falta de control: cuando los archivos están en el proyecto Chat de Claude, pierdo control sobre versiones y la gestión resulta opaca, sin fácil recuperación tras borrados.
+- Para evitar estos problemas, he optado recientemente por mantener los documentos exclusivamente en carpetas locales sincronizadas vía GitHub, gestionando manualmente el aporte de documentos a cada conversación según sea necesario. De esta forma, todos los documentos relevantes están bajo mi control y versión, y sólo los incorporo explícitamente en el contexto de cada turno conversacional según la necesidad—siguiendo la recomendación de la propia Anthropic y de miembros de la comunidad.
+
+Objetivos y dudas sobre Claude Cowork
+
+Quiero estudiar si Claude Cowork puede replicar y mejorar este workflow:
+
+1. Acceso a documentos: ¿Cowork permite trabajar directamente sobre la carpeta local del equipo, de modo que los documentos del proyecto (repositorio local sincronizado) formen la base para el diálogo y análisis de soluciones? ¿Cómo trata Cowork estos documentos respecto a versiones, indexación y visibilidad? ¿Es posible enganchar mi carpeta local sin perder control?
+2. Conversaciones: ¿La dinámica de análisis y diseño mediante diálogo socrático (con ventanas de contexto, roles, documentos incorporados en contexto, etc.) es idéntica o suficientemente similar en Cowork respecto a Chat? ¿La selección de modelos (Opus, etc.) y las funcionalidades asociadas son las mismas? ¿Hay diferencias sustanciales en la forma de analizar los proyectos o plantear el diseño en Cowork versus Chat?
+3. Instrucciones de proyecto: En Claude Chat, las instrucciones del proyecto son fundamentales y he desarrollado una skill específica para estructurarlas correctamente porque impactan todas las conversaciones bajo ese proyecto. ¿Claude Cowork permite definir instrucciones de proyecto equivalentes? ¿Cuál es su formato, estructura y alcance? ¿Necesitan especial tratamiento para resultar óptimas?
+4. Funcionalidades adicionales: ¿Qué funcionalidades propias y diferenciadoras aporta Claude Cowork respecto a Chat en el flujo de análisis y diseño? Específicamente, me interesa saber si hay herramientas para generación de documentos en distintos formatos, manejo de versiones, integración con repositorios, funcionalidades colaborativas, etc.
+
+Necesito entender si Cowork puede mejorar la eficiencia, fiabilidad y control del análisis y diseño en mis proyectos, y si se adapta a mis prácticas actuales sin generar nuevas restricciones ni problemas.

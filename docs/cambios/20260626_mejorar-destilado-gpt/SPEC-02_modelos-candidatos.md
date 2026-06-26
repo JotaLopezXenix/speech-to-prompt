@@ -3,6 +3,8 @@
 **Cambio:** `docs/cambios/20260626_mejorar-destilado-gpt/`  
 **Por qué:** ver DESIGN.md — experimentar con modelos más capaces (o3, gpt-5, etc.) desde la app sin tocar el default actual.
 
+> **Resultado de la evaluación (2026-06-26).** El modelo elegido para destilar es **`gpt-4.1`** (`enabled=1`, `is_default=1`): con el prompt afinado iguala al golden y es el más barato (principio coste-primero). `gpt-5.4` se probó y quedó peor para esta tarea → vuelve a `enabled=0`. Todos los candidatos quedan `enabled=0`, listos para activar uno a uno si en el futuro hace falta escalar. El cambio `max_tokens`→`max_completion_tokens` se mantiene (compatible con todos; obligatorio para reasoning).
+
 ---
 
 ## 1. Resumen
