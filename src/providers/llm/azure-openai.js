@@ -32,12 +32,6 @@ export class AzureOpenAIProvider extends LLMProvider {
     return [
       { id: 'gpt-4.1',      label: 'GPT-4.1 (Azure OpenAI)' },
       { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini (Azure OpenAI)' },
-      { id: 'gpt-5.1',      label: 'GPT-5.1 (Azure OpenAI)' },
-      { id: 'o3',           label: 'o3 (Azure OpenAI)' },
-      { id: 'o3-pro',       label: 'o3-pro (Azure OpenAI)' },
-      { id: 'o4-mini',      label: 'o4-mini (Azure OpenAI)' },
-      { id: 'gpt-5',        label: 'GPT-5 (Azure OpenAI)' },
-      { id: 'gpt-5.4',      label: 'GPT-5.4 (Azure OpenAI)' },
     ];
   }
 

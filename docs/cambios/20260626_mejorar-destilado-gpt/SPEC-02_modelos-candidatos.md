@@ -3,7 +3,9 @@
 **Cambio:** `docs/cambios/20260626_mejorar-destilado-gpt/`  
 **Por qué:** ver DESIGN.md — experimentar con modelos más capaces (o3, gpt-5, etc.) desde la app sin tocar el default actual.
 
-> **Resultado de la evaluación (2026-06-26).** El modelo elegido para destilar es **`gpt-4.1`** (`enabled=1`, `is_default=1`): con el prompt afinado iguala al golden y es el más barato (principio coste-primero). `gpt-5.4` se probó y quedó peor para esta tarea → vuelve a `enabled=0`. Todos los candidatos quedan `enabled=0`, listos para activar uno a uno si en el futuro hace falta escalar. El cambio `max_tokens`→`max_completion_tokens` se mantiene (compatible con todos; obligatorio para reasoning).
+> **DESCARTADO (2026-06-26).** Tras la evaluación, **`gpt-4.1` (el de la migración 004) es suficiente** y es el modelo elegido. El enfoque de "registro de candidatos" de esta SPEC se **abandona**: la migración `005_llm_models_candidates.sql` se **elimina** (no se aplica a producción ni se conserva en el repo) y la lista de modelos del provider se recorta a los reales (`gpt-4.1`, `gpt-4.1-mini`). El cambio `max_tokens`→`max_completion_tokens` en el provider **sí se mantiene** (verificado con `gpt-4.1`; forward-compatible). Si en el futuro hace falta escalar a un modelo más capaz, se añade ese modelo concreto al registro en su momento, no un catálogo especulativo.
+>
+> Lo que sigue documenta el enfoque original (descartado), a efectos de registro.
 
 ---
 

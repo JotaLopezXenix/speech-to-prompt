@@ -42,6 +42,6 @@ El brief `completo` se pega como **primer turno de una sesión de Claude Code** 
 ## Resultado
 
 - **Modelo elegido: `gpt-4.1`** (el más barato de los probados). Con el prompt afinado (v3) **iguala el golden** en una evaluación sobre **5 sesiones** largas y de dominios distintos. Cumple el principio coste-primero.
-- `gpt-5.4` quedó **peor** para esta tarea pese a ser más caro: poco denso (transcript pulido en vez de brief) y con algún error factual. Los candidatos (`gpt-5`, `gpt-5.1`, `gpt-5.4`, `o3`, `o3-pro`, `o4-mini`) quedan en el registro con `enabled=0`.
+- `gpt-5.4` quedó **peor** para esta tarea pese a ser más caro: poco denso (transcript pulido en vez de brief) y con algún error factual. **Se descarta el enfoque de "registro de candidatos":** la migración 005 se elimina y la lista de modelos del provider se recorta a los reales. `gpt-4.1` (de la migración 004) es suficiente; si en el futuro hace falta escalar, se añade el modelo concreto en su momento.
 - **Debilidades residuales conocidas** de `gpt-4.1`: en dictados extremadamente largos tiende a comprimir (mitigado en v3 instruyendo preservar datos concretos), y falla la corrección de nombres de nicho (Qwen, LLaMA…). Asumibles: el usuario revisa el brief antes de pegarlo.
 - Detalle de la evaluación y artefactos: ver `SPEC-01`, `SPEC-02` y la carpeta `eval/`.
