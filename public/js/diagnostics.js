@@ -7,6 +7,7 @@ import { api } from './api-client.js';
 
 const FLUSH_AT = 50;       // tamaño de buffer que dispara un flush
 const BUFFER_CAP = 500;    // tope defensivo si la red está caída (descarta lo más viejo)
+const MAX_BATCH = 100;     // troceo por POST: el servidor rechaza lotes > 200 (413)
 
 // Eventos que, al registrarse, fuerzan un flush inmediato (son los relevantes
 // para el diagnóstico y no queremos perderlos si la pestaña se cierra).
@@ -22,6 +23,7 @@ let seq = 0;
 let sessionId = null;
 let buffer = [];
 let runActive = false; // true mientras hay una grabación en curso
+let flushing = false;  // guarda anti-concurrencia para flush()
 
 function isSuspicious(type, payload) {
   if (SUSPICIOUS.has(type)) return true;
@@ -62,18 +64,27 @@ export function logEvent(type, payload = {}) {
   if (isSuspicious(type, payload) || buffer.length >= FLUSH_AT) flush();
 }
 
-// Envía el buffer pendiente. En éxito lo vacía; en fallo lo conserva (se reintenta
-// en el próximo flush). Nunca lanza.
+// Envía el buffer pendiente en tandas de <= MAX_BATCH (el servidor rechaza > 200).
+// Cada tanda se reclama ANTES del await (así flushBeacon no la reenvía) y, si falla,
+// se re-encola por delante y se corta (reintento en el próximo flush). Nunca lanza.
+// La guarda `flushing` evita envíos solapados (logEvent llama a flush sin await).
 export async function flush() {
-  if (buffer.length === 0) return;
-  const batch = buffer;
-  buffer = [];
+  if (flushing || buffer.length === 0) return;
+  flushing = true;
   try {
-    await api.postDiagnostics(batch);
-  } catch {
-    // Re-encolar lo no enviado por delante de lo nuevo (best-effort).
-    buffer = batch.concat(buffer);
-    if (buffer.length > BUFFER_CAP) buffer.splice(0, buffer.length - BUFFER_CAP);
+    while (buffer.length > 0) {
+      const batch = buffer.slice(0, MAX_BATCH);
+      buffer = buffer.slice(batch.length); // reclama la tanda antes del await
+      try {
+        await api.postDiagnostics(batch);
+      } catch {
+        buffer = batch.concat(buffer); // re-encola lo no enviado por delante
+        if (buffer.length > BUFFER_CAP) buffer.splice(0, buffer.length - BUFFER_CAP);
+        break;
+      }
+    }
+  } finally {
+    flushing = false;
   }
 }
 

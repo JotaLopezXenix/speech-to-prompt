@@ -331,6 +331,7 @@ export function renderPhase1(container, { onComplete }) {
         updateUI();
         attachMeterToStream(recorder.stream);
       } catch (err) {
+        diag.endCaptureRun(); // el run no llegó a arrancar: ciérralo (evita visibility_change huérfanos)
         showError(err.name === 'NotAllowedError'
           ? 'Se necesita acceso al micrófono. Permite el acceso y vuelve a intentarlo.'
           : `Error al iniciar la grabación: ${err.message}`);
