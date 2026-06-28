@@ -52,4 +52,8 @@ export const api = {
 
   // System prompts por defecto de cada modo, para verlos/editarlos antes de destilar.
   getPrompts: () => request('GET', '/prompts'),
+
+  // Telemetría de captura (lote de eventos de diagnóstico). Best-effort: el
+  // llamador (diagnostics.js) ignora los errores para no romper la grabación.
+  postDiagnostics: (events) => request('POST', '/diagnostics', { events }),
 };

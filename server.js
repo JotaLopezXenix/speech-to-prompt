@@ -9,6 +9,7 @@ import sessionsRouter from './src/routes/sessions.js';
 import transcribeRouter from './src/routes/transcribe.js';
 import distillRouter from './src/routes/distill.js';
 import promptsRouter from './src/routes/prompts.js';
+import diagnosticsRouter from './src/routes/diagnostics.js';
 import { identity } from './src/middleware/identity.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -38,6 +39,9 @@ app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', transcribeRouter);
 app.use('/api/sessions', distillRouter);
 app.use('/api/prompts', promptsRouter);
+// Telemetría de captura: owner-scoped (mismo principal que /api/sessions).
+app.use('/api/diagnostics', identity);
+app.use('/api/diagnostics', diagnosticsRouter);
 
 // Fallback: serve index.html for any non-API route
 app.get('*', (req, res) => {

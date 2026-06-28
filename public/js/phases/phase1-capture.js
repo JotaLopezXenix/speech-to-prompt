@@ -1,6 +1,7 @@
 import { AudioRecorder, formatTime } from '../audio-recorder.js';
 import { api } from '../api-client.js';
 import { checkAudio } from '../audio-guards.js';
+import * as diag from '../diagnostics.js';
 
 const PREFERRED_MIC_KEY = 'stp.preferredMicId';
 
@@ -134,6 +135,10 @@ export function renderPhase1(container, { onComplete }) {
 
   recorder.onTimeUpdate = (seconds) => { timer.textContent = formatTime(seconds); };
 
+  // Instrumentación + salvaguarda (cambio grabacion-stop-espontaneo).
+  recorder.onDiag = (type, payload) => diag.logEvent(type, payload);
+  recorder.onExternalStop = handleExternalStop;
+
   // --- Render de la sesión (segmentos + transcripción acumulada) -------------
 
   function renderSession() {
@@ -178,13 +183,76 @@ export function renderPhase1(container, { onComplete }) {
     });
   }
 
+  // Banner de la salvaguarda: la grabación se cortó sola; ofrecemos guardar el
+  // tramo recuperado o descartarlo. Resuelve true = guardar.
+  function confirmRecoveredAudio() {
+    return new Promise((resolve) => {
+      warnBox.hidden = false;
+      warnBox.innerHTML = `
+        <strong>La grabación se detuvo de forma inesperada.</strong>
+        <p>Hemos conservado el audio grabado hasta el corte. ¿Guardar este tramo?</p>
+        <div class="phase-actions">
+          <button class="btn-primary" id="btn-keep-rec">Guardar este tramo</button>
+          <button class="btn-ghost" id="btn-discard-rec">Descartar</button>
+        </div>
+      `;
+      warnBox.querySelector('#btn-keep-rec').addEventListener('click', () => { warnBox.hidden = true; resolve(true); });
+      warnBox.querySelector('#btn-discard-rec').addEventListener('click', () => { warnBox.hidden = true; resolve(false); });
+    });
+  }
+
+  // Salvaguarda ante un stop EXTERNO del recorder (lo invoca recorder.onExternalStop).
+  // Arregla la UI congelada (updateUI) y rescata el blob en vez de perderlo al
+  // volver a Grabar. NO es la UX de recuperación definitiva (eso es el cambio futuro).
+  async function handleExternalStop(blob, meta) {
+    stopMediaSessionProbe();
+    diag.logEvent('chunks_preserved', { chunkCount: meta?.chunkCount, totalBytes: meta?.totalBytes });
+    updateUI(); // el recorder ya está inactivo: descongela el botón/cronómetro
+
+    if (blob && blob.size > 0) {
+      const keep = await confirmRecoveredAudio();
+      if (keep) {
+        diag.logEvent('recovered_segment_kept', { totalBytes: blob.size });
+        await commitSegment(blob, { source: 'recorded', seconds: meta?.elapsedSeconds || 0, skipGuard: true });
+      } else {
+        diag.logEvent('recovered_segment_discarded', {});
+        updateUI();
+        await startPreview(selectedDeviceId);
+      }
+    } else {
+      diag.logEvent('recovered_segment_empty', {});
+      updateUI();
+      await startPreview(selectedDeviceId);
+    }
+    diag.endCaptureRun();
+  }
+
+  // Sonda de Media Session: registra handlers que SOLO logan, para cazar media-keys
+  // (p.ej. de auriculares Bluetooth) que podrían estar activando el botón (H1).
+  function startMediaSessionProbe() {
+    const ms = navigator.mediaSession;
+    if (!ms?.setActionHandler) return;
+    for (const action of ['play', 'pause', 'stop']) {
+      try { ms.setActionHandler(action, () => diag.logEvent('mediasession_action', { action })); } catch {}
+    }
+  }
+
+  function stopMediaSessionProbe() {
+    const ms = navigator.mediaSession;
+    if (!ms?.setActionHandler) return;
+    for (const action of ['play', 'pause', 'stop']) {
+      try { ms.setActionHandler(action, null); } catch {}
+    }
+  }
+
   // --- Confirmar y subir un segmento -----------------------------------------
 
-  async function commitSegment(blob, { source = 'recorded', seconds = 0, filename = 'audio.webm' }) {
+  async function commitSegment(blob, { source = 'recorded', seconds = 0, filename = 'audio.webm', skipGuard = false }) {
     hideError();
 
-    // Guard solo para grabaciones; un import es deliberado.
-    if (source === 'recorded') {
+    // Guard solo para grabaciones; un import es deliberado. `skipGuard` lo usa la
+    // salvaguarda de corte externo: ese tramo ya se confirmó guardarlo aparte.
+    if (source === 'recorded' && !skipGuard) {
       const verdict = checkAudio(blob.size, seconds);
       if (verdict.level !== 'ok') {
         const send = await confirmSuspectAudio(verdict.message);
@@ -202,6 +270,7 @@ export function renderPhase1(container, { onComplete }) {
       if (!sessionId) {
         const s = await api.createSession();
         sessionId = s.id;
+        diag.setSessionId(sessionId);
       }
       const res = await api.addSegment(sessionId, blob, { source, filename });
       segments = (res.session && res.session.segments) || segments;
@@ -219,7 +288,18 @@ export function renderPhase1(container, { onComplete }) {
 
   // --- Grabación -------------------------------------------------------------
 
-  btnRecord.addEventListener('click', async () => {
+  btnRecord.addEventListener('click', async (e) => {
+    // Instrumentación: ¿la activación es un click real del usuario o sintética
+    // (tecla/botón multimedia BT)? `isTrusted=false` o `detail===0` delata H1.
+    diag.logEvent('record_button_activated', {
+      isTrusted: e.isTrusted,
+      detail: e.detail,
+      pointerType: e.pointerType ?? null,
+      viaKeyboard: e.detail === 0,
+      activeElement: document.activeElement?.id || null,
+      recorderState: recorder.mediaRecorder?.state || 'inactive',
+    });
+
     if (busy) return;
     hideError();
 
@@ -228,17 +308,26 @@ export function renderPhase1(container, { onComplete }) {
       const seconds = recorder.getElapsedSeconds();
       btnRecord.disabled = true;
       const blob = await recorder.stop();
+      stopMediaSessionProbe();
       if (blob && blob.size > 0) {
         await commitSegment(blob, { source: 'recorded', seconds });
       } else {
         updateUI();
         await startPreview(selectedDeviceId);
       }
+      diag.endCaptureRun();
     } else {
       // Empezar un nuevo segmento
       stopPreview();
+      diag.startCaptureRun();
+      diag.logEvent('capture_started', {
+        deviceId: selectedDeviceId || null,
+        userAgent: navigator.userAgent,
+        visibilityState: document.visibilityState,
+      });
       try {
         await recorder.start(selectedDeviceId || null);
+        startMediaSessionProbe();
         updateUI();
         attachMeterToStream(recorder.stream);
       } catch (err) {
