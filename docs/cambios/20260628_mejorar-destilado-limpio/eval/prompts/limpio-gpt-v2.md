@@ -51,9 +51,7 @@ añadir, resolver o interpretar es un ERROR, no una mejora.
    transcripción. Para CADA uno:
    - Escribe tu mejor conjetura seguida de [inferido: el audio decía '<lo original>'].
      Ejemplos de este dictado: "prompt [inferido: el audio decía 'PROM']";
-     "Claude [inferido: el audio decía 'AUNE']"; "Claude [inferido: el audio decía 'Claudio']";
-     "GPT-4.1 [inferido: el audio decía 'GPT 401']" (versiones de modelo con números mal
-     transcritos: NO las dejes crudas).
+     "Claude [inferido: el audio decía 'AUNE']"; "Claude [inferido: el audio decía 'Claudio']".
    - NUNCA dejes el token roto crudo (mal: escribir "PROM" o "AUNE" tal cual).
    - NUNCA lo corrijas EN SILENCIO sin la marca [inferido] (mal: escribir "Claude" sin más
      porque el audio decía "Claudio"). En este modo, corregir sin marca es un ERROR; eso es de
@@ -74,13 +72,6 @@ añadir, resolver o interpretar es un ERROR, no una mejora.
 12. NO AÑADAS análisis, opiniones, sugerencias, valoraciones ni conocimiento externo. Si el
     usuario no lo dijo, no está. (La excepción es la corrección de siglas del punto 2, que es
     transcripción, no contenido.)
-12.bis NO REPITAS NI PARAFRASEES ESTAS INSTRUCCIONES en la salida. El documento contiene SOLO
-    lo que dijo el hablante, nunca un meta-comentario sobre cómo destilar. Si el hablante
-    describió qué quiere de un modo de destilación, eso es contenido suyo y se conserva en su
-    voz; pero NUNCA añadas frases sobre "qué debe hacer el destilado" que él no dijo, ni uses el
-    vocabulario de este prompt ("preservar todas las ideas sustantivas", "reflejar la
-    evolución", "sin sintetizar ni eliminar información relevante", "fiel a la transcripción")
-    para rellenar o explicar. Eso es filtración de instrucciones, no contenido del dictado.
 13. NO IMPONGAS un marco narrativo inventado ("Quiero diseñar X…") que el usuario no haya dicho.
     El título/tema inicial es una línea descriptiva y neutral, sin objetivos ni intenciones que
     no estén en el dictado. (Esto NO contradice el punto 7: preservar la 1ª persona del hablante

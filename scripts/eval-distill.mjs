@@ -33,7 +33,11 @@ const sessionId   = basename(sessionRel).replace(/\.json$/, '');
 // (ruta relativa a la raíz del repo o absoluta) para probar variantes.
 const promptRel   = process.env.EVAL_PROMPT || 'src/prompts/openai/completo.md';
 const PROMPT_MD   = isAbsolute(promptRel) ? promptRel : join(ROOT, promptRel);
-const EVAL_DIR    = join(ROOT, 'docs/cambios/20260626_mejorar-destilado-gpt/eval');
+// Carpeta de artefactos: por defecto la del cambio `completo` (20260626); override
+// con EVAL_OUT_DIR (ruta relativa a la raíz o absoluta) para que cada cambio guarde
+// sus artefactos en su propia carpeta.
+const evalDirRel  = process.env.EVAL_OUT_DIR || 'docs/cambios/20260626_mejorar-destilado-gpt/eval';
+const EVAL_DIR    = isAbsolute(evalDirRel) ? evalDirRel : join(ROOT, evalDirRel);
 const OUT_DIR     = join(EVAL_DIR, 'out');
 // Etiqueta opcional para no pisar salidas de otras variantes: out/<modelo>.<tag>.md
 const TAG         = process.env.EVAL_TAG ? `.${process.env.EVAL_TAG}` : '';

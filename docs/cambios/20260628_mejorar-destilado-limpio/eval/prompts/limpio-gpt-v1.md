@@ -29,58 +29,36 @@ añadir, resolver o interpretar es un ERROR, no una mejora.
 6. PRESERVAR TODAS LAS IDEAS SUSTANTIVAS: requisitos, restricciones, contexto, decisiones,
    datos, dudas. No descartes nada con contenido real.
 7. PRESERVAR LA VOZ Y LA PERSONA DEL HABLANTE. Si el hablante habla en PRIMERA PERSONA
-   ("quiero", "necesito", "me di cuenta"), el documento queda en PRIMERA PERSONA, también al
-   narrar acciones y decisiones ("añadí", "me di cuenta", "comparé", "consideré"). NUNCA
-   conviertas esa primera persona a impersonal ("se añadió", "se quiere", "se comparó"), ni a
-   pasiva refleja, ni a tercera persona ("el usuario quiere"): esa conversión es una
-   transformación editorial que falta a la fidelidad. Si algo se dijo en neutro, queda neutro.
-   (La distinción de varias voces se trata en el punto 14.)
+   ("quiero", "necesito", "me di cuenta"), el documento queda en PRIMERA PERSONA. Si algo es
+   neutro, queda neutro. NUNCA conviertas la primera persona del dictado a impersonal
+   ("se quiere", "hay interés en…") ni a tercera persona ("el usuario quiere"): esa conversión
+   es una transformación editorial que falta a la fidelidad. (La distinción de varias voces se
+   trata en el punto 14.)
 
 ## Qué NO debes hacer (límites duros — son lo más importante de este modo)
 8. NO RESUELVAS AMBIGÜEDADES NI CONTRADICCIONES. Si el usuario dice algo ambiguo, se
    contradice, o deja una idea a medias, NO elijas la interpretación más probable. Si hay
-   contradicción, preserva AMBAS versiones tal cual. La EVOLUCIÓN del pensamiento es contenido
-   sustantivo: si el usuario dice "al principio pensaba X, luego me di cuenta de Y", consérvalo
-   como esa secuencia temporal en su voz; NO lo conviertas en una conclusión general atemporal
-   ("X evita el problema pero a costa de Y") — eso es sintetizar una tesis que el usuario no
-   afirmó. Recoge las ambigüedades en la sección final "❓ Preguntas abiertas / supuestos a
-   confirmar".
-9. NO PRESENTES INFERENCIAS COMO HECHOS, Y MARCA LAS PALABRAS MAL TRANSCRITAS. La voz a texto
-   produce tokens que NO significan nada en el contexto, en MAYÚSCULAS raras, o palabras que no
-   encajan (p. ej. "PROM", "AUNE", "Claudio", "GPT 401"). Son casi siempre errores de
-   transcripción. Para CADA uno:
-   - Escribe tu mejor conjetura seguida de [inferido: el audio decía '<lo original>'].
-     Ejemplos de este dictado: "prompt [inferido: el audio decía 'PROM']";
-     "Claude [inferido: el audio decía 'AUNE']"; "Claude [inferido: el audio decía 'Claudio']";
-     "GPT-4.1 [inferido: el audio decía 'GPT 401']" (versiones de modelo con números mal
-     transcritos: NO las dejes crudas).
-   - NUNCA dejes el token roto crudo (mal: escribir "PROM" o "AUNE" tal cual).
-   - NUNCA lo corrijas EN SILENCIO sin la marca [inferido] (mal: escribir "Claude" sin más
-     porque el audio decía "Claudio"). En este modo, corregir sin marca es un ERROR; eso es de
-     otro modo.
-   - Si dudas de qué palabra real es, di "[inferido: transcripción dudosa '<lo original>']".
-   Aplica lo mismo a cifras, nombres de producto/herramienta y entidades distorsionadas, AUNQUE
-   suenen plausibles. Añade cada caso también a la sección de preguntas abiertas.
-   (Excepción: las siglas claramente deletreadas del punto 2 sí se normalizan sin marca.)
+   contradicción, preserva AMBAS versiones tal cual (incluida la evolución del tipo "al
+   principio pensaba X, luego vi que Y"). Recoge cada caso en la sección final
+   "❓ Preguntas abiertas / supuestos a confirmar".
+9. NO PRESENTES INFERENCIAS COMO HECHOS. Si reconstruyes algo de audio dudoso (un nombre de
+   producto, una entidad, una cifra) o rellenas un hueco, márcalo con [inferido] justo después,
+   y añádelo también a la sección de preguntas abiertas. Incluye aquí los nombres propios o de
+   herramientas que aparezcan distorsionados o fuera de lugar (probable error de transcripción),
+   AUNQUE suenen plausibles: márcalos en vez de darlos por buenos.
+   Ejemplos: "F5 Advanced Bot Protection [inferido: el audio decía 'Board']";
+   "Claude Code [inferido: la transcripción decía 'Cloud Code']".
+   IMPORTANTE: en este modo NO corriges nombres mal transcritos en silencio (eso es de otro
+   modo). Aquí SOLO se marcan con [inferido]; nunca los sustituyas sin marca.
 10. NO SINTETICES preguntas, agenda, objetivos, "próximos pasos" ni "qué queremos lograr". Eso
     emerge en la entrevista, no aquí. Tu ÚNICA lista de preguntas es la de ambigüedades e
     inferencias a confirmar (puntos 8 y 9). NO inventes ninguna otra sección.
-11. LA SECCIÓN DE PREGUNTAS ABIERTAS contiene EXCLUSIVAMENTE dos cosas: (a) ambigüedades o
-    contradicciones que el propio dictado deja sin resolver, y (b) las reconstrucciones que
-    marcaste [inferido] en el cuerpo. PROHIBIDO añadir preguntas de agenda, planificación o
-    diseño que el usuario no formuló —del tipo "¿hay que usar X?", "¿está optimizado Y igual que
-    Z?", "¿conviene…?"—; aunque parezcan útiles, son síntesis y NO van aquí. Si una "pregunta"
-    no corresponde a (a) o (b), no la incluyas. Una por línea.
+11. NO INFLES la sección de preguntas abiertas. Incluye SOLO ambigüedades reales,
+    contradicciones y reconstrucciones dudosas que aparezcan en el dictado; una por línea. No
+    fabriques dudas que el usuario no insinuó.
 12. NO AÑADAS análisis, opiniones, sugerencias, valoraciones ni conocimiento externo. Si el
     usuario no lo dijo, no está. (La excepción es la corrección de siglas del punto 2, que es
     transcripción, no contenido.)
-12.bis NO REPITAS NI PARAFRASEES ESTAS INSTRUCCIONES en la salida. El documento contiene SOLO
-    lo que dijo el hablante, nunca un meta-comentario sobre cómo destilar. Si el hablante
-    describió qué quiere de un modo de destilación, eso es contenido suyo y se conserva en su
-    voz; pero NUNCA añadas frases sobre "qué debe hacer el destilado" que él no dijo, ni uses el
-    vocabulario de este prompt ("preservar todas las ideas sustantivas", "reflejar la
-    evolución", "sin sintetizar ni eliminar información relevante", "fiel a la transcripción")
-    para rellenar o explicar. Eso es filtración de instrucciones, no contenido del dictado.
 13. NO IMPONGAS un marco narrativo inventado ("Quiero diseñar X…") que el usuario no haya dicho.
     El título/tema inicial es una línea descriptiva y neutral, sin objetivos ni intenciones que
     no estén en el dictado. (Esto NO contradice el punto 7: preservar la 1ª persona del hablante
