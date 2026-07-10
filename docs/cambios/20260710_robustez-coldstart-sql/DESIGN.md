@@ -174,3 +174,33 @@ En el front (`public/js/phases/phase1-capture.js` + `audio-recorder.js`):
 Cerrada la Fase 1. Cuando quieras, `/jcc-spec` para redactar el `SPEC.md`
 autocontenido (un único spec, D6). Recordatorio metodológico: dejar la "Fase
 actual" de `CLAUDE.md` en *análisis* hasta lanzar la especificación.
+
+## 8. Addendum — review adversarial independiente (2026-07-10)
+
+La revisión de Fase 4 (independiente) halló dos huecos MEDIA. Registro fechado
+para que el rastro de auditoría no mienta:
+
+- **A1 — D2 requería `propagateCreateError:false` para funcionar de verdad.**
+  `mssql` cablea `propagateCreateError:true` en el pool `tarn`, lo que hace que
+  tarn **rechace el acquire pendiente al PRIMER `create` fallido** (BD pausada)
+  SIN esperar a `acquireTimeoutMillis`. Es decir, subir los timeouts del pool era
+  por sí solo **inerte** para el sub-caso 2. **Corregido:** se añade
+  `propagateCreateError:false` al `pool` (nuestro `config.pool` gana en el
+  `Object.assign` de mssql). Con esto D2 cumple lo diseñado: una sola espera de
+  adquisición absorbe la reanudación. El trade-off de Q3 (esperar más si la BD
+  está de verdad caída) queda confirmado y aceptado.
+
+- **A2 — "Reintentar" no es idempotente (trade-off ACEPTADO; no se arregla aquí).**
+  Si el `POST` original commiteó en el servidor pero su respuesta se perdió
+  (proceso reciclado tras el commit, blip de red en la respuesta), reintentar
+  puede **duplicar** un segmento u **orfanar** una sesión vacía. Decisión de mesa
+  común: se **acepta** ("no perder audio" > "duplicado raro"); el fallo exacto del
+  incidente (timeout de adquisición ANTES de cualquier escritura) es seguro de
+  reintentar. Una **idempotencia real** (id de intento cliente + dedup en
+  `addSegment`, con columna/migración) es estructural y **se difiere al cambio
+  futuro de robustez** (junto con la UX de recuperación pulida ya aparcada). El
+  SPEC §5 se enmienda para no afirmar "sin duplicados" en la ruta de reintento.
+
+Huecos BAJA (el warm-up puede colgar decenas de segundos; `warnBox` compartido):
+sin acción, dentro de límites aceptados. Criterio duro §8.3 (cold-start real con
+`az sql db pause`): pendiente de smoke coordinado con Agustín antes de cerrar.

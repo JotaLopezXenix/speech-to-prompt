@@ -49,6 +49,11 @@ pool: {
   acquireTimeoutMillis: 120000,     // espera total por una conexión usable
   createTimeoutMillis: 60000,       // margen sobre connectionTimeout (30s)
   createRetryIntervalMillis: 500,   // reintenta crear conexión cada 0,5s
+  // CLAVE (addendum A1): mssql cablea propagateCreateError:true, que hace que
+  // tarn rechace el acquire al PRIMER create fallido sin esperar a
+  // acquireTimeoutMillis (los timeouts serían inertes). false → el acquire
+  // espera y reintenta el create durante toda la reanudación.
+  propagateCreateError: false,
 },
 ```
 
@@ -218,6 +223,13 @@ Nada.
   **guard de audio sospechoso** (`confirmSuspectAudio`), el **contrato del
   recorder** (`stop()`→`Promise<blob>`, `chunks` hasta el próximo `start()`) y el
   **flush de diagnósticos** no se tocan.
+
+> **Nota (addendum A2, review 10-jul):** el "sin duplicados" se refiere a la **capa
+> transaccional de backend** (`addSegment`/`replaceSegments`), intacta. El nuevo
+> **"Reintentar" del front NO es idempotente**: en la ventana estrecha "el `POST`
+> commiteó pero se perdió la respuesta", reintentar puede duplicar un segmento u
+> orfanar una sesión vacía. **Trade-off aceptado** ("no perder audio" > "duplicado
+> raro"); la idempotencia real se difiere al cambio futuro de robustez (DESIGN §8/A2).
 
 ## 6. Migración de datos
 

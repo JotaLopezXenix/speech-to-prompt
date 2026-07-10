@@ -30,4 +30,8 @@ test('buildConfig fija los timeouts del pool para absorber el cold-start', () =>
   assert.equal(cfg.pool.acquireTimeoutMillis, 120000);
   assert.ok(cfg.pool.createTimeoutMillis >= 30000);
   assert.ok(cfg.pool.createRetryIntervalMillis > 0);
+  // propagateCreateError:false es la palanca EFECTIVA: sin ella, mssql (que la
+  // cablea a true) haría que tarn rechace el acquire al primer create fallido y
+  // los timeouts de arriba no absorberían la reanudación (review 10-jul).
+  assert.equal(cfg.pool.propagateCreateError, false);
 });

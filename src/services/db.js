@@ -31,6 +31,13 @@ export function buildConfig() {
       acquireTimeoutMillis: 120000,
       createTimeoutMillis: 60000,
       createRetryIntervalMillis: 500,
+      // CLAVE (review 10-jul): mssql cablea `propagateCreateError:true`, que hace
+      // que tarn rechace el acquire pendiente al PRIMER create fallido (BD pausada)
+      // SIN esperar a acquireTimeoutMillis → los timeouts de arriba serían inertes.
+      // Con `false`, el acquire espera y reintenta el create durante toda la
+      // reanudación (a costa de tardar más si la BD está de verdad caída, trade-off
+      // aceptado). Nuestro `pool` gana en el Object.assign de mssql, así que manda.
+      propagateCreateError: false,
     },
     // Serverless puede tardar en reanudar tras la auto-pausa; damos margen al
     // connect (def. 15s) para que una sola tentativa pueda absorber el cold-start.
