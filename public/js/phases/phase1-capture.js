@@ -19,6 +19,7 @@ export function renderPhase1(container, { onComplete }) {
   let segments = [];          // [{ audio_file, transcription_raw, duration_seconds, source }]
   let mergedTranscript = '';
   let busy = false;           // transcribiendo un segmento
+  let pendingRetry = null;    // { blob, opts } del último intento de subida fallido
 
   // Estado del preview de micrófono (independiente de la grabación)
   let previewStream = null;
@@ -139,6 +140,10 @@ export function renderPhase1(container, { onComplete }) {
   recorder.onDiag = (type, payload) => diag.logEvent(type, payload);
   recorder.onExternalStop = handleExternalStop;
 
+  // Warm-up de la BD al entrar en Captura: despierta la Serverless pausada cuanto
+  // antes, para ocultar el cold-start del primer guardado (robustez-coldstart-sql).
+  api.warmup();
+
   // --- Render de la sesión (segmentos + transcripción acumulada) -------------
 
   function renderSession() {
@@ -227,6 +232,46 @@ export function renderPhase1(container, { onComplete }) {
     diag.endCaptureRun();
   }
 
+  // --- Reintento de subida (cambio robustez-coldstart-sql) -------------------
+  // Si commitSegment falla (p. ej. cold-start de la BD), retenemos el audio en un
+  // único slot y ofrecemos reintentar en vez de perderlo. Reutiliza el warnBox y
+  // el mismo patrón que confirmRecoveredAudio.
+
+  function showRetryBanner(message) {
+    warnBox.hidden = false;
+    warnBox.innerHTML = `
+      <strong>No se pudo guardar el audio.</strong>
+      <p>${message}</p>
+      <p>Tu audio no se ha perdido. Puedes reintentarlo (p. ej. si la base de datos estaba despertando).</p>
+      <div class="phase-actions">
+        <button class="btn-primary" id="btn-retry-upload">Reintentar</button>
+        <button class="btn-ghost" id="btn-discard-upload">Descartar</button>
+      </div>
+    `;
+    warnBox.querySelector('#btn-retry-upload').addEventListener('click', retryUpload);
+    warnBox.querySelector('#btn-discard-upload').addEventListener('click', discardRetry);
+  }
+
+  function clearRetry() {
+    pendingRetry = null;
+    warnBox.hidden = true;
+    warnBox.innerHTML = '';
+  }
+
+  async function retryUpload() {
+    if (!pendingRetry) return;
+    const { blob, opts } = pendingRetry;
+    warnBox.hidden = true;
+    diag.logEvent('upload_retry', { totalBytes: blob?.size ?? 0 });
+    await commitSegment(blob, { ...opts, skipGuard: true });
+  }
+
+  function discardRetry() {
+    diag.logEvent('upload_retry_discarded', {});
+    clearRetry();
+    updateUI();
+  }
+
   // Sonda de Media Session: registra handlers que SOLO logan, para cazar media-keys
   // (p.ej. de auriculares Bluetooth) que podrían estar activando el botón (H1).
   function startMediaSessionProbe() {
@@ -247,11 +292,12 @@ export function renderPhase1(container, { onComplete }) {
 
   // --- Confirmar y subir un segmento -----------------------------------------
 
-  async function commitSegment(blob, { source = 'recorded', seconds = 0, filename = 'audio.webm', skipGuard = false }) {
+  async function commitSegment(blob, opts = {}) {
+    const { source = 'recorded', seconds = 0, filename = 'audio.webm', skipGuard = false } = opts;
     hideError();
 
-    // Guard solo para grabaciones; un import es deliberado. `skipGuard` lo usa la
-    // salvaguarda de corte externo: ese tramo ya se confirmó guardarlo aparte.
+    // Guard solo para grabaciones; un import es deliberado. `skipGuard` lo usan la
+    // salvaguarda de corte externo y el reintento: ese audio ya se confirmó.
     if (source === 'recorded' && !skipGuard) {
       const verdict = checkAudio(blob.size, seconds);
       if (verdict.level !== 'ok') {
@@ -276,8 +322,11 @@ export function renderPhase1(container, { onComplete }) {
       segments = (res.session && res.session.segments) || segments;
       mergedTranscript = res.transcription_raw || mergedTranscript;
       renderSession();
+      clearRetry(); // éxito: descarta cualquier slot/banner de un intento previo
     } catch (err) {
-      showError(`Error al transcribir el segmento: ${err.message}`);
+      // No perder el audio: retenerlo y ofrecer reintentar (cold-start de la BD, etc.).
+      pendingRetry = { blob, opts };
+      showRetryBanner(`Error al guardar el segmento: ${err.message}`);
     } finally {
       busy = false;
       transcribingBox.hidden = true;
@@ -318,6 +367,7 @@ export function renderPhase1(container, { onComplete }) {
       diag.endCaptureRun();
     } else {
       // Empezar un nuevo segmento
+      api.warmup(); // despierta la BD mientras se graba (robustez-coldstart-sql)
       stopPreview();
       diag.startCaptureRun();
       diag.logEvent('capture_started', {

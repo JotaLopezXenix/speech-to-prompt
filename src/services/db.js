@@ -9,7 +9,7 @@ import sql from 'mssql';
 
 const isAzure = !!process.env.WEBSITE_HOSTNAME;
 
-function buildConfig() {
+export function buildConfig() {
   if (!process.env.SQL_SERVER || !process.env.SQL_DATABASE) {
     throw new Error(
       'Faltan las variables de conexión a SQL (SQL_SERVER/SQL_DATABASE). ' +
@@ -21,7 +21,17 @@ function buildConfig() {
   const base = {
     server: process.env.SQL_SERVER,
     database: process.env.SQL_DATABASE,
-    pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
+    pool: {
+      max: 10,
+      min: 0,
+      idleTimeoutMillis: 30000,
+      // Cold-start de Serverless: dar tiempo a que la BD reanude (~30-60s) en una
+      // sola espera de adquisición, en vez de que el pool (tarn) aborte y reviente
+      // con "operation timed out for an unknown reason".
+      acquireTimeoutMillis: 120000,
+      createTimeoutMillis: 60000,
+      createRetryIntervalMillis: 500,
+    },
     // Serverless puede tardar en reanudar tras la auto-pausa; damos margen al
     // connect (def. 15s) para que una sola tentativa pueda absorber el cold-start.
     connectionTimeout: 30000,
@@ -72,13 +82,15 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function isTransient(err) {
+export function isTransient(err) {
   const num = err?.number ?? err?.code;
   if (TRANSIENT_NUMBERS.has(num)) return true;
   if (typeof err?.code === 'string' && TRANSIENT_CODES.has(err.code)) return true;
   // El timeout de conexión de tedious llega como "Failed to connect to host:1433
-  // in 15000ms" (sin la palabra "timeout"); lo tratamos como transitorio.
-  return /timeout|failed to connect|ETIMEOUT|ESOCKET|ECONNCLOSED|ECONNRESET|currently unavailable|not currently available/i.test(
+  // in 15000ms" (sin la palabra "timeout"); lo tratamos como transitorio. El pool
+  // (tarn) lanza "operation timed out for an unknown reason" al agotar la espera
+  // de adquisición durante el cold-start: de ahí el patrón "timed out".
+  return /timeout|timed out|failed to connect|ETIMEOUT|ESOCKET|ECONNCLOSED|ECONNRESET|currently unavailable|not currently available/i.test(
     err?.message || ''
   );
 }

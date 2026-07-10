@@ -56,4 +56,9 @@ export const api = {
   // Telemetría de captura (lote de eventos de diagnóstico). Best-effort: el
   // llamador (diagnostics.js) ignora los errores para no romper la grabación.
   postDiagnostics: (events) => request('POST', '/diagnostics', { events }),
+
+  // Warm-up de la BD (fire-and-forget). Despierta la Serverless pausada mientras
+  // el usuario dicta, para que el guardado al Detener no vea el cold-start. Nunca
+  // lanza: el llamador lo ignora.
+  warmup: () => request('GET', '/health/db').catch(() => {}),
 };
