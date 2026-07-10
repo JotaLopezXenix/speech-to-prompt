@@ -91,6 +91,13 @@ frente al arranque en frío de Azure SQL Serverless para que **no se pierda audi
   raíz y `/api/health/db` responden **HTTP 401** (Easy Auth gatea en el borde, como
   debe). **Sin migración** (el cambio no toca esquema).
 
+### Actualización 10-jul (tarde)
+- **Smoke funcional logueado en prod con la BD caliente**: OK — grabar/guardar/
+  destilar sin fallos. Confirma **empíricamente que no hay regresión** en el flujo
+  normal. NO reproduce el cold-start (la BD estaba despierta), así que **§8.3 sigue
+  pendiente**.
+- Rama `robustez-coldstart-sql` **borrada** (local + `origin`), ya mergeada a `main`.
+
 ### Lo que NO se ha verificado (honesto)
 - **§8.3 — prueba de fuego del cold-start real**: NO ejecutada. Requiere pausar la
   BD de **producción** y una **sesión de navegador logueada**. El criterio duro del
