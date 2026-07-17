@@ -26,11 +26,26 @@ export function extractEmail(payload) {
   return payload.preferred_username || payload.email || payload.upn || null;
 }
 
-// El issuer debe ser exactamente el del tenant del token. Pura, testeable.
+// El issuer debe ser exactamente el del tenant del token, en formato v2.0. Pura, testeable.
+// REQUISITO DE CONFIGURACIÓN (H2 de la review): el registro de app debe emitir tokens
+// v2.0 (`requestedAccessTokenVersion: 2` en el manifiesto / "Expose an API"); en v1.0 el
+// issuer es `https://sts.windows.net/{tid}/` y aquí se rechazaría (falla cerrado). Ver la
+// guía del registro de app Entra.
 export function assertIssuer(payload) {
   const expected = `https://login.microsoftonline.com/${payload.tid}/v2.0`;
   if (payload.iss !== expected) {
     throw new Error(`issuer inesperado: ${payload.iss}`);
+  }
+}
+
+// Defensa en profundidad (H4 de la review): el token debe portar el scope delegado
+// esperado (`scp` es una cadena separada por espacios). Desactivable con
+// ENTRA_REQUIRED_SCOPE='' si el registro nombra el scope de otra forma. Pura, testeable.
+export function assertScope(payload, requiredScope) {
+  if (!requiredScope) return;
+  const scopes = typeof payload.scp === 'string' ? payload.scp.split(' ') : [];
+  if (!scopes.includes(requiredScope)) {
+    throw new Error(`falta el scope requerido: ${requiredScope}`);
   }
 }
 
@@ -50,6 +65,7 @@ export async function verifyAccessToken(token) {
     // issuer NO se fija aquí (multi-tenant): se valida abajo contra el tid.
   });
   assertIssuer(payload);
+  assertScope(payload, process.env.ENTRA_REQUIRED_SCOPE ?? 'access_as_user');
 
   const { tid, oid } = payload;
   if (!tid || !oid) throw new Error('token sin tid/oid');

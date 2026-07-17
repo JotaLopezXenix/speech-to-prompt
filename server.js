@@ -42,11 +42,14 @@ app.use('/api/auth-config', authConfigRouter);
 app.use('/api/config', identity);
 app.use('/api/config', configRouter);
 // Identidad + aislamiento: todo /api/sessions exige principal autenticado
-// (Easy Auth en Azure; usuario dev en local) y deja req.user disponible.
+// (token bearer en Azure; usuario dev en local) y deja req.user disponible.
 app.use('/api/sessions', identity);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', transcribeRouter);
 app.use('/api/sessions', distillRouter);
+// Prompts de destilado: IP del producto → también protegido (SPEC §2). Antes lo
+// tapaba Easy Auth a nivel plataforma; al retirarlo, se protege en la app.
+app.use('/api/prompts', identity);
 app.use('/api/prompts', promptsRouter);
 // Telemetría de captura: owner-scoped (mismo principal que /api/sessions).
 app.use('/api/diagnostics', identity);

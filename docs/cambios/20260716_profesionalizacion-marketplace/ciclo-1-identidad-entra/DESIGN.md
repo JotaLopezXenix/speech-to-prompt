@@ -79,3 +79,19 @@
 1. Qué queda exactamente **público** sin auth (health sí; ¿`/api/config`?; el shell mínimo para poder pintar el login).
 2. Estrategia de **logout** y de expiración/renovación de sesión de cara a UX.
 3. Normalización de la **lista blanca** (case-insensitive, dominios).
+
+---
+
+## ADDENDUM 17-jul-2026 — hallazgos de la review adversarial (Fase 4) y resolución
+
+Revisión independiente del commit `f4ea1a6`. Veredicto: cumple lo sustancial y no rompe regresión; validación del token sin bypass. Hallazgos y resolución (bucle 3↔4):
+
+- **H1 (MEDIA, defecto de código):** `/api/prompts` quedó sin `identity` → tras retirar Easy Auth quedaría abierto. **CORREGIDO** (`server.js` monta `identity` en `/api/prompts`; SPEC §3 enmendado; test de arranque cubre `GET /api/prompts` sin token → 401).
+- **H2 (MEDIA, config):** la validación exige issuer **v2.0**; los access tokens de una API propia son v1.0 salvo `requestedAccessTokenVersion:2`. **Resuelto por documentación:** requisito anotado en `token-verify.js`, SPEC §4 y la guía del registro de app Entra (no es agujero: falla cerrado).
+- **H3 (MEDIA, plan de cutover):** el orden literal del backfill podía orfanar el histórico por colisión con `UX_users_external_id`. **CORREGIDO en SPEC §6:** backfill **antes** del primer login del flujo nuevo; verificación R3 con cuenta de prueba distinta.
+- **H4 (BAJA, hardening):** no se comprobaba el scope. **AÑADIDO** `assertScope` (`scp` debe contener `access_as_user`; desactivable por env) + test.
+- **H5 (BAJA, cosmético):** el MSAL vendorizado es `.min.js` UMD, no `.esm.js`. **SPEC §3 enmendado** al nombre real.
+- **H6 (BAJA, latente → ciclo 3):** `users.email` sigue `NOT NULL`; muerde al retirar la lista blanca (ciclo `marketplace-transactable`) si un token no trae email. **Anotado como trabajo del ciclo 3** (no se toca aquí).
+- **H7 (BAJA, frontend interino):** el login rompe si el `<script>` de MSAL no carga. **Aceptado**: el ciclo 2 rehace el frontend.
+
+Verificación tras el fix: `npm test` **14/14** (se añadieron 2 tests de `assertScope`); arranque local+Azure-sim **12/12** (incluye `/api/prompts`→401). Re-review: pendiente de confirmar veredicto limpio.

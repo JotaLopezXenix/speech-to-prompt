@@ -26,13 +26,13 @@ Stack dado (no se cambia): Node ≥20 ESM, Express 4, SQL Server (`mssql`), fron
 - `src/utils/allowlist.js` — normalización + comprobación de la lista blanca (testeable).
 - `src/routes/auth-config.js` — `GET /api/auth-config` (público) → config MSAL no secreta.
 - `public/js/auth.js` — envoltura MSAL: init, login, `getToken()`, logout.
-- `public/vendor/msal-browser.esm.js` — build ESM vendorizado de MSAL.
+- `public/vendor/msal-browser.min.js` — build **UMD** vendorizado de MSAL (`window.msal`; v5.17.1). Se carga con `<script>` plano antes del módulo (patrón no-build más robusto que un ESM con imports bare).
 - `test/allowlist.test.js`, `test/token-verify.test.js` — tests de lógica pura.
 
 ### MODIFIED
 - `src/middleware/identity.js` — de leer cabeceras Easy Auth a validar bearer + lista blanca + construir `external_id`; conserva el bypass `DEV_USER_*` en local.
 - `src/services/user-store.js` — `ensureUser` casa **solo** por `external_id`, escribe `tenant_id`, elimina la reconciliación por email.
-- `server.js` — monta `identity` también en `/api/config`; monta `auth-config` público; `/api/health` sigue público.
+- `server.js` — monta `identity` también en `/api/config` **y en `/api/prompts`**; monta `auth-config` público; `/api/health` sigue público.
 - `public/js/api-client.js` — adjunta `Authorization: Bearer`; maneja 401 (refresh silencioso → login interactivo).
 - `public/js/app.js` + `public/index.html` — puerta de auth al cargar + pantalla de login mínima.
 - `.env`/App Settings (doc, §6/§ops) — nuevas variables `ENTRA_*`, `ALLOWED_EMAILS`.
@@ -51,8 +51,12 @@ verifyAccessToken(bearerToken: string) -> Promise<{ tid, oid, email, name }>
   - createRemoteJWKSet(https://login.microsoftonline.com/common/discovery/v2.0/keys) (cacheado)
   - jwtVerify con audience = ENTRA_API_AUDIENCE, algorithms ['RS256']
   - assert payload.iss === `https://login.microsoftonline.com/${payload.tid}/v2.0`
+    ⚠ REQUIERE tokens v2.0: el registro de app debe fijar requestedAccessTokenVersion:2
+      (en v1.0 el iss es sts.windows.net/{tid}/ y se rechazaría). Ver guía de Entra.
+  - assertScope(payload, ENTRA_REQUIRED_SCOPE ?? 'access_as_user') — el `scp` debe
+    contener el scope delegado (hardening; desactivable con ENTRA_REQUIRED_SCOPE='')
   - email = payload.preferred_username || payload.email || payload.upn || null
-  - lanza en firma/aud/iss/exp inválidos (el middleware traduce a 401)
+  - lanza en firma/aud/iss/scope/exp inválidos (el middleware traduce a 401)
 buildExternalId(tid, oid) -> `${tid}.${oid}`   // exportada, pura, testeable
 ```
 
@@ -142,7 +146,8 @@ UPDATE dbo.users
       tenant_id   = @XENIX_TID
   WHERE external_id IS NOT NULL AND external_id NOT LIKE '%.%';
 ```
-**Orden de cutover:** aplicar `006` → desplegar código → **loguear** el `external_id` que produce el primer login real (verificación R3) → si coincide con lo esperado, ejecutar el backfill. Como es determinista (el `oid` no cambia entre Easy Auth y el token), puede ejecutarse en el mismo cutover; el log es la red de seguridad.
+**Orden de cutover (CORREGIDO — review H3):** aplicar `006` → desplegar código → **ejecutar el backfill ANTES del primer login del flujo nuevo** → recién entonces permitir el login. Es determinista (conocemos `XENIX_TID` y el `oid` = `external_id` actual), así que no necesita ver un token primero.
+> ⚠ **No invertir el orden.** Si se deja loguear un primer login antes del backfill, `ensureUser` (que casa solo por `external_id`) **no encontraría** la fila vieja (`external_id='OID'`) y **INSERTARÍA una fila nueva** (`external_id='TID.OID'`, histórico vacío); el backfill posterior chocaría con `UX_users_external_id` y **orfanaría** el histórico. Verificación R3 sin crear duplicado: consultar el `external_id` esperado en un entorno de Preview / con una cuenta de prueba distinta, **no** con la cuenta cuyo histórico se migra. Si por error se creó la fila nueva, borrarla antes del backfill.
 
 ## 7. Fuera de alcance
 
