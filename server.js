@@ -11,6 +11,7 @@ import distillRouter from './src/routes/distill.js';
 import promptsRouter from './src/routes/prompts.js';
 import diagnosticsRouter from './src/routes/diagnostics.js';
 import healthRouter from './src/routes/health.js';
+import authConfigRouter from './src/routes/auth-config.js';
 import { identity } from './src/middleware/identity.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,11 @@ app.use(express.static(join(__dirname, 'public')));
 // API routes
 // Warm-up de la BD: sin identity (no toca datos), para despertar la Serverless.
 app.use('/api/health', healthRouter);
+// Config pública de MSAL para el front (sin identity: se necesita antes de autenticar).
+app.use('/api/auth-config', authConfigRouter);
+// /api/config gestiona API keys/proveedores: ahora EXIGE auth (antes lo tapaba
+// Easy Auth a nivel plataforma; ciclo identidad-entra lo protege en la app).
+app.use('/api/config', identity);
 app.use('/api/config', configRouter);
 // Identidad + aislamiento: todo /api/sessions exige principal autenticado
 // (Easy Auth en Azure; usuario dev en local) y deja req.user disponible.

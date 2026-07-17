@@ -20,8 +20,12 @@
     "@azure/identity": "^4.5.0",
     "@azure/storage-blob": "^12.26.0",
     "express": "^4.21.2",
+    "jose": "^6.2.3",
     "mssql": "^11.0.1",
     "multer": "^2.1.1",
     "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@azure/msal-browser": "^5.17.1"
   }
 }
