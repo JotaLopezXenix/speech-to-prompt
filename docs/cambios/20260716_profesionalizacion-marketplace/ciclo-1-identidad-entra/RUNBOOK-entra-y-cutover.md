@@ -48,15 +48,28 @@ Tras crear, apunta de la pestaña **Overview**:
 
 Sin esto, los access tokens salen en formato v1.0 (issuer `https://sts.windows.net/{tid}/`) y el backend —que exige el issuer v2.0 `https://login.microsoftonline.com/{tid}/v2.0`— los rechaza con 401.
 
-## 5. Permiso de la SPA sobre su propia API
+## 5. Permiso de la SPA sobre su propia API (consentimiento limpio)
 
-Como la SPA y la API son el mismo registro, autoriza el scope:
-- **API permissions** → **Add a permission** → **My APIs** → selecciona `speech-to-prompt` → **Delegated permissions** → marca `access_as_user` → **Add permissions**.
-- **Grant admin consent for Xenix** (botón) para que las cuentas del tenant no vean el prompt de consentimiento. (Las cuentas de otros tenants / MSA consentirán ellas la primera vez.)
+Como la SPA y la API son el **mismo registro**, hay dos piezas complementarias (ambas de libro, ninguna es un parche):
 
-## 6. (Opcional) Claims de email
+**5.1. Registrar el permiso.** **API permissions** → **Add a permission** → **My APIs** → selecciona `speech-to-prompt` → **Delegated permissions** → marca `access_as_user` → **Add permissions**.
 
-El backend saca el email de `preferred_username` → `email` → `upn`. Con tokens v2.0 suele venir `preferred_username`. Si en pruebas ves que falta, en **Token configuration** → **Add optional claim** → tipo **Access** → añade `email` (y activa el permiso `email` si lo pide).
+> **Troubleshooting "My APIs → No results":** el picker solo lista apps de las que eres **Owner**, y una API recién expuesta tarda unos minutos en aparecer. Si sale vacío: (a) **Manage → Owners** → añádete si no estás (causa nº1); (b) escribe el nombre en el buscador; (c) espera unos minutos y refresca el portal.
+
+**5.2. Pre-autorizar la SPA (quita el consentimiento "app se llama a sí misma").** **Expose an API** → **Authorized client applications** → **Add a client application** → pega el **propio Client ID** del registro → marca el scope `access_as_user` → **Add**. Esto no relaja seguridad; elimina un consentimiento sin sentido (la app pidiéndose permiso a sí misma).
+
+**5.3. Consentimiento de admin para Xenix.** Botón **Grant admin consent for Xenix** en **API permissions**. Con esto, tú y Agustín (cuentas Xenix) **no veréis ningún prompt**.
+
+> **Sobre el prompt de consentimiento (dos tipos, no confundir):**
+> - *(a) "Iniciar sesión y leer tu perfil básico"* — consentimiento normal de cualquier app de terceros, **una sola vez por usuario**. Es la pantalla "Permisos solicitados → Aceptar" que ves al estrenar cualquier app con tu cuenta Microsoft/Google. Para compradores del Marketplace es one-time y esperado; para clientes-empresa, su admin puede pre-consentir a toda la plantilla.
+> - *(b) "La app quiere llamar a su propia API"* — absurdo; lo elimina 5.2.
+> No hay fricción por-uso. El consentimiento de admin (5.3) lo quita del todo para el propio tenant.
+
+## 6. Claims de email — SÁLTALO (opcional de verdad)
+
+**Recomendación: no configurar nada aquí.** El backend saca el correo de `preferred_username`, que **los tokens v2.0 ya incluyen por defecto** — suficiente para la lista blanca. Si dejas el claim `email` sin configurar, **no hay ningún problema**.
+
+> Si el portal te muestra *"These claims (email) require OpenID Connect Scopes…"* al añadir el optional claim: es justo la señal de que no merece la pena para nuestro caso — **cancela y sáltalo**. (Solo si algún día se necesitara el claim `email` garantizado, la forma correcta —no un parche— es añadir el permiso `email` en API permissions → Microsoft Graph → OpenID permissions. Hoy es innecesario.)
 
 ## 7. Rellenar App Settings (App Service → Configuration)
 
