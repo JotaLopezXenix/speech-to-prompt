@@ -64,6 +64,8 @@
     <div id="history-container"></div>
   </aside>
 
+  <!-- MSAL (vendorizado, UMD → window.msal). Antes del módulo para que auth.js lo vea. -->
+  <script src="/vendor/msal-browser.min.js"></script>
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>

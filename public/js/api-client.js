@@ -1,15 +1,33 @@
+import { getToken, acquireInteractive, isDevBypass } from './auth.js';
+
 const BASE = '/api';
 
-async function request(method, path, body, isMultipart = false) {
+async function request(method, path, body, isMultipart = false, _retried = false) {
   const options = { method };
+  const headers = {};
   if (body && !isMultipart) {
-    options.headers = { 'Content-Type': 'application/json' };
+    headers['Content-Type'] = 'application/json';
     options.body = JSON.stringify(body);
   } else if (isMultipart) {
-    options.body = body; // FormData
+    options.body = body; // FormData (el navegador fija Content-Type con boundary)
   }
 
+  // Adjunta el access token (ciclo identidad-entra). En local (devBypass) getToken
+  // devuelve null y la request va sin token (el backend usa el usuario dev).
+  const token = await getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (Object.keys(headers).length) options.headers = headers;
+
   const res = await fetch(`${BASE}${path}`, options);
+
+  // 401: token caducado. Reintenta una vez (getToken hace refresh silencioso); si
+  // sigue fallando, manda a login interactivo (redirige fuera).
+  if (res.status === 401 && !isDevBypass()) {
+    if (!_retried) return request(method, path, body, isMultipart, true);
+    acquireInteractive();
+    throw new Error('Sesión expirada, redirigiendo a inicio de sesión…');
+  }
+
   const data = await res.json();
 
   if (!res.ok) {

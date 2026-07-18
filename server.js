@@ -11,6 +11,7 @@ import distillRouter from './src/routes/distill.js';
 import promptsRouter from './src/routes/prompts.js';
 import diagnosticsRouter from './src/routes/diagnostics.js';
 import healthRouter from './src/routes/health.js';
+import authConfigRouter from './src/routes/auth-config.js';
 import { identity } from './src/middleware/identity.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,13 +35,21 @@ app.use(express.static(join(__dirname, 'public')));
 // API routes
 // Warm-up de la BD: sin identity (no toca datos), para despertar la Serverless.
 app.use('/api/health', healthRouter);
+// Config pública de MSAL para el front (sin identity: se necesita antes de autenticar).
+app.use('/api/auth-config', authConfigRouter);
+// /api/config gestiona API keys/proveedores: ahora EXIGE auth (antes lo tapaba
+// Easy Auth a nivel plataforma; ciclo identidad-entra lo protege en la app).
+app.use('/api/config', identity);
 app.use('/api/config', configRouter);
 // Identidad + aislamiento: todo /api/sessions exige principal autenticado
-// (Easy Auth en Azure; usuario dev en local) y deja req.user disponible.
+// (token bearer en Azure; usuario dev en local) y deja req.user disponible.
 app.use('/api/sessions', identity);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/sessions', transcribeRouter);
 app.use('/api/sessions', distillRouter);
+// Prompts de destilado: IP del producto → también protegido (SPEC §2). Antes lo
+// tapaba Easy Auth a nivel plataforma; al retirarlo, se protege en la app.
+app.use('/api/prompts', identity);
 app.use('/api/prompts', promptsRouter);
 // Telemetría de captura: owner-scoped (mismo principal que /api/sessions).
 app.use('/api/diagnostics', identity);

@@ -1,4 +1,5 @@
 import { api } from './api-client.js';
+import { initAuth, getAccount, login } from './auth.js';
 import { renderPhase1 } from './phases/phase1-capture.js';
 import { renderPhase3 } from './phases/phase3-review-raw.js';
 import { renderPhase4 } from './phases/phase4-distill.js';
@@ -212,6 +213,32 @@ async function checkFirstRun() {
   }
 }
 
-// Init
-checkFirstRun();
-goToPhase(1);
+// Pantalla de login mínima e interina (el ciclo 2 rehace el frontend). Solo se
+// muestra cuando MSAL está activo (Azure) y no hay cuenta; en local (devBypass)
+// getAccount() siempre devuelve cuenta y no se pinta.
+function renderLogin() {
+  phaseContainer.innerHTML = `
+    <div class="login-screen" style="max-width:420px;margin:4rem auto;text-align:center">
+      <h2>Inicia sesión</h2>
+      <p>Accede con tu cuenta de Microsoft para usar Speech-to-Prompt.</p>
+      <button id="btn-login" class="btn-primary">Entrar con Microsoft</button>
+    </div>`;
+  document.getElementById('btn-login')?.addEventListener('click', () => login());
+}
+
+// Init: primero la puerta de auth; solo si hay cuenta se arranca la app.
+async function boot() {
+  try {
+    await initAuth();
+  } catch (err) {
+    console.error('Fallo inicializando la autenticación:', err);
+  }
+  if (!getAccount()) {
+    renderLogin();
+    return;
+  }
+  checkFirstRun();
+  goToPhase(1);
+}
+
+boot();
