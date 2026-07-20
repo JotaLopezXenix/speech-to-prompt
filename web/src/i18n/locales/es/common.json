@@ -1,0 +1,49 @@
+{
+  "nav": {
+    "history": "Historial",
+    "settings": "Ajustes",
+    "theme": "Cambiar tema",
+    "steps": "Fases del flujo"
+  },
+  "phases": {
+    "capture": "Captura",
+    "review": "Revisión",
+    "distill": "Destilado",
+    "result": "Resultado"
+  },
+  "capture": {
+    "title": "Captura",
+    "subtitle": "Graba por tramos; revisas y destilas después.",
+    "placeholder": "Pantalla en construcción (SPEC-04: captura + salvaguardas)."
+  },
+  "review": {
+    "title": "Revisión",
+    "placeholder": "Pantalla en construcción (SPEC-05)."
+  },
+  "distill": {
+    "title": "Destilado",
+    "placeholder": "Pantalla en construcción (SPEC-05)."
+  },
+  "result": {
+    "title": "Resultado",
+    "placeholder": "Pantalla en construcción (SPEC-05)."
+  },
+  "history": {
+    "title": "Historial",
+    "placeholder": "Pantalla en construcción (SPEC-06)."
+  },
+  "settings": {
+    "title": "Ajustes",
+    "placeholder": "Pantalla en construcción (SPEC-06)."
+  },
+  "login": {
+    "title": "Entrar",
+    "cta": "Entrar con Microsoft",
+    "placeholder": "Login real con MSAL en SPEC-03."
+  },
+  "health": {
+    "checking": "Comprobando conexión con el backend…",
+    "ok": "Backend conectado",
+    "fail": "Sin conexión con el backend"
+  }
+}

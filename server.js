@@ -2,6 +2,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { createServer } from 'http';
+import { existsSync } from 'fs';
 import open from 'open';
 import { ensureDirectories } from './src/utils/paths.js';
 import configRouter from './src/routes/config.js';
@@ -55,7 +56,16 @@ app.use('/api/prompts', promptsRouter);
 app.use('/api/diagnostics', identity);
 app.use('/api/diagnostics', diagnosticsRouter);
 
-// Fallback: serve index.html for any non-API route
+// Frontend nuevo (ciclo 2b) servido en /app — ruta TEMPORAL para desprender R5
+// sin tocar el frontend viejo en /. En el cutover final, el build de web/ pasará
+// a servirse en /. La guarda existsSync evita 500 en local si aún no hay build.
+const webDist = join(__dirname, 'web', 'dist');
+if (existsSync(webDist)) {
+  app.use('/app', express.static(webDist));
+  app.get('/app/*', (req, res) => res.sendFile(join(webDist, 'index.html')));
+}
+
+// Fallback: serve index.html for any non-API route (frontend viejo, intacto)
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'public', 'index.html'));
 });

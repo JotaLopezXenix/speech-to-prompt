@@ -3,3 +3,4 @@ data/
 .claude/
 .env
 .env.dev
+web/dist/

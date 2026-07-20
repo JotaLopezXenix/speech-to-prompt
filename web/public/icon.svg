@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Speech-to-Prompt">
+  <rect width="512" height="512" rx="112" fill="#2F5D50"/>
+  <rect x="212" y="118" width="88" height="156" rx="44" fill="#F3EFE7"/>
+  <g fill="none" stroke="#F3EFE7" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M160 250a96 96 0 0 0 192 0"/>
+    <path d="M256 346v54"/>
+    <path d="M206 400h100"/>
+  </g>
+</svg>

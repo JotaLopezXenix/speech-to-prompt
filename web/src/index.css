@@ -1,0 +1,119 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Dark mode por clase (.dark en <html>), no por media query. */
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Dirección "B · Papel" — valores del design system (DESIGN-SYSTEM-2a).
+  Los componentes leen TOKENS (semánticos shadcn + extras de marca), nunca hex.
+  Choque de nombres resuelto: el acento pino del DS = `primary` de shadcn;
+  el pino-soft del DS = `accent` de shadcn (fondo de hover/selección).
+*/
+:root {
+  --radius: 0.875rem; /* 14px = card */
+
+  /* Paleta base "B · Papel" (claro) */
+  --paper: #f3efe7;
+  --surface: #fbf8f2;
+  --surface-elevated: #ffffff;
+  --ink: #201e19;
+  --ink-muted: #6b6456;
+  --hairline: #e7e0d2;
+  --pine: #2f5d50;
+  --pine-hover: #274e43;
+  --pine-soft: #e4ece7;
+  --success: #3e7c58;
+  --warning: #b7791f;
+  --error: #b4472e;
+
+  /* Tokens semánticos shadcn → paleta */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--ink);
+  --primary: var(--pine);
+  --primary-foreground: #fbf8f2;
+  --secondary: var(--surface);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--pine-soft);
+  --accent-foreground: var(--pine-hover);
+  --destructive: var(--error);
+  --destructive-foreground: #fbf8f2;
+  --border: var(--hairline);
+  --input: var(--hairline);
+  --ring: var(--pine);
+}
+
+.dark {
+  /* Solo se redefine la paleta base; los semánticos (var(--paper)…) se recalculan solos. */
+  --paper: #1c1a16;
+  --surface: #24211c;
+  --surface-elevated: #2c2822;
+  --ink: #f1ece2;
+  --ink-muted: #a79e8d;
+  --hairline: #332f28;
+  --pine: #6fb59f;
+  --pine-hover: #8ac7b4;
+  --pine-soft: #22302b;
+  --primary-foreground: #1c1a16;
+  --destructive-foreground: #f1ece2;
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-input: 12px;
+  --radius-card: 14px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Extras de marca (no cubiertos por shadcn) */
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-ink: var(--ink);
+  --color-hairline: var(--hairline);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  --font-display: "Source Serif 4 Variable", Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}

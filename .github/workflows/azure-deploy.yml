@@ -19,6 +19,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Frontend nuevo (ciclo 2b): se construye aquí en CI y se envía ya compilado
+      # (web/dist). El backend lo sigue instalando Oryx en el servidor. Se borra
+      # web/node_modules para no incluirlo en el paquete de despliegue.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build web (Vite)
+        run: |
+          cd web
+          npm ci
+          npm run build
+          rm -rf node_modules
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:

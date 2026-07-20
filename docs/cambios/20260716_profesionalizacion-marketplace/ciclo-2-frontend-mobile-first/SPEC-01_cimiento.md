@@ -4,6 +4,12 @@
 **DESIGN (fuente del porqué):** `DESIGN.md` (ciclo, decisiones estructurales), `DESIGN-2a.md` (decisiones de diseño/UX), `DESIGN-SYSTEM-2a.md` (tokens y handoff). **Trazas:** stack ratificado (ciclo §4.3); "cosechar" (ciclo §4.4); navegación guiada fluida (2a §3.3); tema ambos default claro (2a §3.4); build step nuevo = R5 (ciclo §6).
 **Es el primero de varios SPEC de 2b** (02 API tipada · 03 auth/login · 04 captura+salvaguardas · 05 resto del flujo · 06 marco). Cadencia acordada: 01 ahora, resto just-in-time.
 
+> **ADDENDUM 2026-07-20 — stack moderno (decisión de mesa común durante la implementación).** Al scaffoldear, `create-vite` instaló **React 19.2 / Vite 8 / TypeScript 6 / oxlint**, y `shadcn/ui` hoy asume **Tailwind v4**. Ratificado: construir con **React 19 + Tailwind v4 + shadcn** (en lugar de React 18 / Vite 5 / Tailwind v3 de §2). Esto **sustituye** el detalle de versiones y de cableado de tokens en §2, §3.1 y §4.1:
+> - **Tailwind v4 es CSS-first:** plugin **`@tailwindcss/vite`** (no `postcss.config.js` ni `tailwind.config.ts`). Tokens y dark mode se declaran en `web/src/index.css` con `@import "tailwindcss"`, **`@theme`** (`--color-paper`, `--color-accent`, `--radius-card`, `--font-display`, …) y **`@custom-variant dark`**. Los **valores** (hex, radios, fuentes) de `DESIGN-SYSTEM-2a` NO cambian; solo el mecanismo.
+> - **Vite** se fija a la versión estable que soporten los plugins (`@vitejs/plugin-react`, `vite-plugin-pwa`); si `vite-plugin-pwa` no soporta aún Vite 8, se baja Vite a la mayor versión compatible. Se reporta la versión final elegida.
+> - **Lint:** `oxlint` (lo que trae el scaffold), no eslint.
+> - Lo demás del SPEC (estructura de carpetas, navegación, tema por clase → `@custom-variant dark`, i18n, PWA, delta `/app`, "qué se PRESERVA", verificación y regresión) se mantiene.
+
 ## 1. Resumen
 Crear el **cimiento del frontend nuevo** como app **React + Vite + TypeScript + Tailwind + shadcn/ui** en la subcarpeta **`web/`**: design system (tokens/tema/fuentes de `DESIGN-SYSTEM-2a`), PWA instalable, andamiaje i18n (español por defecto), **shell con stepper y navegación guiada fluida**, primitivos base y pantallas *placeholder* cableadas a la navegación, y el **pipeline de build/deploy** que sirve el build en Azure en una ruta **temporal `/app`** (para desprender R5) sin tocar el frontend viejo en `/`.
 

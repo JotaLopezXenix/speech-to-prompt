@@ -53,6 +53,8 @@
 
 ## 4. Handoff a código (verbatim del bloque "Para Claude Code")
 
+> **ADDENDUM 2026-07-20:** en 2b se construye con **Tailwind v4** (CSS-first). Estos **valores no cambian**; el cableado se hace en `web/src/index.css` con `@import "tailwindcss"` + `@theme` + `@custom-variant dark` (ver `SPEC-01_cimiento.md`, ADDENDUM). El `globals.css`/`tailwind.config` de abajo (estilo v3) queda como **referencia de valores y de mapeo semántico**, no como el mecanismo literal.
+
 ```css
 /* globals.css */
 :root {
