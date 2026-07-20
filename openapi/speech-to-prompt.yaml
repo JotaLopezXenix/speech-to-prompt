@@ -1,0 +1,894 @@
+openapi: 3.1.0
+info:
+  title: Speech-to-Prompt API
+  version: "1.0.0"
+  description: >
+    Contrato HTTP de Speech-to-Prompt, documentado spec-first como fotografía fiel
+    del backend existente (rutas `/api/*`). Este documento es la fuente de verdad
+    del contrato; de él se generan los tipos del cliente tipado en `web/`
+    (openapi-typescript) y lo consumirán los clientes nativos futuros.
+
+    Versionado: el contrato se sirve bajo el alias aditivo `/api/v1` (ver `servers`).
+    Las rutas `/api/*` sin versión siguen existiendo, byte-idénticas, para el
+    frontend antiguo; `/api/v1/*` remonta los MISMOS routers.
+
+    Autenticación (ciclo `identidad-entra`): las operaciones protegidas exigen
+    `Authorization: Bearer <access token>` en Azure. En desarrollo local (sin
+    `WEBSITE_HOSTNAME` y sin cabecera Authorization) el backend usa un usuario dev
+    de entorno (`DEV_USER_*`) y NO exige token — por eso `bearerAuth` se documenta
+    pero en local las protegidas responden sin él.
+
+servers:
+  - url: /api/v1
+    description: Contrato versionado (alias aditivo del /api/* actual).
+
+# Por defecto, toda operación exige bearer. Las públicas lo anulan con `security: []`.
+security:
+  - bearerAuth: []
+
+tags:
+  - name: health
+    description: Warm-up / salud de la BD (público).
+  - name: auth
+    description: Configuración pública para inicializar el login (público).
+  - name: config
+    description: Configuración de proveedores y API keys (protegido).
+  - name: sessions
+    description: Sesiones de dictado multi-segmento (protegido, aislado por propietario).
+  - name: prompts
+    description: Prompts de destilado por familia del modelo activo (protegido).
+  - name: diagnostics
+    description: Telemetría de captura, best-effort (protegido).
+
+paths:
+  /health/db:
+    get:
+      tags: [health]
+      summary: Warm-up / salud de la BD
+      description: >
+        Ejecuta un `SELECT 1` (con reintento) para despertar la BD Serverless y
+        comprobar que responde. Sin identidad: no toca datos de usuario. El front
+        lo llama fire-and-forget al empezar a grabar.
+      operationId: healthDb
+      security: []
+      responses:
+        "200":
+          description: La BD responde.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    const: true
+        "503":
+          description: La BD no está disponible.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    const: false
+                  error:
+                    $ref: "#/components/schemas/ErrorDetail"
+
+  /auth-config:
+    get:
+      tags: [auth]
+      summary: Configuración pública de autenticación (MSAL)
+      description: >
+        Config no secreta para inicializar MSAL en el frontend. Se necesita ANTES
+        de autenticarse, por eso es pública. En local devuelve `{ devBypass: true }`:
+        el front no monta MSAL ni gatea (espejo del bypass del middleware `identity`).
+      operationId: getAuthConfig
+      security: []
+      responses:
+        "200":
+          description: Config de auth (bypass local, o parámetros MSAL en Azure).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthConfig"
+
+  /config:
+    get:
+      tags: [config]
+      summary: Leer configuración (API keys enmascaradas + proveedores disponibles)
+      operationId: getConfig
+      responses:
+        "200":
+          description: Configuración actual.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/ServerError" }
+    put:
+      tags: [config]
+      summary: Actualizar configuración (API keys / defaults)
+      description: >
+        Fusión superficial de `api_keys` y `defaults`. Devuelve la config
+        enmascarada (nunca las claves en claro).
+      operationId: updateConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigUpdate"
+      responses:
+        "200":
+          description: Config actualizada (enmascarada).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [config]
+                properties:
+                  config:
+                    $ref: "#/components/schemas/Config"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /sessions:
+    post:
+      tags: [sessions]
+      summary: Crear una sesión vacía
+      operationId: createSession
+      responses:
+        "201":
+          description: Sesión creada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/ServerError" }
+    get:
+      tags: [sessions]
+      summary: Listar las sesiones del usuario (resumen)
+      operationId: listSessions
+      responses:
+        "200":
+          description: Lista de sesiones (más recientes primero).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SessionListItem"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /sessions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    get:
+      tags: [sessions]
+      summary: Leer una sesión completa (con segmentos)
+      operationId: getSession
+      responses:
+        "200":
+          description: Sesión.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+    put:
+      tags: [sessions]
+      summary: Actualizar columnas escalares de una sesión
+      description: >
+        Fusión superficial. Solo se escriben columnas en lista blanca
+        (ver `SessionUpdate`); otras claves se ignoran. Los segmentos NO se
+        gestionan aquí (van por /segments y /reprocess).
+      operationId: updateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SessionUpdate"
+      responses:
+        "200":
+          description: Sesión actualizada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /sessions/{id}/usage:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    get:
+      tags: [sessions]
+      summary: Uso + coste estimado de una sesión
+      operationId: getSessionUsage
+      responses:
+        "200":
+          description: Eventos de uso y desglose de coste (estimado).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usage"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /sessions/{id}/segments:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    post:
+      tags: [sessions]
+      summary: Añadir un segmento de audio (subir, transcribir, anexar)
+      description: >
+        Sube un audio (grabado o importado), lo normaliza (ffmpeg opcional), lo
+        transcribe con el proveedor STT activo y lo añade como nuevo segmento;
+        recalcula `transcription_raw` de la sesión.
+      operationId: addSegment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AddSegmentForm"
+      responses:
+        "200":
+          description: Segmento añadido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddSegmentResult"
+        "400":
+          description: Falta audio (MISSING_AUDIO) o falta API key del STT (MISSING_API_KEY).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500":
+          description: Fallo de transcripción (STT_FAILED).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/transcribe:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    post:
+      tags: [sessions]
+      summary: Alias histórico de POST /sessions/{id}/segments
+      description: Idéntico a `/segments` (mismo handler). Se conserva por compatibilidad.
+      operationId: transcribeSegment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/AddSegmentForm"
+      responses:
+        "200":
+          description: Segmento añadido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddSegmentResult"
+        "400":
+          description: MISSING_AUDIO o MISSING_API_KEY.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500":
+          description: STT_FAILED.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/audio/{ordinal}:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+      - name: ordinal
+        in: path
+        required: true
+        description: Posición 1-based del segmento dentro de la sesión.
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      tags: [sessions]
+      summary: Descargar el audio de un segmento
+      description: >
+        Sirve el audio del segmento desde el almacén (contenedor privado en Azure);
+        este es el único acceso autorizado al audio (no hay URL pública).
+      operationId: getSegmentAudio
+      responses:
+        "200":
+          description: Audio del segmento.
+          content:
+            audio/webm:
+              schema:
+                type: string
+                format: binary
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404":
+          description: Sesión (SESSION_NOT_FOUND) o audio (AUDIO_NOT_FOUND) no encontrados.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Fallo al servir el audio (AUDIO_FAILED).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/reprocess:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    post:
+      tags: [sessions]
+      summary: Re-transcribir el audio ya guardado (rescate)
+      description: >
+        Re-transcribe los audios almacenados de la sesión y reproyecta
+        `transcription_raw`. Rescata sesiones sin transcribir o mal transcritas.
+      operationId: reprocessSession
+      responses:
+        "200":
+          description: Sesión reprocesada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReprocessResult"
+        "400":
+          description: Falta API key (MISSING_API_KEY) o no hay audio (NO_AUDIO).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500":
+          description: STT_FAILED.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /sessions/{id}/distill:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    post:
+      tags: [sessions]
+      summary: Destilar la transcripción a un prompt
+      description: >
+        Destila `transcription_edited || transcription_raw` con el LLM activo.
+        `mode` elige la variante (por defecto `completo`); `systemPrompt` opcional
+        sobreescribe el prompt del modo solo para esta petición (no toca la BD).
+      operationId: distillSession
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DistillRequest"
+      responses:
+        "200":
+          description: Prompt destilado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DistillResult"
+        "400":
+          description: >
+            Sin transcripción (NO_TRANSCRIPTION), modelo deshabilitado
+            (MODEL_DISABLED) o falta API key (MISSING_API_KEY).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "500":
+          description: Fallo del LLM (LLM_FAILED).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /prompts:
+    get:
+      tags: [prompts]
+      summary: Prompts por defecto de la familia del modelo activo
+      description: >
+        Devuelve `{ modo: texto }` de la familia del modelo LLM activo, para que el
+        front los muestre y permita editarlos antes de destilar. Fuente: BD.
+      operationId: getPrompts
+      responses:
+        "200":
+          description: Mapa modo→prompt de la familia activa.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyPrompts"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "500": { $ref: "#/components/responses/ServerError" }
+
+  /diagnostics:
+    post:
+      tags: [diagnostics]
+      summary: Registrar un lote de eventos de telemetría de captura
+      description: >
+        Best-effort: el cliente ignora los errores para no interrumpir la grabación.
+        Máximo 200 eventos por lote; cada payload se trunca a ~8 KB.
+      operationId: postDiagnostics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/DiagnosticEvent"
+      responses:
+        "200":
+          description: Eventos insertados.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [inserted]
+                properties:
+                  inserted:
+                    type: integer
+        "400":
+          description: Falta el array o ningún evento válido (BAD_REQUEST).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "413":
+          description: Demasiados eventos por lote (TOO_LARGE, máximo 200).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: No se pudieron guardar (DIAG_FAILED).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Access token de Microsoft Entra (multi-tenant + MSA), validado stateless
+        en el backend. En local (dev bypass) no se envía.
+
+  parameters:
+    SessionId:
+      name: id
+      in: path
+      required: true
+      description: Identificador entero de la sesión.
+      schema:
+        type: integer
+
+  responses:
+    Unauthorized:
+      description: Falta token (UNAUTHENTICATED) o token inválido/expirado (TOKEN_INVALID).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Cuenta no autorizada (NOT_ALLOWLISTED).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Sesión no encontrada (SESSION_NOT_FOUND). Incluye recursos de otro propietario (aislamiento).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ServerError:
+      description: Error interno.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    ErrorDetail:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Código estable de error (p. ej. SESSION_NOT_FOUND, STT_FAILED).
+        message:
+          type: string
+          description: Mensaje legible (puede variar; no es contrato).
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorDetail"
+
+    Segment:
+      type: object
+      required:
+        [audio_file, transcription_raw, transcription_edited, duration_seconds, source, created_at]
+      properties:
+        audio_file:
+          type: [string, "null"]
+          description: Clave del audio en el almacén.
+        transcription_raw:
+          type: [string, "null"]
+        transcription_edited:
+          type: [string, "null"]
+        duration_seconds:
+          type: [integer, "null"]
+        source:
+          type: string
+          enum: [recorded, imported]
+        created_at:
+          type: [string, "null"]
+          description: ISO 8601.
+
+    Session:
+      type: object
+      required:
+        - id
+        - timestamp
+        - segments
+        - transcription_raw
+        - transcription_edited
+        - prompt_distilled
+        - distill_mode
+        - distill_prompt_used
+        - llm_provider
+        - llm_model
+        - stt_provider
+        - stt_model
+        - audio_file
+      properties:
+        id:
+          type: integer
+        timestamp:
+          type: [string, "null"]
+          description: ISO 8601 de creación.
+        segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Segment"
+        transcription_raw:
+          type: [string, "null"]
+          description: Vista materializada = concatenación del texto de los segmentos.
+        transcription_edited:
+          type: [string, "null"]
+        prompt_distilled:
+          type: [string, "null"]
+        distill_mode:
+          type: [string, "null"]
+        distill_prompt_used:
+          type: [string, "null"]
+        llm_provider:
+          type: [string, "null"]
+        llm_model:
+          type: [string, "null"]
+        stt_provider:
+          type: [string, "null"]
+        stt_model:
+          type: [string, "null"]
+        audio_file:
+          type: [string, "null"]
+          description: Espejo legacy = audio del primer segmento.
+
+    SessionListItem:
+      type: object
+      required:
+        [id, timestamp, preview, has_prompt, has_transcription, has_audio, segment_count]
+      properties:
+        id:
+          type: integer
+        timestamp:
+          type: [string, "null"]
+        preview:
+          type: [string, "null"]
+          description: Primeros ~100 chars del prompt destilado o, si no, de la transcripción.
+        has_prompt:
+          type: boolean
+        has_transcription:
+          type: boolean
+        has_audio:
+          type: boolean
+        segment_count:
+          type: integer
+
+    SessionUpdate:
+      type: object
+      description: >
+        Columnas escalares actualizables (lista blanca). Todas opcionales; claves
+        fuera de esta lista se ignoran en el backend.
+      properties:
+        transcription_raw:
+          type: [string, "null"]
+        transcription_edited:
+          type: [string, "null"]
+        prompt_distilled:
+          type: [string, "null"]
+        distill_mode:
+          type: [string, "null"]
+        distill_prompt_used:
+          type: [string, "null"]
+        llm_provider:
+          type: [string, "null"]
+        llm_model:
+          type: [string, "null"]
+        stt_provider:
+          type: [string, "null"]
+        stt_model:
+          type: [string, "null"]
+      additionalProperties: false
+
+    UsageEvent:
+      type: object
+      required: [id, kind, provider, model, input_tokens, output_tokens, audio_seconds, created_at]
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+          enum: [stt, llm]
+        provider:
+          type: string
+        model:
+          type: string
+        input_tokens:
+          type: [integer, "null"]
+        output_tokens:
+          type: [integer, "null"]
+        audio_seconds:
+          type: [integer, "null"]
+        created_at:
+          type: string
+          description: ISO 8601.
+
+    Cost:
+      type: object
+      required: [currency, stt, llm, total, unpriced]
+      properties:
+        currency:
+          type: string
+          examples: [USD]
+        stt:
+          type: number
+        llm:
+          type: number
+        total:
+          type: number
+        unpriced:
+          type: integer
+          description: Nº de eventos sin tarifa conocida.
+
+    Usage:
+      type: object
+      required: [events, cost]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/UsageEvent"
+        cost:
+          $ref: "#/components/schemas/Cost"
+
+    Config:
+      type: object
+      description: API keys (enmascaradas en respuestas) + defaults de proveedor/modelo.
+      required: [api_keys, defaults]
+      properties:
+        api_keys:
+          type: object
+          description: Clave por proveedor (enmascarada salvo últimos 4 chars).
+          additionalProperties:
+            type: string
+          properties:
+            anthropic: { type: string }
+            groq: { type: string }
+            google: { type: string }
+            azure-whisper: { type: string }
+            azure-openai: { type: string }
+        defaults:
+          type: object
+          required: [llm_provider, llm_model, stt_provider, stt_model]
+          properties:
+            llm_provider: { type: string }
+            llm_model: { type: string }
+            stt_provider: { type: string }
+            stt_model: { type: string }
+
+    ConfigResponse:
+      type: object
+      required: [config, llmProviders, sttProviders, configured]
+      properties:
+        config:
+          $ref: "#/components/schemas/Config"
+        llmProviders:
+          type: array
+          items:
+            type: string
+        sttProviders:
+          type: array
+          items:
+            type: string
+        configured:
+          type: boolean
+
+    ConfigUpdate:
+      type: object
+      description: Fusión superficial. Ambos campos opcionales.
+      properties:
+        api_keys:
+          type: object
+          additionalProperties:
+            type: string
+        defaults:
+          type: object
+          additionalProperties:
+            type: string
+
+    AddSegmentForm:
+      type: object
+      required: [audio]
+      properties:
+        audio:
+          type: string
+          format: binary
+          description: Audio del segmento (WebM/Opus u otro formato soportado).
+        source:
+          type: string
+          enum: [recorded, imported]
+          default: recorded
+
+    AddSegmentResult:
+      type: object
+      required: [segment, transcription_raw, session]
+      properties:
+        segment:
+          $ref: "#/components/schemas/Segment"
+        transcription_raw:
+          type: string
+          description: Transcripción de sesión recalculada tras añadir el segmento.
+        session:
+          $ref: "#/components/schemas/Session"
+
+    ReprocessResult:
+      type: object
+      required: [transcription_raw, session]
+      properties:
+        transcription_raw:
+          type: string
+        session:
+          $ref: "#/components/schemas/Session"
+
+    DistillRequest:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [completo, ligero, literal, limpio]
+          description: Ausente o desconocido → el backend resuelve a `completo`.
+        systemPrompt:
+          type: string
+          description: Override del prompt del modo, solo para esta petición.
+
+    LlmUsage:
+      type: [object, "null"]
+      description: Uso de tokens del LLM (forma dependiente del proveedor).
+      properties:
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+
+    DistillResult:
+      type: object
+      required: [prompt_distilled, usage, truncated, session]
+      properties:
+        prompt_distilled:
+          type: string
+        usage:
+          $ref: "#/components/schemas/LlmUsage"
+        truncated:
+          type: boolean
+        session:
+          $ref: "#/components/schemas/Session"
+
+    FamilyPrompts:
+      type: object
+      description: Mapa modo→texto de prompt de la familia del modelo activo.
+      additionalProperties:
+        type: string
+
+    DiagnosticEvent:
+      type: object
+      required: [captureRunId, type]
+      description: >
+        Evento de telemetría de captura. El backend descarta los que no traen
+        `type` + `captureRunId`.
+      properties:
+        captureRunId:
+          type: string
+        type:
+          type: string
+        seq:
+          type: integer
+        payload:
+          type: object
+          additionalProperties: true
+        clientTs:
+          type: [number, string]
+        sessionId:
+          type: integer
+
+    AuthConfig:
+      description: Bypass local, o parámetros MSAL en Azure.
+      oneOf:
+        - type: object
+          required: [devBypass]
+          properties:
+            devBypass:
+              const: true
+        - type: object
+          required: [clientId, authority, apiScope]
+          properties:
+            clientId:
+              type: [string, "null"]
+            authority:
+              type: string
+            apiScope:
+              type: [string, "null"]

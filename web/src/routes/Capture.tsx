@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Placeholder } from './Placeholder'
+import { api } from '@/api/client'
 
 type Health = 'checking' | 'ok' | 'fail'
 
 // Placeholder de la fase Captura (la real, con salvaguardas, llega en SPEC-04).
-// Incluye una comprobación del backend para verificar el lazo front→API extremo a extremo.
+// Comprueba el backend con el CLIENTE TIPADO (SPEC-02) para verificar el lazo
+// front→/api/v1 extremo a extremo.
 export default function Capture() {
   const { t } = useTranslation()
   const [health, setHealth] = useState<Health>('checking')
 
   useEffect(() => {
     let alive = true
-    fetch('/api/health/db')
-      .then((r) => alive && setHealth(r.ok ? 'ok' : 'fail'))
+    api
+      .healthDb()
+      .then(({ response }) => alive && setHealth(response.ok ? 'ok' : 'fail'))
       .catch(() => alive && setHealth('fail'))
     return () => {
       alive = false

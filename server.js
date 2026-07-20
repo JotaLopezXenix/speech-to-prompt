@@ -56,6 +56,24 @@ app.use('/api/prompts', promptsRouter);
 app.use('/api/diagnostics', identity);
 app.use('/api/diagnostics', diagnosticsRouter);
 
+// --- Alias de versión /api/v1 (SPEC-02, ciclo 2b) ----------------------------
+// Espejo ADITIVO del contrato actual: remonta los MISMOS routers con idéntico
+// orden de `identity`. /api/* (sin versión) queda byte-idéntico para el frontend
+// viejo; el frontend nuevo consume /api/v1 vía su cliente tipado. La fuente de
+// verdad del contrato es openapi/speech-to-prompt.yaml.
+app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/auth-config', authConfigRouter);
+app.use('/api/v1/config', identity);
+app.use('/api/v1/config', configRouter);
+app.use('/api/v1/sessions', identity);
+app.use('/api/v1/sessions', sessionsRouter);
+app.use('/api/v1/sessions', transcribeRouter);
+app.use('/api/v1/sessions', distillRouter);
+app.use('/api/v1/prompts', identity);
+app.use('/api/v1/prompts', promptsRouter);
+app.use('/api/v1/diagnostics', identity);
+app.use('/api/v1/diagnostics', diagnosticsRouter);
+
 // Frontend nuevo (ciclo 2b) servido en /app — ruta TEMPORAL para desprender R5
 // sin tocar el frontend viejo en /. En el cutover final, el build de web/ pasará
 // a servirse en /. La guarda existsSync evita 500 en local si aún no hay build.
