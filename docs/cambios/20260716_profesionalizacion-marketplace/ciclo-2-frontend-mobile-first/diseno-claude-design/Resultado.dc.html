@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  a { color: #2F5D50; text-decoration: none; }
+  a:hover { color: #274E43; }
+  @keyframes s2p-toast { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001ms !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#EDE8DD;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#201E19;display:flex;flex-direction:column;align-items:center;gap:22px;padding:34px 16px 56px;">
+
+  <div style="width:390px;height:844px;border-radius:44px;background:#111;padding:11px;box-shadow:0 28px 60px -22px rgba(32,30,25,.5),0 6px 18px -8px rgba(32,30,25,.35);flex:none;">
+    <div style="width:100%;height:100%;border-radius:34px;overflow:hidden;background:#F3EFE7;display:flex;flex-direction:column;position:relative;">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 24px 2px;font-size:13px;font-weight:600;color:#201E19;flex:none;">
+        <span style="font-variant-numeric:tabular-nums;">9:41</span>
+        <span style="width:16px;height:9px;border:1.5px solid #201E19;border-radius:3px;display:inline-block;position:relative;"><span style="position:absolute;inset:1.5px;background:#201E19;border-radius:1px;"></span></span>
+      </div>
+
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px;flex:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:#2F5D50;display:flex;align-items:center;justify-content:center;flex:none;">
+            <div style="width:9px;height:16px;border-radius:5px;background:#F3EFE7;position:relative;">
+              <div style="position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:1.5px;height:5px;background:#F3EFE7;"></div>
+              <div style="position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:12px;height:1.5px;background:#F3EFE7;"></div>
+            </div>
+          </div>
+          <span style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;font-weight:600;letter-spacing:-.01em;">Speech-to-Prompt</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button aria-label="Historial" style="width:38px;height:38px;border-radius:10px;border:1px solid #E7E0D2;background:#FBF8F2;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 10px;cursor:pointer;">
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;"></span>
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;"></span>
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;width:70%;"></span>
+          </button>
+          <div style="width:38px;height:38px;border-radius:999px;background:#E4ECE7;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">JC</div>
+        </div>
+      </header>
+
+      <div style="display:flex;align-items:center;gap:0;padding:0 20px 18px;flex:none;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">✓</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B6456;font-weight:600;">Captura</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#2F5D50;margin:0 6px;margin-bottom:19px;opacity:.4;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">✓</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B6456;font-weight:600;">Revisión</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#2F5D50;margin:0 6px;margin-bottom:19px;opacity:.4;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">✓</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B6456;font-weight:600;">Destilado</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#2F5D50;margin:0 6px;margin-bottom:19px;opacity:.4;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#2F5D50;color:#FBF8F2;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">4</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#2F5D50;font-weight:600;">Resultado</span>
+        </div>
+      </div>
+
+      <main style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px;padding:2px 20px 12px;">
+
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-family:'Source Serif 4',Georgia,serif;font-size:26px;font-weight:500;letter-spacing:-.01em;">Tu prompt está listo</div>
+          <p style="margin:0;font-size:14px;color:#6B6456;line-height:1.55;">Cópialo y pégalo en tu modelo de IA.</p>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:14.5px;line-height:1.66;color:#201E19;white-space:pre-wrap;">Actúa como copywriter especializado en café de especialidad.
+
+Escribe la descripción de producto de un café colombiano de origen único para una tienda online. Tono cercano pero profesional y cálido.
+
+Incluye: notas de cata (cacao, panela, cítricos), origen (Huila, Colombia) y método de tueste (medio). Extensión 90–120 palabras. Evita clichés. Cierra con una frase que invite a probarlo.</div>
+          <div style="display:flex;align-items:center;gap:14px;padding-top:12px;border-top:1px solid #F0EBDF;font-size:11.5px;color:#8A8272;font-family:'IBM Plex Mono',monospace;">
+            <span>Completo</span>
+            <span style="width:3px;height:3px;border-radius:999px;background:#CDC3B0;"></span>
+            <span>148 palabras</span>
+            <span style="width:3px;height:3px;border-radius:999px;background:#CDC3B0;"></span>
+            <span>0,8 s</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 15px;border:1.5px dashed #DDD5C4;border-radius:14px;background:#FAF6EE;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:12.5px;color:#8A8272;">Coste de esta sesión</span>
+            <span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:#B7791F;background:#FBF3E4;border:1px solid #EAD9B4;border-radius:999px;padding:2px 8px;">Próximamente</span>
+          </div>
+          <span style="font-size:13px;color:#C7BEAD;font-family:'IBM Plex Mono',monospace;">— · —</span>
+        </div>
+
+      </main>
+
+      <div style="flex:none;padding:14px 20px 26px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(to top,#F3EFE7 72%,rgba(243,239,231,0));">
+        <button onClick="{{ copy }}" style="{{ copyBtn }}">{{ copyLabel }}</button>
+        <div style="display:flex;gap:10px;">
+          <button style="flex:1;height:46px;border-radius:12px;border:1px solid #E7E0D2;background:#FBF8F2;color:#6B6456;font-size:14px;font-weight:600;cursor:pointer;">Editar</button>
+          <button style="flex:1;height:46px;border-radius:12px;border:1px solid #E7E0D2;background:#FBF8F2;color:#6B6456;font-size:14px;font-weight:600;cursor:pointer;">Nuevo dictado</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ copied }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:118px;z-index:20;background:#201E19;color:#F3EFE7;font-size:13.5px;font-weight:500;padding:11px 18px;border-radius:999px;display:flex;align-items:center;gap:8px;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);animation:s2p-toast .2s ease-out;">
+          <span style="width:16px;height:16px;border-radius:999px;background:#6FB59F;color:#1C1A16;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</span>
+          Prompt copiado
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { copied: false };
+  copy = () => {
+    this.setState({ copied: true });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ copied: false }), 1900);
+  };
+  componentWillUnmount() { clearTimeout(this._t); }
+  renderVals() {
+    const c = this.state.copied;
+    return {
+      copied: c,
+      copy: this.copy,
+      copyLabel: c ? 'Copiado ✓' : 'Copiar prompt',
+      copyBtn: {
+        width: '100%', height: '54px', borderRadius: '14px', border: 'none', cursor: 'pointer',
+        fontSize: '16px', fontWeight: '600', fontFamily: 'inherit',
+        color: '#FBF8F2', background: c ? '#3E7C58' : '#2F5D50',
+        boxShadow: '0 12px 24px -12px rgba(47,93,80,.6)', transition: 'background .15s',
+      },
+    };
+  }
+}
+</script>
+</body>
+</html>

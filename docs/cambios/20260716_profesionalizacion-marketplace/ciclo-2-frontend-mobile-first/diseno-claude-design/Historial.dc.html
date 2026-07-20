@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  a { color: #2F5D50; text-decoration: none; }
+  a:hover { color: #274E43; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#EDE8DD;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#201E19;display:flex;justify-content:center;padding:34px 16px 56px;">
+  <div style="width:390px;height:844px;border-radius:44px;background:#111;padding:11px;box-shadow:0 28px 60px -22px rgba(32,30,25,.5),0 6px 18px -8px rgba(32,30,25,.35);flex:none;">
+    <div style="width:100%;height:100%;border-radius:34px;overflow:hidden;background:#F3EFE7;display:flex;flex-direction:column;position:relative;">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 24px 2px;font-size:13px;font-weight:600;color:#201E19;flex:none;">
+        <span style="font-variant-numeric:tabular-nums;">9:41</span>
+        <span style="width:16px;height:9px;border:1.5px solid #201E19;border-radius:3px;display:inline-block;position:relative;"><span style="position:absolute;inset:1.5px;background:#201E19;border-radius:1px;"></span></span>
+      </div>
+
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 8px;flex:none;">
+        <button aria-label="Volver" style="width:38px;height:38px;border-radius:10px;border:1px solid #E7E0D2;background:#FBF8F2;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="width:9px;height:9px;border-left:2px solid #6B6456;border-bottom:2px solid #6B6456;transform:rotate(45deg);margin-left:3px;"></span></button>
+        <span style="font-family:'Source Serif 4',Georgia,serif;font-size:19px;font-weight:600;">Historial</span>
+        <div style="width:38px;height:38px;border-radius:999px;background:#E4ECE7;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">JC</div>
+      </header>
+
+      <div style="display:flex;gap:7px;padding:8px 20px 14px;flex:none;">
+        <span style="background:#2F5D50;color:#FBF8F2;font-size:13px;font-weight:600;border-radius:999px;padding:7px 15px;">Todas</span>
+        <span style="background:#FBF8F2;color:#6B6456;border:1px solid #E7E0D2;font-size:13px;font-weight:600;border-radius:999px;padding:7px 15px;">En curso</span>
+        <span style="background:#FBF8F2;color:#6B6456;border:1px solid #E7E0D2;font-size:13px;font-weight:600;border-radius:999px;padding:7px 15px;">Completadas</span>
+      </div>
+
+      <main style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:20px;padding:2px 20px 12px;">
+
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Hoy</div>
+
+          <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Descripción de café de especialidad</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;font-weight:600;color:#3E7C58;background:#E4ECE7;border-radius:999px;padding:2px 9px;">Completado</span>
+                <span style="font-size:12px;color:#A79E8D;">hace 2 h · 3 tramos</span>
+              </div>
+            </div>
+            <span style="width:8px;height:8px;border-right:2px solid #C7BEAD;border-top:2px solid #C7BEAD;transform:rotate(45deg);flex:none;"></span>
+          </div>
+
+          <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Correo a proveedor por el retraso</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;font-weight:600;color:#2F5D50;background:#E4ECE7;border-radius:999px;padding:2px 9px;">En destilado</span>
+                <span style="font-size:12px;color:#A79E8D;">hace 4 h · reanudar</span>
+              </div>
+            </div>
+            <span style="width:8px;height:8px;border-right:2px solid #C7BEAD;border-top:2px solid #C7BEAD;transform:rotate(45deg);flex:none;"></span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Esta semana</div>
+
+          <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Guion para vídeo de producto</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;font-weight:600;color:#B7791F;background:#FBF3E4;border-radius:999px;padding:2px 9px;">En captura</span>
+                <span style="font-size:12px;color:#A79E8D;">lun · reanudar</span>
+              </div>
+            </div>
+            <span style="width:8px;height:8px;border-right:2px solid #C7BEAD;border-top:2px solid #C7BEAD;transform:rotate(45deg);flex:none;"></span>
+          </div>
+
+          <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Resumen de la reunión de equipo</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;font-weight:600;color:#3E7C58;background:#E4ECE7;border-radius:999px;padding:2px 9px;">Completado</span>
+                <span style="font-size:12px;color:#A79E8D;">dom · 5 tramos</span>
+              </div>
+            </div>
+            <span style="width:8px;height:8px;border-right:2px solid #C7BEAD;border-top:2px solid #C7BEAD;transform:rotate(45deg);flex:none;"></span>
+          </div>
+
+          <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:14px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;">
+              <span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Ideas para la newsletter</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;font-weight:600;color:#8A8272;background:#EFEADE;border-radius:999px;padding:2px 9px;">Borrador</span>
+                <span style="font-size:12px;color:#A79E8D;">sáb · 1 tramo</span>
+              </div>
+            </div>
+            <span style="width:8px;height:8px;border-right:2px solid #C7BEAD;border-top:2px solid #C7BEAD;transform:rotate(45deg);flex:none;"></span>
+          </div>
+        </div>
+
+      </main>
+
+      <div style="flex:none;padding:14px 20px 26px;background:linear-gradient(to top,#F3EFE7 72%,rgba(243,239,231,0));">
+        <button style="width:100%;height:52px;border-radius:14px;border:none;background:#2F5D50;color:#FBF8F2;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 24px -12px rgba(47,93,80,.6);"><span style="font-size:19px;line-height:0;">+</span> Nuevo dictado</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

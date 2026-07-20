@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  a { color: #2F5D50; text-decoration: none; }
+  a:hover { color: #274E43; }
+  @keyframes s2p-sheet { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001ms !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#EDE8DD;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#201E19;display:flex;flex-direction:column;align-items:center;gap:22px;padding:34px 16px 56px;">
+
+  <div style="width:390px;height:844px;border-radius:44px;background:#111;padding:11px;box-shadow:0 28px 60px -22px rgba(32,30,25,.5),0 6px 18px -8px rgba(32,30,25,.35);flex:none;">
+    <div style="width:100%;height:100%;border-radius:34px;overflow:hidden;background:#F3EFE7;display:flex;flex-direction:column;position:relative;">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 24px 2px;font-size:13px;font-weight:600;color:#201E19;flex:none;">
+        <span style="font-variant-numeric:tabular-nums;">9:41</span>
+        <span style="width:16px;height:9px;border:1.5px solid #201E19;border-radius:3px;display:inline-block;position:relative;"><span style="position:absolute;inset:1.5px;background:#201E19;border-radius:1px;"></span></span>
+      </div>
+
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px;flex:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:#2F5D50;display:flex;align-items:center;justify-content:center;flex:none;">
+            <div style="width:9px;height:16px;border-radius:5px;background:#F3EFE7;position:relative;">
+              <div style="position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:1.5px;height:5px;background:#F3EFE7;"></div>
+              <div style="position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:12px;height:1.5px;background:#F3EFE7;"></div>
+            </div>
+          </div>
+          <span style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;font-weight:600;letter-spacing:-.01em;">Speech-to-Prompt</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button aria-label="Historial" style="width:38px;height:38px;border-radius:10px;border:1px solid #E7E0D2;background:#FBF8F2;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 10px;cursor:pointer;">
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;"></span>
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;"></span>
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;width:70%;"></span>
+          </button>
+          <div style="width:38px;height:38px;border-radius:999px;background:#E4ECE7;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">JC</div>
+        </div>
+      </header>
+
+      <div style="display:flex;align-items:center;gap:0;padding:0 20px 16px;flex:none;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">✓</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B6456;font-weight:600;">Captura</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#2F5D50;margin:0 6px;margin-bottom:19px;opacity:.4;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">✓</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B6456;font-weight:600;">Revisión</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#2F5D50;margin:0 6px;margin-bottom:19px;opacity:.4;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#2F5D50;color:#FBF8F2;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">3</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#2F5D50;font-weight:600;">Destilado</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#E7E0D2;margin:0 6px;margin-bottom:19px;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #E7E0D2;color:#A79E8D;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">4</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#A79E8D;font-weight:600;">Resultado</span>
+        </div>
+      </div>
+
+      <main style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:18px;padding:2px 20px 12px;">
+
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="font-family:'Source Serif 4',Georgia,serif;font-size:22px;font-weight:500;letter-spacing:-.01em;">Afina tu destilado</div>
+          <button onClick="{{ openDestilar }}" style="align-self:flex-start;display:flex;align-items:center;gap:7px;background:transparent;border:none;padding:0;cursor:pointer;color:#2F5D50;font-size:13px;font-weight:600;font-family:inherit;">
+            <span style="width:17px;height:17px;border-radius:999px;border:1.5px solid #2F5D50;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Source Serif 4',serif;font-style:italic;font-weight:600;flex:none;">i</span>
+            ¿Qué es destilar?
+          </button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Modo de destilado</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button onClick="{{ pickCompleto }}" style="{{ cardCompleto }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:600;">Completo</span><span style="{{ dotCompleto }}"></span></div>
+              <span style="font-size:11.5px;color:#8A8272;">Estructurado y detallado</span>
+            </button>
+            <button onClick="{{ pickLigero }}" style="{{ cardLigero }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:600;">Ligero</span><span style="{{ dotLigero }}"></span></div>
+              <span style="font-size:11.5px;color:#8A8272;">Breve y directo</span>
+            </button>
+            <button onClick="{{ pickLiteral }}" style="{{ cardLiteral }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:600;">Literal</span><span style="{{ dotLiteral }}"></span></div>
+              <span style="font-size:11.5px;color:#8A8272;">Fiel a tus palabras</span>
+            </button>
+            <button onClick="{{ pickLimpio }}" style="{{ cardLimpio }}">
+              <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:600;">Limpio</span><span style="{{ dotLimpio }}"></span></div>
+              <span style="font-size:11.5px;color:#8A8272;">Sin muletillas</span>
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Ajustes</div>
+          <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:14px;overflow:hidden;">
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                <span style="font-size:14.5px;font-weight:500;">Instrucción de rol</span>
+                <button onClick="{{ openRol }}" aria-label="Info" style="width:17px;height:17px;border-radius:999px;border:1.5px solid #CDC3B0;background:transparent;color:#8A8272;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Source Serif 4',serif;font-style:italic;cursor:pointer;flex:none;">i</button>
+              </div>
+              <button onClick="{{ toggleRol }}" aria-label="Instrucción de rol" style="{{ trackRol }}"><span style="{{ knobRol }}"></span></button>
+            </div>
+            <div style="height:1px;background:#F0EBDF;"></div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                <span style="font-size:14.5px;font-weight:500;">Restricciones</span>
+                <button onClick="{{ openRestric }}" aria-label="Info" style="width:17px;height:17px;border-radius:999px;border:1.5px solid #CDC3B0;background:transparent;color:#8A8272;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Source Serif 4',serif;font-style:italic;cursor:pointer;flex:none;">i</button>
+              </div>
+              <button onClick="{{ toggleRestric }}" aria-label="Restricciones" style="{{ trackRestric }}"><span style="{{ knobRestric }}"></span></button>
+            </div>
+            <div style="height:1px;background:#F0EBDF;"></div>
+
+            <div style="display:flex;flex-direction:column;gap:11px;padding:15px 16px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:14.5px;font-weight:500;">Nivel de detalle</span>
+                <button onClick="{{ openDetalle }}" aria-label="Info" style="width:17px;height:17px;border-radius:999px;border:1.5px solid #CDC3B0;background:transparent;color:#8A8272;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Source Serif 4',serif;font-style:italic;cursor:pointer;flex:none;">i</button>
+              </div>
+              <div style="display:flex;gap:6px;background:#F3EFE7;border:1px solid #E7E0D2;border-radius:999px;padding:4px;">
+                <button onClick="{{ setBajo }}" style="{{ segBajo }}">Bajo</button>
+                <button onClick="{{ setMedio }}" style="{{ segMedio }}">Medio</button>
+                <button onClick="{{ setAlto }}" style="{{ segAlto }}">Alto</button>
+              </div>
+            </div>
+
+          </div>
+          <span style="font-size:11.5px;color:#A79E8D;line-height:1.5;">Afinas el resultado sin tocar el prompt. La app lo redacta por ti.</span>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Destino y formato</span>
+            <span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:#B7791F;background:#FBF3E4;border:1px solid #EAD9B4;border-radius:999px;padding:2px 8px;">Próximamente</span>
+          </div>
+          <div style="border:1.5px dashed #DDD5C4;border-radius:14px;padding:14px;display:flex;gap:8px;background:#FAF6EE;">
+            <div style="flex:1;height:42px;border-radius:10px;background:#F3EFE7;border:1px solid #E7E0D2;display:flex;align-items:center;justify-content:space-between;padding:0 13px;color:#A79E8D;font-size:13.5px;">Destino<span style="font-size:10px;">▾</span></div>
+            <div style="flex:1;height:42px;border-radius:10px;background:#F3EFE7;border:1px solid #E7E0D2;display:flex;align-items:center;justify-content:space-between;padding:0 13px;color:#A79E8D;font-size:13.5px;">Formato<span style="font-size:10px;">▾</span></div>
+          </div>
+        </div>
+
+      </main>
+
+      <div style="flex:none;padding:14px 20px 26px;display:flex;gap:10px;background:linear-gradient(to top,#F3EFE7 68%,rgba(243,239,231,0));">
+        <button style="width:52px;height:52px;border-radius:14px;border:1px solid #E7E0D2;background:#FBF8F2;color:#6B6456;font-size:12px;font-weight:600;cursor:pointer;flex:none;">Regen.</button>
+        <button style="flex:1;height:52px;border-radius:14px;border:none;background:#2F5D50;color:#FBF8F2;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 24px -12px rgba(47,93,80,.6);">Ver resultado <span style="font-size:17px;">→</span></button>
+      </div>
+
+      <sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;">
+          <div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(32,30,25,.34);"></div>
+          <div style="position:relative;background:#FBF8F2;border-top-left-radius:22px;border-top-right-radius:22px;padding:10px 22px 30px;box-shadow:0 -14px 40px -16px rgba(32,30,25,.4);animation:s2p-sheet .2s ease-out;max-height:78%;overflow-y:auto;">
+            <div style="width:38px;height:4px;border-radius:999px;background:#E0D8C8;margin:4px auto 16px;"></div>
+            <div style="font-family:'Source Serif 4',Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-.01em;margin-bottom:12px;text-wrap:balance;">{{ sheetTitle }}</div>
+            <div style="font-size:15px;line-height:1.62;color:#4A4437;white-space:pre-wrap;">{{ sheetBody }}</div>
+            <button onClick="{{ closeSheet }}" style="margin-top:22px;width:100%;height:48px;border-radius:12px;border:1px solid #E7E0D2;background:#FFFFFF;color:#201E19;font-size:15px;font-weight:600;cursor:pointer;">Entendido</button>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { mode: 'completo', rol: true, restric: false, detail: 'medio', sheet: null };
+
+  sheets = {
+    destilar: {
+      title: '¿Qué es destilar?',
+      body: 'Destilar convierte tu dictado en un prompt limpio y bien estructurado, listo para pegar en tu modelo de IA. Tú no escribes el prompt: la app lo redacta por ti a partir de lo que dijiste.\n\nElige un modo según cuánto quieras que reelabore tus palabras:\n\n· Completo — prompt estructurado y detallado.\n· Ligero — versión breve y directa.\n· Literal — fiel a tus palabras, con mínima edición.\n· Limpio — quita muletillas y redundancias.',
+    },
+    rol: { title: 'Instrucción de rol', body: 'Añade al prompt una instrucción de rol —por ejemplo, «actúa como experto en…»— para orientar el tono y la precisión de la respuesta de la IA.' },
+    restric: { title: 'Restricciones', body: 'Incorpora límites explícitos al prompt (longitud, formato, qué evitar) para que la respuesta se ciña a lo que necesitas.' },
+    detalle: { title: 'Nivel de detalle', body: 'Controla cuánto contexto y estructura añade la app al redactar el prompt: de más escueto (Bajo) a más elaborado (Alto).' },
+  };
+
+  card(a) { return { display:'flex', flexDirection:'column', gap:'5px', textAlign:'left', cursor:'pointer', borderRadius:'14px', padding:'13px 14px', fontFamily:'inherit', background:a?'#E4ECE7':'#FBF8F2', border:a?'1.5px solid #2F5D50':'1.5px solid #E7E0D2' }; }
+  dot(a) { return { width:'16px', height:'16px', borderRadius:'999px', flex:'none', display:'inline-block', background:a?'#2F5D50':'transparent', border:a?'1.5px solid #2F5D50':'1.5px solid #CDC3B0', boxShadow:a?'inset 0 0 0 2.5px #E4ECE7':'none' }; }
+  track(on) { return { position:'relative', width:'46px', height:'27px', borderRadius:'999px', border:'none', cursor:'pointer', flex:'none', padding:'0', background:on?'#2F5D50':'#DDD5C4', transition:'background .15s' }; }
+  knob(on) { return { position:'absolute', top:'3px', left:on?'22px':'3px', width:'21px', height:'21px', borderRadius:'999px', background:'#FFFFFF', boxShadow:'0 1px 3px rgba(0,0,0,.2)', transition:'left .15s', display:'block' }; }
+  seg(a) { return { flex:'1', border:'none', cursor:'pointer', borderRadius:'999px', padding:'8px 0', fontSize:'13px', fontWeight:'600', fontFamily:'inherit', background:a?'#2F5D50':'transparent', color:a?'#FBF8F2':'#6B6456' }; }
+
+  open(k) { this.setState({ sheet: k }); }
+
+  renderVals() {
+    const m = this.state.mode, d = this.state.detail, s = this.state.sheet;
+    const sh = s ? this.sheets[s] : null;
+    return {
+      pickCompleto:()=>this.setState({mode:'completo'}), pickLigero:()=>this.setState({mode:'ligero'}),
+      pickLiteral:()=>this.setState({mode:'literal'}), pickLimpio:()=>this.setState({mode:'limpio'}),
+      cardCompleto:this.card(m==='completo'), cardLigero:this.card(m==='ligero'), cardLiteral:this.card(m==='literal'), cardLimpio:this.card(m==='limpio'),
+      dotCompleto:this.dot(m==='completo'), dotLigero:this.dot(m==='ligero'), dotLiteral:this.dot(m==='literal'), dotLimpio:this.dot(m==='limpio'),
+      toggleRol:()=>this.setState(p=>({rol:!p.rol})), trackRol:this.track(this.state.rol), knobRol:this.knob(this.state.rol),
+      toggleRestric:()=>this.setState(p=>({restric:!p.restric})), trackRestric:this.track(this.state.restric), knobRestric:this.knob(this.state.restric),
+      setBajo:()=>this.setState({detail:'bajo'}), setMedio:()=>this.setState({detail:'medio'}), setAlto:()=>this.setState({detail:'alto'}),
+      segBajo:this.seg(d==='bajo'), segMedio:this.seg(d==='medio'), segAlto:this.seg(d==='alto'),
+      openDestilar:()=>this.open('destilar'), openRol:()=>this.open('rol'), openRestric:()=>this.open('restric'), openDetalle:()=>this.open('detalle'),
+      closeSheet:()=>this.setState({sheet:null}),
+      sheetOpen:!!s, sheetTitle:sh?sh.title:'', sheetBody:sh?sh.body:'',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  a { color: #2F5D50; text-decoration: none; }
+  a:hover { color: #274E43; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#EDE8DD;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#201E19;padding:56px 24px 96px;">
+  <div style="max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:56px;">
+
+    <header style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:12px;background:#2F5D50;display:flex;align-items:center;justify-content:center;flex:none;">
+          <div style="width:10px;height:18px;border-radius:5px;background:#F3EFE7;position:relative;">
+            <div style="position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);width:1.5px;height:6px;background:#F3EFE7;"></div>
+            <div style="position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);width:14px;height:1.5px;background:#F3EFE7;"></div>
+          </div>
+        </div>
+        <span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8A8272;font-weight:600;">Speech-to-Prompt · Sistema de diseño</span>
+      </div>
+      <h1 style="margin:0;font-family:'Source Serif 4',Georgia,serif;font-size:44px;font-weight:600;letter-spacing:-.02em;line-height:1.05;max-width:640px;text-wrap:balance;">Dirección "B · Papel" — guía de tokens</h1>
+      <p style="margin:0;font-size:16px;line-height:1.6;color:#6B6456;max-width:620px;">Editorial y humano: papel cálido, acento verde pino, serif con contención. Todo componente lee <em>tokens</em>, nunca colores directos. Base de la traducción a React + Vite + TypeScript + Tailwind + shadcn/ui.</p>
+    </header>
+
+    <section style="background:#2C2822;border-radius:18px;padding:26px 28px;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8FA79C;font-weight:700;">Para Claude Code — handoff</div>
+      <p style="margin:0;font-size:14.5px;line-height:1.65;color:#D8D0C2;max-width:760px;">Lee estos ficheros en el proyecto y reconstruye en shadcn. No copies "mis" primitivos: compón los de shadcn y aplícales estos tokens. Las pantallas (<code>Captura</code>, <code>Revision</code>, <code>Destilado</code>, <code>Resultado</code>) son la referencia de composición y estados; esta página, la de valores.</p>
+      <pre style="margin:0;background:#1C1A16;border:1px solid #332F28;border-radius:12px;padding:18px;overflow-x:auto;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px;line-height:1.7;color:#C8D8D0;white-space:pre;">/* globals.css */
+:root {
+  --paper:#F3EFE7; --surface:#FBF8F2; --surface-elevated:#FFFFFF;
+  --ink:#201E19; --muted:#6B6456; --hairline:#E7E0D2;
+  --accent:#2F5D50; --accent-hover:#274E43; --accent-soft:#E4ECE7;
+  --success:#3E7C58; --warning:#B7791F; --error:#B4472E;
+}
+.dark {
+  --paper:#1C1A16; --surface:#24211C; --surface-elevated:#2C2822;
+  --ink:#F1ECE2; --muted:#A79E8D; --hairline:#332F28;
+  --accent:#6FB59F; --accent-soft:#22302B;
+}
+
+// tailwind.config.ts → theme.extend
+colors: {
+  paper:'var(--paper)', surface:'var(--surface)',
+  'surface-elevated':'var(--surface-elevated)',
+  ink:'var(--ink)', muted:'var(--muted)', hairline:'var(--hairline)',
+  accent:{ DEFAULT:'var(--accent)', hover:'var(--accent-hover)', soft:'var(--accent-soft)' },
+  success:'var(--success)', warning:'var(--warning)', error:'var(--error)',
+},
+borderRadius:{ input:'12px', card:'14px' },
+fontFamily:{
+  display:['"Source Serif 4"','Georgia','serif'],
+  sans:['system-ui','-apple-system','"Segoe UI"','Roboto','sans-serif'],
+  mono:['"IBM Plex Mono"','ui-monospace','monospace'],
+}
+
+/* Mapeo a los tokens semánticos de shadcn */
+--background: var(--paper);        --card: var(--surface-elevated);
+--foreground: var(--ink);          --muted-foreground: var(--muted);
+--border: var(--hairline);         --input: var(--hairline);
+--primary: var(--accent);          --primary-foreground: #FBF8F2;
+--ring: var(--accent);</pre>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h2 style="margin:0;font-family:'Source Serif 4',serif;font-size:26px;font-weight:600;letter-spacing:-.01em;">Color — claro (default)</h2>
+        <p style="margin:0;font-size:14px;color:#8A8272;">Contraste AA en ambos temas. Semánticos cálidos, sin rojo de sistema.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#F3EFE7;border:1px solid #E7E0D2;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">paper</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#F3EFE7</span><span style="font-size:11.5px;color:#A79E8D;">fondo de página</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#FBF8F2;border:1px solid #E7E0D2;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">surface</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#FBF8F2</span><span style="font-size:11.5px;color:#A79E8D;">tarjetas</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#FFFFFF;border:1px solid #E7E0D2;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">surface-elevated</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#FFFFFF</span><span style="font-size:11.5px;color:#A79E8D;">elementos elevados</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#E7E0D2;border:1px solid #DDD5C4;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">hairline</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#E7E0D2</span><span style="font-size:11.5px;color:#A79E8D;">bordes / filetes</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#201E19;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">ink</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#201E19</span><span style="font-size:11.5px;color:#A79E8D;">texto principal</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#6B6456;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">muted</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#6B6456</span><span style="font-size:11.5px;color:#A79E8D;">texto secundario</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#2F5D50;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">accent</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#2F5D50</span><span style="font-size:11.5px;color:#A79E8D;">acento (pino)</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#274E43;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">accent-hover</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#274E43</span><span style="font-size:11.5px;color:#A79E8D;">hover / activo</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#E4ECE7;border:1px solid #D5E0DA;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">accent-soft</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#E4ECE7</span><span style="font-size:11.5px;color:#A79E8D;">fondos de acento</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#3E7C58;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">success</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#3E7C58</span><span style="font-size:11.5px;color:#A79E8D;">éxito (cálido)</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#B7791F;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">warning</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#B7791F</span><span style="font-size:11.5px;color:#A79E8D;">aviso (cálido)</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:76px;border-radius:12px;background:#B4472E;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;">error</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#8A8272;">#B4472E</span><span style="font-size:11.5px;color:#A79E8D;">error (cálido)</span></div></div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h2 style="margin:0;font-family:'Source Serif 4',serif;font-size:26px;font-weight:600;letter-spacing:-.01em;">Color — oscuro (cálido)</h2>
+        <p style="margin:0;font-size:14px;color:#8A8272;">No negro frío. Solo se redefinen estos tokens; el resto se hereda.</p>
+      </div>
+      <div style="background:#1C1A16;border-radius:16px;padding:22px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#1C1A16;border:1px solid #332F28;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">paper</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#1C1A16</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#24211C;border:1px solid #332F28;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">surface</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#24211C</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#2C2822;border:1px solid #332F28;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">surface-elevated</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#2C2822</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#332F28;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">hairline</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#332F28</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#F1ECE2;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">ink</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#F1ECE2</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#A79E8D;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">muted</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#A79E8D</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#6FB59F;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">accent</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#6FB59F</span></div></div>
+        <div style="display:flex;flex-direction:column;gap:8px;"><div style="height:70px;border-radius:12px;background:#22302B;border:1px solid #332F28;"></div><div style="display:flex;flex-direction:column;gap:1px;"><span style="font-size:13px;font-weight:600;color:#F1ECE2;">accent-soft</span><span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:#A79E8D;">#22302B</span></div></div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h2 style="margin:0;font-family:'Source Serif 4',serif;font-size:26px;font-weight:600;letter-spacing:-.01em;">Tipografía — 3 roles</h2>
+        <p style="margin:0;font-size:14px;color:#8A8272;">Serif solo en titulares; sans humanista para UI; mono tabular para datos/cronómetro.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Display · Source Serif 4</span>
+          <span style="font-family:'Source Serif 4',serif;font-size:30px;font-weight:500;letter-spacing:-.01em;line-height:1.1;">¿Qué tienes en mente?</span>
+          <span style="font-size:12px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">weight 400–600 · titulares</span>
+        </div>
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Cuerpo / UI · system-ui</span>
+          <span style="font-size:16px;line-height:1.55;">Grabas por tramos, revisas la transcripción y la destilas en un prompt limpio.</span>
+          <span style="font-size:12px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">sans humanista · base 15px</span>
+        </div>
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Datos · IBM Plex Mono</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:500;font-variant-numeric:tabular-nums;color:#2F5D50;">00:24</span>
+          <span style="font-size:12px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">tabular-nums · cronómetro</span>
+        </div>
+      </div>
+      <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;align-items:baseline;gap:22px;flex-wrap:wrap;">
+        <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;align-self:center;">Escala móvil (px)</span>
+        <span style="font-size:12px;">12</span><span style="font-size:13px;">13</span><span style="font-size:15px;">15</span><span style="font-size:18px;">18</span><span style="font-size:22px;">22</span><span style="font-size:28px;">28</span><span style="font-size:36px;">36</span>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px;">
+      <h2 style="margin:0;font-family:'Source Serif 4',serif;font-size:26px;font-weight:600;letter-spacing:-.01em;">Espaciado, radios y movimiento</h2>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:16px;">
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Espaciado · base 4px</span>
+          <div style="display:flex;align-items:flex-end;gap:10px;">
+            <div style="width:4px;height:4px;background:#2F5D50;border-radius:2px;"></div>
+            <div style="width:8px;height:8px;background:#2F5D50;border-radius:2px;"></div>
+            <div style="width:12px;height:12px;background:#2F5D50;border-radius:2px;"></div>
+            <div style="width:16px;height:16px;background:#2F5D50;border-radius:2px;"></div>
+            <div style="width:24px;height:24px;background:#2F5D50;border-radius:2px;"></div>
+            <div style="width:32px;height:32px;background:#2F5D50;border-radius:3px;"></div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">4 · 8 · 12 · 16 · 24 · 32</span>
+        </div>
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Radios</span>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="width:38px;height:38px;background:#E4ECE7;border:1px solid #2F5D50;border-radius:12px;"></div>
+            <div style="width:38px;height:38px;background:#E4ECE7;border:1px solid #2F5D50;border-radius:14px;"></div>
+            <div style="width:56px;height:30px;background:#E4ECE7;border:1px solid #2F5D50;border-radius:999px;"></div>
+            <div style="width:38px;height:38px;background:#E4ECE7;border:1px solid #2F5D50;border-radius:999px;"></div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">12 input · 14 card · pill · círculo</span>
+        </div>
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Movimiento</span>
+          <span style="font-size:14px;line-height:1.5;color:#4A4437;">Calmado y con propósito. Pulso suave al grabar. Transiciones 150–200 ms.</span>
+          <span style="font-size:12px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">respeta prefers-reduced-motion</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <h2 style="margin:0;font-family:'Source Serif 4',serif;font-size:26px;font-weight:600;letter-spacing:-.01em;">Componentes propios</h2>
+        <p style="margin:0;font-size:14px;color:#8A8272;">Lo que shadcn no trae. El resto (Button, Input, Sheet, Switch, Toggle-group) se compone con shadcn + estos tokens.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;align-items:center;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;align-self:flex-start;">Botón de grabar</span>
+          <div style="display:flex;gap:18px;align-items:center;">
+            <div style="width:64px;height:64px;border-radius:999px;background:#2F5D50;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 24px -12px rgba(47,93,80,.6);"><div style="width:16px;height:26px;border-radius:8px;background:#F3EFE7;"></div></div>
+            <div style="position:relative;width:64px;height:64px;border-radius:999px;background:#2F5D50;display:flex;align-items:center;justify-content:center;"><span style="width:20px;height:20px;border-radius:6px;background:#F3EFE7;"></span></div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;">listo · grabando</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Chip de tramo</span>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:inline-flex;align-self:flex-start;align-items:center;gap:7px;background:#FBF8F2;border:1px solid #E7E0D2;border-radius:999px;padding:7px 13px;"><span style="width:16px;height:16px;border-radius:999px;background:#E4ECE7;color:#3E7C58;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</span><span style="font-size:13px;font-weight:500;">Tramo 1</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A8272;">0:42</span></div>
+            <div style="display:inline-flex;align-self:flex-start;align-items:center;gap:7px;background:#E4ECE7;border:1px solid #2F5D50;border-radius:999px;padding:7px 13px;"><span style="width:8px;height:8px;border-radius:999px;background:#2F5D50;"></span><span style="font-size:13px;font-weight:600;color:#2F5D50;">Tramo 3</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#2F5D50;">0:24</span></div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;">transcrito · en vivo</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Toggle</span>
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="position:relative;width:46px;height:27px;border-radius:999px;background:#2F5D50;"><span style="position:absolute;top:3px;left:22px;width:21px;height:21px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span></div>
+            <div style="position:relative;width:46px;height:27px;border-radius:999px;background:#DDD5C4;"><span style="position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:999px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span></div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;">on · off</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Tarjeta de modo</span>
+          <div style="display:flex;flex-direction:column;gap:5px;border-radius:14px;padding:13px 14px;background:#E4ECE7;border:1.5px solid #2F5D50;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:14px;font-weight:600;">Completo</span><span style="width:16px;height:16px;border-radius:999px;background:#2F5D50;box-shadow:inset 0 0 0 2.5px #E4ECE7;"></span></div><span style="font-size:11.5px;color:#8A8272;">Estructurado y detallado</span></div>
+          <span style="font-size:12px;color:#A79E8D;">seleccionada</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Stepper</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="width:24px;height:24px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">✓</div>
+            <div style="flex:1;height:1.5px;background:#2F5D50;opacity:.4;"></div>
+            <div style="width:24px;height:24px;border-radius:999px;background:#2F5D50;color:#FBF8F2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">2</div>
+            <div style="flex:1;height:1.5px;background:#E7E0D2;"></div>
+            <div style="width:24px;height:24px;border-radius:999px;background:#FBF8F2;border:1.5px solid #E7E0D2;color:#A79E8D;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;">3</div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;">hecho · activo · pendiente</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Banner de salvaguarda</span>
+          <div style="background:#FBF3E4;border:1px solid #EAD9B4;border-radius:12px;padding:12px;display:flex;gap:10px;align-items:flex-start;"><span style="width:20px;height:20px;border-radius:999px;background:#B7791F;color:#FBF8F2;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex:none;">!</span><span style="font-size:13px;line-height:1.45;">La grabación se detuvo. ¿Guardar o descartar?</span></div>
+          <span style="font-size:12px;color:#A79E8D;">no perder audio</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Botones</span>
+          <div style="display:flex;flex-direction:column;gap:9px;">
+            <button style="height:44px;border-radius:12px;border:none;background:#2F5D50;color:#FBF8F2;font-size:14px;font-weight:600;cursor:pointer;">Primario</button>
+            <button style="height:44px;border-radius:12px;border:1px solid #E7E0D2;background:#FBF8F2;color:#6B6456;font-size:14px;font-weight:600;cursor:pointer;">Ghost</button>
+          </div>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Info contextual (i)</span>
+          <div style="display:flex;align-items:center;gap:9px;"><span style="width:18px;height:18px;border-radius:999px;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:'Source Serif 4',serif;font-style:italic;font-weight:600;">i</span><span style="font-size:13.5px;color:#4A4437;">abre hoja inferior</span></div>
+          <span style="font-size:12px;color:#A79E8D;">divulgación progresiva</span>
+        </div>
+
+        <div style="background:#FBF8F2;border:1px solid #E7E0D2;border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Marca / avatar</span>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:36px;height:36px;border-radius:10px;background:#2F5D50;display:flex;align-items:center;justify-content:center;"><div style="width:9px;height:16px;border-radius:5px;background:#F3EFE7;"></div></div>
+            <div style="width:36px;height:36px;border-radius:999px;background:#E4ECE7;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;">JC</div>
+          </div>
+          <span style="font-size:12px;color:#A79E8D;">wordmark · avatar</span>
+        </div>
+
+      </div>
+    </section>
+
+    <footer style="border-top:1px solid #E7E0D2;padding-top:24px;display:flex;flex-direction:column;gap:6px;">
+      <span style="font-size:13px;color:#8A8272;">Pantallas de referencia en el proyecto: <a href="Captura.dc.html">Captura</a> · <a href="Revision.dc.html">Revisión</a> · <a href="Destilado.dc.html">Destilado</a> · <a href="Resultado.dc.html">Resultado</a></span>
+      <span style="font-size:12px;color:#A79E8D;">Speech-to-Prompt · Ciclo 2a · dirección "B · Papel"</span>
+    </footer>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { -webkit-font-smoothing: antialiased; }
+  a { color: #2F5D50; text-decoration: none; }
+  a:hover { color: #274E43; }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#EDE8DD;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#201E19;display:flex;flex-direction:column;align-items:center;gap:22px;padding:34px 16px 56px;">
+
+  <div style="width:390px;height:844px;border-radius:44px;background:#111;padding:11px;box-shadow:0 28px 60px -22px rgba(32,30,25,.5),0 6px 18px -8px rgba(32,30,25,.35);flex:none;">
+    <div style="width:100%;height:100%;border-radius:34px;overflow:hidden;background:#F3EFE7;display:flex;flex-direction:column;position:relative;">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 24px 2px;font-size:13px;font-weight:600;color:#201E19;flex:none;">
+        <span style="font-variant-numeric:tabular-nums;">9:41</span>
+        <span style="width:16px;height:9px;border:1.5px solid #201E19;border-radius:3px;display:inline-block;position:relative;"><span style="position:absolute;inset:1.5px;background:#201E19;border-radius:1px;"></span></span>
+      </div>
+
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 14px;flex:none;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:10px;background:#2F5D50;display:flex;align-items:center;justify-content:center;flex:none;">
+            <div style="width:9px;height:16px;border-radius:5px;background:#F3EFE7;position:relative;">
+              <div style="position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:1.5px;height:5px;background:#F3EFE7;"></div>
+              <div style="position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:12px;height:1.5px;background:#F3EFE7;"></div>
+            </div>
+          </div>
+          <span style="font-family:'Source Serif 4',Georgia,serif;font-size:18px;font-weight:600;letter-spacing:-.01em;">Speech-to-Prompt</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button aria-label="Historial" style="width:38px;height:38px;border-radius:10px;border:1px solid #E7E0D2;background:#FBF8F2;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 10px;cursor:pointer;">
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;"></span>
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;"></span>
+            <span style="height:1.5px;background:#6B6456;border-radius:2px;width:70%;"></span>
+          </button>
+          <div style="width:38px;height:38px;border-radius:999px;background:#E4ECE7;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">JC</div>
+        </div>
+      </header>
+
+      <div style="display:flex;align-items:center;gap:0;padding:0 20px 16px;flex:none;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #2F5D50;color:#2F5D50;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;">✓</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#6B6456;font-weight:600;">Captura</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#2F5D50;margin:0 6px;margin-bottom:19px;opacity:.4;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#2F5D50;color:#FBF8F2;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">2</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#2F5D50;font-weight:600;">Revisión</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#E7E0D2;margin:0 6px;margin-bottom:19px;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #E7E0D2;color:#A79E8D;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">3</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#A79E8D;font-weight:600;">Destilado</span>
+        </div>
+        <div style="flex:1;height:1.5px;background:#E7E0D2;margin:0 6px;margin-bottom:19px;"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;">
+          <div style="width:26px;height:26px;border-radius:999px;background:#FBF8F2;border:1.5px solid #E7E0D2;color:#A79E8D;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">4</div>
+          <span style="font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#A79E8D;font-weight:600;">Resultado</span>
+        </div>
+      </div>
+
+      <main style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding:2px 20px 12px;">
+
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-family:'Source Serif 4',Georgia,serif;font-size:24px;font-weight:500;letter-spacing:-.01em;">Revisa tu dictado</div>
+          <p style="margin:0;font-size:14px;color:#6B6456;line-height:1.55;">Corrige lo que quieras antes de destilar. Se han unido 3 tramos.</p>
+        </div>
+
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;flex:none;">
+          <div style="display:flex;align-items:center;gap:7px;background:#FBF8F2;border:1px solid #E7E0D2;border-radius:999px;padding:7px 13px;flex:none;"><span style="width:16px;height:16px;border-radius:999px;background:#E4ECE7;color:#3E7C58;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</span><span style="font-size:13px;font-weight:500;">Tramo 1</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A8272;">0:42</span></div>
+          <div style="display:flex;align-items:center;gap:7px;background:#FBF8F2;border:1px solid #E7E0D2;border-radius:999px;padding:7px 13px;flex:none;"><span style="width:16px;height:16px;border-radius:999px;background:#E4ECE7;color:#3E7C58;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</span><span style="font-size:13px;font-weight:500;">Tramo 2</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A8272;">0:38</span></div>
+          <div style="display:flex;align-items:center;gap:7px;background:#FBF8F2;border:1px solid #E7E0D2;border-radius:999px;padding:7px 13px;flex:none;"><span style="width:16px;height:16px;border-radius:999px;background:#E4ECE7;color:#3E7C58;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;">✓</span><span style="font-size:13px;font-weight:500;">Tramo 3</span><span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8A8272;">0:24</span></div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex:none;">
+          <span style="font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#8A8272;font-weight:600;">Transcripción</span>
+          <span style="font-size:11.5px;color:#A79E8D;font-family:'IBM Plex Mono',monospace;">1:44 · 58 palabras</span>
+        </div>
+
+        <div style="background:#FFFFFF;border:1px solid #E7E0D2;border-radius:16px;padding:17px;flex:1;min-height:0;position:relative;">
+          <div contenteditable="true" style="font-size:15px;line-height:1.7;color:#201E19;outline:none;min-height:100%;">Necesito un prompt para generar la descripción de producto de una tienda online de café de especialidad. Que suene cercano pero profesional, con tono cálido. Y bueno, que incluya notas de cata y el origen del grano, y también el método de tueste si puede ser.</div>
+        </div>
+
+      </main>
+
+      <div style="flex:none;padding:14px 20px 26px;display:flex;gap:10px;background:linear-gradient(to top,#F3EFE7 68%,rgba(243,239,231,0));">
+        <button style="width:120px;height:52px;border-radius:14px;border:1px solid #E7E0D2;background:#FBF8F2;color:#6B6456;font-size:14px;font-weight:600;cursor:pointer;flex:none;">Añadir tramo</button>
+        <button style="flex:1;height:52px;border-radius:14px;border:none;background:#2F5D50;color:#FBF8F2;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 12px 24px -12px rgba(47,93,80,.6);">Destilar <span style="font-size:17px;">→</span></button>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
