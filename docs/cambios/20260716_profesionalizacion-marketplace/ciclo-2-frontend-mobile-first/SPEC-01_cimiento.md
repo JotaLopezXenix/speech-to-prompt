@@ -8,6 +8,7 @@
 > - **Tailwind v4 es CSS-first:** plugin **`@tailwindcss/vite`** (no `postcss.config.js` ni `tailwind.config.ts`). Tokens y dark mode se declaran en `web/src/index.css` con `@import "tailwindcss"`, **`@theme`** (`--color-paper`, `--color-accent`, `--radius-card`, `--font-display`, …) y **`@custom-variant dark`**. Los **valores** (hex, radios, fuentes) de `DESIGN-SYSTEM-2a` NO cambian; solo el mecanismo.
 > - **Vite** se fija a la versión estable que soporten los plugins (`@vitejs/plugin-react`, `vite-plugin-pwa`); si `vite-plugin-pwa` no soporta aún Vite 8, se baja Vite a la mayor versión compatible. Se reporta la versión final elegida.
 > - **Lint:** `oxlint` (lo que trae el scaffold), no eslint.
+> - **Icono PWA:** en vez de PNG 192/512 (§3.1) se entrega un único `icon.svg` (`sizes:"any"`, `any`+`maskable`), instalable en navegadores modernos; el raster 192/512 queda como pulido menor (revisión Fase 4, gravedad baja).
 > - Lo demás del SPEC (estructura de carpetas, navegación, tema por clase → `@custom-variant dark`, i18n, PWA, delta `/app`, "qué se PRESERVA", verificación y regresión) se mantiene.
 
 ## 1. Resumen

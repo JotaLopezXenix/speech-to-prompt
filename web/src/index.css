@@ -30,7 +30,7 @@
   /* Tokens semánticos shadcn → paleta */
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: var(--surface);
+  --card: var(--surface-elevated);
   --card-foreground: var(--ink);
   --popover: var(--surface-elevated);
   --popover-foreground: var(--ink);
