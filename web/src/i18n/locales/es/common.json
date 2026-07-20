@@ -38,8 +38,17 @@
   },
   "login": {
     "title": "Entrar",
+    "tagline": "Tus pensamientos hablados, en calma y claros.",
+    "subtitle": "Dicta por tramos, revisa y destila un prompt limpio para tu IA. En cualquier momento muerto.",
     "cta": "Entrar con Microsoft",
-    "placeholder": "Login real con MSAL en SPEC-03."
+    "terms": "Al continuar aceptas los Términos y la Política de privacidad."
+  },
+  "auth": {
+    "loading": "Preparando tu sesión…",
+    "signingIn": "Entrando…",
+    "logout": "Cerrar sesión",
+    "error": "No se pudo iniciar la autenticación.",
+    "retry": "Reintentar"
   },
   "health": {
     "checking": "Comprobando conexión con el backend…",

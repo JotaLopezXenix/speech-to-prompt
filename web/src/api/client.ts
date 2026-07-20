@@ -17,11 +17,31 @@ export function setTokenProvider(fn: TokenProvider): void {
   tokenProvider = fn
 }
 
+// Handler de 401 irrecuperable. En SPEC-03 el AuthProvider lo cablea a la
+// re-adquisición interactiva de MSAL (acquireTokenRedirect); en devBypass no se
+// registra (el backend acepta al usuario dev, nunca hay 401). Sin acoplar a MSAL.
+type UnauthorizedHandler = () => void
+
+let unauthorizedHandler: UnauthorizedHandler | null = null
+let handling401 = false
+
+export function setUnauthorizedHandler(fn: UnauthorizedHandler | null): void {
+  unauthorizedHandler = fn
+}
+
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
     const token = await tokenProvider()
     if (token) request.headers.set('Authorization', `Bearer ${token}`)
     return request
+  },
+  onResponse({ response }) {
+    // 401: token ausente/expirado. Dispara re-adquisición interactiva (navega
+    // fuera), una sola vez para no encadenar redirecciones ante 401 concurrentes.
+    if (response.status === 401 && unauthorizedHandler && !handling401) {
+      handling401 = true
+      unauthorizedHandler()
+    }
   },
 }
 

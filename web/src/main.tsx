@@ -7,6 +7,7 @@ import './index.css'
 import './i18n'
 import App from './App'
 import { ThemeProvider } from './theme/ThemeProvider'
+import { AuthProvider } from './auth/AuthProvider'
 
 // Fija la clase de tema antes del primer paint para evitar parpadeo (default claro).
 if (localStorage.getItem('stp-theme') === 'dark') {
@@ -16,7 +17,9 @@ if (localStorage.getItem('stp-theme') === 'dark') {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 )
