@@ -42,7 +42,19 @@
     "warn": {
       "noSignal": "No se detecta sonido del micrófono. Comprueba que el micro correcto esté activo y que estás hablando."
     },
-    "mic": { "label": "Micrófono" },
+    "mic": {
+      "label": "Micrófono",
+      "checkLevel": "Habla para comprobar el nivel ↑",
+      "detected": "Micrófono detectado ✓",
+      "noSignalPreview": "Sin señal: este dispositivo parece mudo. Prueba con otro micrófono.",
+      "openError": "No se pudo abrir el micrófono: {{msg}}"
+    },
+    "error": {
+      "mic": "Se necesita acceso al micrófono. Permite el acceso y vuelve a intentarlo.",
+      "start": "Error al iniciar la grabación: {{msg}}",
+      "micDenied": "Se necesita acceso al micrófono. Permite el acceso en el navegador y recarga la página.",
+      "micAccess": "No se pudo acceder al micrófono: {{msg}}"
+    },
     "guard": {
       "suspectTitle": "Revisa este audio.",
       "send": "Enviar igualmente",
@@ -50,11 +62,13 @@
     },
     "safeguard": {
       "title": "La grabación se detuvo.",
+      "message": "Hemos conservado el audio grabado hasta el corte. ¿Guardar este tramo o descartarlo?",
       "keep": "Guardar tramo",
       "discard": "Descartar"
     },
     "retry": {
       "title": "No se pudo guardar el audio.",
+      "message": "Tu audio no se ha perdido. Puedes reintentar. ({{msg}})",
       "retry": "Reintentar",
       "discard": "Descartar"
     }

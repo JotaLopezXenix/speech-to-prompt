@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import type { components } from '@/api/schema'
 import { api, unwrap } from '@/api/client'
 import { PATHS } from '@/routes/paths'
@@ -60,6 +61,7 @@ type CommitOpts = { source?: 'recorded' | 'imported'; seconds?: number; filename
 export function useCapture(): CaptureController {
   const navigate = useNavigate()
   const active = useActiveSession()
+  const { t } = useTranslation()
 
   // --- Instancias imperativas (una sola vez) --------------------------------
   const recorderRef = useRef<AudioRecorder | null>(null)
@@ -92,6 +94,11 @@ export function useCapture(): CaptureController {
   const selectedDeviceIdRef = useRef(selectedDeviceId)
   const pendingRetryRef = useRef<{ blob: Blob; opts: CommitOpts } | null>(null)
   const bannerResolveRef = useRef<((v: boolean) => void) | null>(null)
+  // Candado de reentrada: cubre toda la operación async de toggleRecord (parar +
+  // commit + banner suspect, o arrancar). Reemplaza el `btnRecord.disabled=true`
+  // que el viejo mantenía durante stop()/commit; evita que un 2º clic (o Grabar
+  // durante el banner suspect) arranque una grabación espuria o cuelgue el commit.
+  const transitioningRef = useRef(false)
   const signalDetectedRef = useRef(false)
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const previewStreamRef = useRef<MediaStream | null>(null)
@@ -155,20 +162,20 @@ export function useCapture(): CaptureController {
       const constraints = deviceId ? { deviceId: { exact: deviceId } } : true
       stream = await navigator.mediaDevices.getUserMedia({ audio: constraints })
     } catch (err) {
-      setMicStatus({ text: `No se pudo abrir el micrófono: ${(err as Error).message}`, error: true })
+      setMicStatus({ text: t('capture.mic.openError', { msg: (err as Error).message }), error: true })
       return
     }
     previewStreamRef.current = stream
-    setMicStatus({ text: 'Habla para comprobar el nivel ↑', error: false })
+    setMicStatus({ text: t('capture.mic.checkLevel'), error: false })
     previewStartedAtRef.current = Date.now()
     meter.resetPeak()
     meter.onLevel = (rms) => {
       pushLevel(rms)
       const peak = meter.peakSinceReset
       if (!recorder.isRecording && Date.now() - previewStartedAtRef.current > PREVIEW_ARM_MS && peak < PEAK_MIN) {
-        setMicStatus({ text: 'Sin señal: este dispositivo parece mudo. Prueba con otro micrófono.', error: true })
+        setMicStatus({ text: t('capture.mic.noSignalPreview'), error: true })
       } else if (peak >= PEAK_MIN && !recorder.isRecording) {
-        setMicStatus({ text: 'Micrófono detectado ✓', error: false })
+        setMicStatus({ text: t('capture.mic.detected'), error: false })
       }
     }
     meter.start(stream)
@@ -211,8 +218,8 @@ export function useCapture(): CaptureController {
     } catch (err) {
       setError(
         (err as Error).name === 'NotAllowedError'
-          ? 'Se necesita acceso al micrófono. Permite el acceso en el navegador y recarga la página.'
-          : `No se pudo acceder al micrófono: ${(err as Error).message}`,
+          ? t('capture.error.micDenied')
+          : t('capture.error.micAccess', { msg: (err as Error).message }),
       )
       return
     } finally {
@@ -290,7 +297,7 @@ export function useCapture(): CaptureController {
     } catch (err) {
       // No perder el audio: retenerlo y ofrecer reintentar (cold-start de la BD, etc.).
       pendingRetryRef.current = { blob, opts }
-      setBanner({ kind: 'retry', message: `Error al guardar el segmento: ${(err as Error).message}` })
+      setBanner({ kind: 'retry', message: t('capture.retry.message', { msg: (err as Error).message }) })
     } finally {
       setBusy(false)
       void startPreview(selectedDeviceIdRef.current)
@@ -306,10 +313,7 @@ export function useCapture(): CaptureController {
     diag.logEvent(EV.chunksPreserved, { chunkCount: meta?.chunkCount, totalBytes: meta?.totalBytes })
 
     if (blob && blob.size > 0) {
-      const keep = await askBanner(
-        'safeguard',
-        'La grabación se detuvo de forma inesperada. Hemos conservado el audio grabado hasta el corte. ¿Guardar este tramo?',
-      )
+      const keep = await askBanner('safeguard', t('capture.safeguard.message'))
       if (keep) {
         diag.logEvent(EV.recoveredSegmentKept, { totalBytes: blob.size })
         await commitSegment(blob, { source: 'recorded', seconds: meta?.elapsedSeconds || 0, skipGuard: true })
@@ -355,47 +359,53 @@ export function useCapture(): CaptureController {
       recorderState: recorder.mediaRecorder?.state || 'inactive',
     })
 
-    if (busyRef.current) return
+    // Candado de reentrada: bloquea un 2º clic (o Grabar durante el banner suspect)
+    // mientras la operación async está en vuelo. `busyRef` cubre la transcripción.
+    if (busyRef.current || transitioningRef.current) return
     setError(null)
-
-    if (recorder.isRecording || recorder.isPaused) {
-      // Detener segmento → transcribir
-      const seconds = recorder.getElapsedSeconds()
-      const blob = await recorder.stop()
-      stopMediaSessionProbe()
-      stopLiveMeter()
-      setStatus('idle')
-      setElapsed(0)
-      if (blob && blob.size > 0) {
-        await commitSegment(blob, { source: 'recorded', seconds })
+    transitioningRef.current = true
+    try {
+      if (recorder.isRecording || recorder.isPaused) {
+        // Detener segmento → transcribir
+        const seconds = recorder.getElapsedSeconds()
+        const blob = await recorder.stop()
+        stopMediaSessionProbe()
+        stopLiveMeter()
+        setStatus('idle')
+        setElapsed(0)
+        if (blob && blob.size > 0) {
+          await commitSegment(blob, { source: 'recorded', seconds })
+        } else {
+          void startPreview(selectedDeviceIdRef.current)
+        }
+        diag.endCaptureRun()
       } else {
-        void startPreview(selectedDeviceIdRef.current)
+        // Empezar un nuevo segmento
+        api.warmup() // despierta la BD mientras se graba (robustez-coldstart-sql)
+        stopPreview()
+        diag.startCaptureRun()
+        diag.logEvent(EV.captureStarted, {
+          deviceId: selectedDeviceIdRef.current || null,
+          userAgent: navigator.userAgent,
+          visibilityState: document.visibilityState,
+        })
+        try {
+          await recorder.start(selectedDeviceIdRef.current || null)
+          startMediaSessionProbe()
+          setStatus('recording')
+          if (recorder.stream) attachLiveMeter(recorder.stream)
+        } catch (err) {
+          diag.endCaptureRun() // el run no llegó a arrancar: ciérralo (evita visibility_change huérfanos)
+          setError(
+            (err as Error).name === 'NotAllowedError'
+              ? t('capture.error.mic')
+              : t('capture.error.start', { msg: (err as Error).message }),
+          )
+          void startPreview(selectedDeviceIdRef.current)
+        }
       }
-      diag.endCaptureRun()
-    } else {
-      // Empezar un nuevo segmento
-      api.warmup() // despierta la BD mientras se graba (robustez-coldstart-sql)
-      stopPreview()
-      diag.startCaptureRun()
-      diag.logEvent(EV.captureStarted, {
-        deviceId: selectedDeviceIdRef.current || null,
-        userAgent: navigator.userAgent,
-        visibilityState: document.visibilityState,
-      })
-      try {
-        await recorder.start(selectedDeviceIdRef.current || null)
-        startMediaSessionProbe()
-        setStatus('recording')
-        if (recorder.stream) attachLiveMeter(recorder.stream)
-      } catch (err) {
-        diag.endCaptureRun() // el run no llegó a arrancar: ciérralo (evita visibility_change huérfanos)
-        setError(
-          (err as Error).name === 'NotAllowedError'
-            ? 'Se necesita acceso al micrófono. Permite el acceso y vuelve a intentarlo.'
-            : `Error al iniciar la grabación: ${(err as Error).message}`,
-        )
-        void startPreview(selectedDeviceIdRef.current)
-      }
+    } finally {
+      transitioningRef.current = false
     }
   }
 
@@ -440,12 +450,19 @@ export function useCapture(): CaptureController {
     }
 
     return () => {
-      // No forzamos el stop del recorder (evita salvaguarda sobre un árbol
-      // desmontado); soltamos preview/medición y cerramos el run de telemetría.
+      // Soltamos los handlers de render (evita setState sobre un árbol desmontado).
       recorder.onTimeUpdate = null
       recorder.onExternalStop = null
+      // Si se navega fuera GRABANDO (la SPA lo permite: nav/stepper del AppShell),
+      // liberamos el micro con una parada INTENCIONAL: no dispara salvaguarda (el
+      // handler ya está anulado) y el audio en curso no commiteado se descarta a
+      // propósito (el usuario salió sin cerrar el tramo). Evita el micro colgado.
+      if (recorder.isRecording || recorder.isPaused) void recorder.stop()
       stopPreview()
       stopLiveMeter()
+      // Resuelve una promesa de banner pendiente para no dejar un closure colgado.
+      bannerResolveRef.current?.(false)
+      bannerResolveRef.current = null
       diag.endCaptureRun()
       if (import.meta.env.DEV) delete (window as unknown as { __stpCapture?: unknown }).__stpCapture
     }
