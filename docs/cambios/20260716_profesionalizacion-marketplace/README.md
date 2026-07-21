@@ -47,4 +47,5 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 
 - `handoffs/HANDOFF-2026-07-18.md` — cierre del ciclo 1 (cutover a prod verificado) + arranque del ciclo 2.
 - `handoffs/HANDOFF-2026-07-20.md` — ciclo 2: 2a diseño completo (Claude Design) + SPEC-01 `cimiento` de 2b cerrado (desplegado, R5 verificado en Azure).
-- `handoffs/HANDOFF-2026-07-21.md` — ciclo 2b: **SPEC-02 `api-tipada` y SPEC-03 `auth-login` CERRADOS** (ambos desplegados y verificados en Azure; SPEC-03 con login real e2e). Siguiente: SPEC-04.
+- `handoffs/HANDOFF-2026-07-21.md` — ciclo 2b: **SPEC-02 `api-tipada` y SPEC-03 `auth-login` CERRADOS** (ambos desplegados y verificados en Azure; SPEC-03 con login real e2e).
+- `handoffs/HANDOFF-2026-07-21-spec04.md` — ciclo 2b: **SPEC-04 `captura-salvaguardas` (R1) CERRADO** (implementado → review 3↔4 con 2 MEDIA+2 BAJA corregidas → desplegado → smoke logueado del usuario, incl. móvil) + **refactor de documentación JCC v1.2** (recorte de "Fase actual" + creación del índice global `docs/cambios/README.md`). Siguiente: SPEC-05.
