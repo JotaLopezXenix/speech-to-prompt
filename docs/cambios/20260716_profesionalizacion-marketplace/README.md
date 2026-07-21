@@ -24,7 +24,7 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 |---|---|---|
 | 0 — preparación | *(en raíz: BRIEF + INVESTIGACION)* | investigación ✅ (Gemini/optimizadores = top-up en ciclo 4); burocracia Partner Center pendiente (Agustín) |
 | 1 — `identidad-entra` | `ciclo-1-identidad-entra/` | **CERRADO** — en prod, login e2e verificado |
-| 2 — `frontend-mobile-first` | `ciclo-2-frontend-mobile-first/` | **2a diseño COMPLETO** (dirección "B · Papel") · **2b en construcción — 3/6 SPEC CERRADOS:** 01 `cimiento` ✅, 02 `api-tipada` ✅, 03 `auth-login` ✅, **04 `captura-salvaguardas` ✅** (R1, el hueso; implementado→revisado limpio→desplegado→verificado en Azure a nivel de plataforma; **pendiente solo el smoke logueado del usuario**) → siguiente: **SPEC-05** (resto del flujo) |
+| 2 — `frontend-mobile-first` | `ciclo-2-frontend-mobile-first/` | **2a diseño COMPLETO** (dirección "B · Papel") · **2b en construcción — 3/6 SPEC CERRADOS:** 01 `cimiento` ✅, 02 `api-tipada` ✅, 03 `auth-login` ✅, **04 `captura-salvaguardas` ✅** (R1, el hueso; implementado→revisado limpio→desplegado→verificado en Azure + smoke logueado e2e del usuario, incl. móvil) → siguiente: **SPEC-05** (resto del flujo) |
 | 3 — `marketplace-transactable` | *(pendiente)* | landing + webhook + Fulfillment APIs + suscripciones + gating |
 | 4 — `destilado-destino` | *(pendiente)* | selección modelo destino + ajustes de formato (funcionalidad estrella) |
 | 5 — `uso-y-costes` | *(pendiente)* | fair-use + costes visibles |
