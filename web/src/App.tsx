@@ -4,6 +4,7 @@ import { PATHS } from '@/routes/paths'
 import { useAuth } from '@/auth/authContext'
 import { RequireAuth } from '@/auth/RequireAuth'
 import { Splash } from '@/auth/AuthProvider'
+import { ActiveSessionProvider } from '@/session/ActiveSessionProvider'
 import Capture from '@/routes/Capture'
 import Review from '@/routes/Review'
 import Distill from '@/routes/Distill'
@@ -33,7 +34,9 @@ function AppRoutes() {
       <Route
         element={
           <RequireAuth>
-            <AppShell />
+            <ActiveSessionProvider>
+              <AppShell />
+            </ActiveSessionProvider>
           </RequireAuth>
         }
       >

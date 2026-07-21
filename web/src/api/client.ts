@@ -17,6 +17,15 @@ export function setTokenProvider(fn: TokenProvider): void {
   tokenProvider = fn
 }
 
+// Cache SÍNCRONO del último token conocido, para consumidores que no pueden
+// `await` el provider (el beacon de telemetría en `pagehide`; SPEC-04 §4.7). Lo
+// refresca el middleware en cada request; en devBypass queda null (sin token).
+let cachedToken: string | null = null
+
+export function getCachedToken(): string | null {
+  return cachedToken
+}
+
 // Handler de 401 irrecuperable. En SPEC-03 el AuthProvider lo cablea a la
 // re-adquisición interactiva de MSAL (acquireTokenRedirect); en devBypass no se
 // registra (el backend acepta al usuario dev, nunca hay 401). Sin acoplar a MSAL.
@@ -32,6 +41,7 @@ export function setUnauthorizedHandler(fn: UnauthorizedHandler | null): void {
 const authMiddleware: Middleware = {
   async onRequest({ request }) {
     const token = await tokenProvider()
+    cachedToken = token
     if (token) request.headers.set('Authorization', `Bearer ${token}`)
     return request
   },
@@ -68,9 +78,6 @@ export async function unwrap<T>(
 }
 
 // --- Fachada tipada fina (espejo de public/js/api-client.js) -----------------
-// Endpoints JSON. `addSegment` (multipart) y `getSegmentAudio` (stream) se
-// consumen y verifican en SPEC-04 (captura) → se añaden allí; el contrato ya los
-// describe en el OpenAPI y sus tipos ya existen en `paths`.
 export const api = {
   // Salud / auth pública
   healthDb: () => client.GET('/health/db'),
@@ -95,6 +102,32 @@ export const api = {
   getSessionUsage: (id: number) =>
     client.GET('/sessions/{id}/usage', { params: { path: { id } } }),
   reprocess: (id: number) => client.POST('/sessions/{id}/reprocess', { params: { path: { id } } }),
+
+  // Segmentos y audio (SPEC-04; cierra el diferido de SPEC-02).
+  // addSegment: multipart → `bodySerializer` construye el FormData (el `body`
+  // tipado satisface el contrato AddSegmentForm: audio binario + source).
+  addSegment: (
+    id: number,
+    audio: Blob,
+    { source = 'recorded', filename = 'audio.webm' }: { source?: 'recorded' | 'imported'; filename?: string } = {},
+  ) =>
+    client.POST('/sessions/{id}/segments', {
+      params: { path: { id } },
+      body: { audio: audio as unknown as string, source },
+      bodySerializer: (body: { audio: unknown; source?: string }) => {
+        const fd = new FormData()
+        fd.append('audio', audio, filename)
+        if (body.source) fd.append('source', body.source)
+        return fd
+      },
+    }),
+  // getSegmentAudio: respuesta binaria (audio/webm) → parseAs 'blob'. Se cablea
+  // aquí; se consume en SPEC-05 (reproducción en Revisión/Resultado).
+  getSegmentAudio: (id: number, ordinal: number) =>
+    client.GET('/sessions/{id}/audio/{ordinal}', {
+      params: { path: { id, ordinal } },
+      parseAs: 'blob',
+    }),
   distill: (
     id: number,
     body?: paths['/sessions/{id}/distill']['post']['requestBody'] extends { content: { 'application/json': infer B } }

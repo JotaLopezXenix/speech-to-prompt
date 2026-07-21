@@ -13,8 +13,51 @@
   },
   "capture": {
     "title": "Captura",
-    "subtitle": "Graba por tramos; revisas y destilas después.",
-    "placeholder": "Pantalla en construcción (SPEC-04: captura + salvaguardas)."
+    "hero": {
+      "title": "¿Qué tienes en mente?",
+      "subtitle": "Pulsa el botón y empieza a hablar. Puedes dictar por tramos: para y sigue cuando quieras."
+    },
+    "cta": { "start": "Pulsa para dictar" },
+    "record": "Grabar",
+    "stop": "Detener tramo",
+    "transcribing": "Transcribiendo",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "finalize": "Finalizar captura",
+    "import": "Importar audio",
+    "imported": "importado",
+    "transcript": "Transcripción",
+    "transcriptEmpty": "(sin texto todavía)",
+    "segmentsCount_one": "{{count}} tramo",
+    "segmentsCount_other": "{{count}} tramos",
+    "tramos": "Tramos",
+    "tramo": "Tramo {{n}}",
+    "live": {
+      "recording": "Grabando · tramo {{n}}",
+      "processing": "Procesando tramo {{n}}",
+      "paused": "Grabación en pausa",
+      "ready": "Listo",
+      "listening": "Tramo {{n}} · escuchando…"
+    },
+    "warn": {
+      "noSignal": "No se detecta sonido del micrófono. Comprueba que el micro correcto esté activo y que estás hablando."
+    },
+    "mic": { "label": "Micrófono" },
+    "guard": {
+      "suspectTitle": "Revisa este audio.",
+      "send": "Enviar igualmente",
+      "discard": "Descartar"
+    },
+    "safeguard": {
+      "title": "La grabación se detuvo.",
+      "keep": "Guardar tramo",
+      "discard": "Descartar"
+    },
+    "retry": {
+      "title": "No se pudo guardar el audio.",
+      "retry": "Reintentar",
+      "discard": "Descartar"
+    }
   },
   "review": {
     "title": "Revisión",
