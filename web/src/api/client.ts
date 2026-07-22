@@ -1,5 +1,5 @@
 import createClient, { type Middleware } from 'openapi-fetch'
-import type { paths } from './schema'
+import type { paths, components } from './schema'
 
 // Cliente HTTP tipado del contrato /api/v1 (SPEC-02). Los tipos vienen de
 // `schema.d.ts`, generado del OpenAPI (`npm run gen:api`). openapi-fetch devuelve
@@ -128,12 +128,10 @@ export const api = {
       params: { path: { id, ordinal } },
       parseAs: 'blob',
     }),
-  distill: (
-    id: number,
-    body?: paths['/sessions/{id}/distill']['post']['requestBody'] extends { content: { 'application/json': infer B } }
-      ? B
-      : never,
-  ) => client.POST('/sessions/{id}/distill', { params: { path: { id } }, body }),
+  // El requestBody de distill es opcional en el OpenAPI → indexarlo con el
+  // condicional daba `never` (fachada incallable). Se tipa directo con el schema.
+  distill: (id: number, body?: components['schemas']['DistillRequest']) =>
+    client.POST('/sessions/{id}/distill', { params: { path: { id } }, body }),
 
   // Prompts de destilado (familia del modelo activo)
   getPrompts: () => client.GET('/prompts'),

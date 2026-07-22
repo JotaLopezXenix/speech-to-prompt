@@ -441,6 +441,17 @@ export function useCapture(): CaptureController {
     recorder.onDiag = (type, payload) => diag.logEvent(type, payload)
     recorder.onExternalStop = (blob, meta) => handleExternalStopRef.current(blob, meta)
 
+    // Hidratación (SPEC-05): si llegamos con una sesión activa y con tramos (p. ej.
+    // "Añadir tramo" desde Revisión), reanudamos la MISMA sesión en vez de crear
+    // otra. Solo siembra si aún no hay sesión local → idempotente en StrictMode. No
+    // toca recorder/guards/diagnostics: las salvaguardas R1 quedan intactas.
+    if (sessionIdRef.current == null && active.session && active.session.segments?.length) {
+      sessionIdRef.current = active.session.id
+      setSegments(active.session.segments)
+      setMergedTranscript(active.session.transcription_edited || active.session.transcription_raw || '')
+      diag.setSessionId(active.session.id)
+    }
+
     api.warmup() // warm-up al montar la Captura (robustez-coldstart-sql)
 
     if (isDesktopRef.current) void populateDeviceList()

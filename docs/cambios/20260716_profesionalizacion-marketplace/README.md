@@ -24,7 +24,7 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 |---|---|---|
 | 0 — preparación | *(en raíz: BRIEF + INVESTIGACION)* | investigación ✅ (Gemini/optimizadores = top-up en ciclo 4); burocracia Partner Center pendiente (Agustín) |
 | 1 — `identidad-entra` | `ciclo-1-identidad-entra/` | **CERRADO** — en prod, login e2e verificado |
-| 2 — `frontend-mobile-first` | `ciclo-2-frontend-mobile-first/` | **2a diseño COMPLETO** (dirección "B · Papel") · **2b en construcción — 3/6 SPEC CERRADOS:** 01 `cimiento` ✅, 02 `api-tipada` ✅, 03 `auth-login` ✅, **04 `captura-salvaguardas` ✅** (R1, el hueso; implementado→revisado limpio→desplegado→verificado en Azure + smoke logueado e2e del usuario, incl. móvil) → siguiente: **SPEC-05** (resto del flujo) |
+| 2 — `frontend-mobile-first` | `ciclo-2-frontend-mobile-first/` | **2a diseño COMPLETO** (dirección "B · Papel") · **2b en construcción — 4/6 SPEC CERRADOS:** 01 `cimiento` ✅, 02 `api-tipada` ✅, 03 `auth-login` ✅, **04 `captura-salvaguardas` ✅** (R1, el hueso; en prod, smoke logueado incl. móvil) · **05 `resto-flujo` IMPLEMENTADO** (Revisión/Destilado/Resultado; rama `2b-05-resto-flujo`, verif. local en verde; pendiente review + smoke Azure) → siguiente: **`/jcc-review` del SPEC-05** |
 | 3 — `marketplace-transactable` | *(pendiente)* | landing + webhook + Fulfillment APIs + suscripciones + gating |
 | 4 — `destilado-destino` | *(pendiente)* | selección modelo destino + ajustes de formato (funcionalidad estrella) |
 | 5 — `uso-y-costes` | *(pendiente)* | fair-use + costes visibles |
@@ -39,7 +39,7 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 - **Ciclo 2** `ciclo-2-frontend-mobile-first/`:
   - Encuadre: `DESIGN.md`.
   - **2a diseño:** `DESIGN-2a.md`, `BRIEF-claude-design-2a.md`, `DESIGN-SYSTEM-2a.md`, `diseno-claude-design/` (snapshots de Claude Design).
-  - **2b construcción:** `SPEC-01_cimiento.md` (con ADDENDUM del stack), `SPEC-02_api-tipada.md` (con ADDENDUM npx), `SPEC-03_auth-login.md`, `SPEC-04_captura-salvaguardas.md` (especificado, sin implementar). **SPEC-05…06 aún NO escritos** (just-in-time).
+  - **2b construcción:** `SPEC-01_cimiento.md` (con ADDENDUM del stack), `SPEC-02_api-tipada.md` (con ADDENDUM npx), `SPEC-03_auth-login.md`, `SPEC-04_captura-salvaguardas.md` (cerrado, en prod), `SPEC-05_resto-flujo.md` (+ ADDENDUM de implementación 22-jul; Revisión/Destilado/Resultado; verif. local en verde, pendiente review adversarial + smoke Azure). **SPEC-06 aún NO escrito** (just-in-time).
   - Código en `web/` (cimiento + `src/api/` cliente tipado + `src/auth/` MSAL), contrato en `openapi/speech-to-prompt.yaml`, alias `/api/v1` en `server.js`.
   - **Fuentes para el futuro SPEC-04 (captura+salvaguardas):** además del `DESIGN.md` del ciclo (§4.4 cosechar, §5 salvaguardas, §6 R1) y el `DESIGN.md` del programa (§6 "Qué se PRESERVA"), el material real vive en **el código a portar** (`public/js/{audio-recorder,audio-guards,diagnostics,phase1-capture}.js`) y en **los dos cambios previos que construyeron esas salvaguardas con DESIGN/SPEC/REVIEW completos**: `docs/cambios/20260628_grabacion-stop-espontaneo/` y `docs/cambios/20260710_robustez-coldstart-sql/`.
 

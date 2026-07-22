@@ -75,15 +75,64 @@
   },
   "review": {
     "title": "Revisión",
-    "placeholder": "Pantalla en construcción (SPEC-05)."
+    "heading": "Revisa tu dictado",
+    "subtitle_one": "Corrige lo que quieras antes de destilar. Se ha unido {{count}} tramo.",
+    "subtitle_other": "Corrige lo que quieras antes de destilar. Se han unido {{count}} tramos.",
+    "transcript": "Transcripción",
+    "words_one": "{{count}} palabra",
+    "words_other": "{{count}} palabras",
+    "tramo": "Tramo {{n}}",
+    "imported": "importado",
+    "play": "Reproducir tramo {{n}}",
+    "pause": "Pausar tramo {{n}}",
+    "audioError": "No se pudo reproducir el audio de este tramo.",
+    "saveError": "No se pudieron guardar los cambios: {{msg}}",
+    "empty": "No hay transcripción. Vuelve a Captura para grabar o importar un tramo.",
+    "addSegment": "Añadir tramo",
+    "distill": "Destilar"
   },
   "distill": {
     "title": "Destilado",
-    "placeholder": "Pantalla en construcción (SPEC-05)."
+    "heading": "Afina tu destilado",
+    "whatIs": "¿Qué es destilar?",
+    "whatIsTitle": "¿Qué es destilar?",
+    "whatIsBody": "Destilar convierte tu dictado en un prompt limpio y bien estructurado, listo para pegar en tu modelo de IA. Tú no escribes el prompt: la app lo redacta por ti a partir de lo que dijiste.\n\nElige un modo según cuánto quieras que reelabore tus palabras:\n\n· Limpio — quita muletillas y redundancias, fiel a lo que dijiste.\n· Completo — prompt estructurado y detallado.\n· Ligero — versión breve y directa.\n· Literal — fiel a tus palabras, con mínima edición.",
+    "modeLabel": "Modo de destilado",
+    "mode": {
+      "limpio": { "label": "Limpio", "desc": "Sin muletillas" },
+      "completo": { "label": "Completo", "desc": "Estructurado y detallado" },
+      "ligero": { "label": "Ligero", "desc": "Breve y directo" },
+      "literal": { "label": "Literal", "desc": "Fiel a tus palabras" }
+    },
+    "soon": "Próximamente",
+    "settingsTitle": "Ajustes",
+    "settings": {
+      "role": "Instrucción de rol",
+      "constraints": "Restricciones",
+      "detail": "Nivel de detalle"
+    },
+    "futureTitle": "Destino y formato",
+    "futureHint": "Elige el modelo de destino y el formato del prompt. Llega en una próxima versión.",
+    "cta": "Ver resultado",
+    "distilling": "Destilando en modo {{mode}}…",
+    "error": "Error en la destilación: {{msg}}"
   },
   "result": {
     "title": "Resultado",
-    "placeholder": "Pantalla en construcción (SPEC-05)."
+    "heading": "Tu prompt está listo",
+    "subtitle": "Cópialo y pégalo en tu modelo de IA.",
+    "copy": "Copiar prompt",
+    "copied": "Prompt copiado",
+    "copyError": "No se pudo copiar. Selecciona el texto y cópialo manualmente.",
+    "edit": "Editar",
+    "save": "Guardar",
+    "newDictation": "Nuevo dictado",
+    "meta": "{{mode}} · {{words}}",
+    "empty": "Aún no hay prompt. Vuelve a Destilado.",
+    "truncatedTitle": "La destilación pudo quedar incompleta.",
+    "truncatedBody": "Alcanzó el límite de longitud. Revisa el final del prompt; si se cortó, divide el dictado en partes más cortas y vuelve a destilar.",
+    "cost": "Coste de esta sesión",
+    "soon": "Próximamente"
   },
   "history": {
     "title": "Historial",
