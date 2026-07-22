@@ -155,6 +155,7 @@
     "reopenError": "No se pudo abrir la sesión: {{msg}}",
     "newDictation": "Nuevo dictado",
     "empty": "Aún no tienes dictados. Empieza uno nuevo.",
+    "emptyFilter": "No hay sesiones en este filtro.",
     "loadError": "No se pudo cargar el historial: {{msg}}",
     "retry": "Reintentar",
     "untitled": "(sin título)"

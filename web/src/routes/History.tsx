@@ -121,6 +121,7 @@ export default function History() {
     navigate(PATHS.capture)
   }
 
+  const busy = openingId !== null || reprocessingId !== null
   const filtered = (items ?? []).filter((s) => matchesFilter(s, filter))
   const grouped: Record<Group, SessionListItem[]> = { today: [], week: [], earlier: [] }
   for (const s of filtered) grouped[groupOf(s.timestamp)].push(s)
@@ -164,8 +165,10 @@ export default function History() {
           <div className="flex flex-1 items-center justify-center text-muted-foreground">
             <Loader2 className="size-5 motion-safe:animate-spin" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('history.empty')}</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground">{t('history.emptyFilter')}</p>
         ) : (
           GROUP_ORDER.filter((g) => grouped[g].length > 0).map((g) => (
             <div key={g} className="flex flex-col gap-2">
@@ -176,6 +179,7 @@ export default function History() {
                 <SessionCard
                   key={s.id}
                   item={s}
+                  busy={busy}
                   opening={openingId === s.id}
                   reprocessing={reprocessingId === s.id}
                   onOpen={() => void reopen(s)}
@@ -200,12 +204,14 @@ export default function History() {
 
 function SessionCard({
   item,
+  busy,
   opening,
   reprocessing,
   onOpen,
   onReprocess,
 }: {
   item: SessionListItem
+  busy: boolean
   opening: boolean
   reprocessing: boolean
   onOpen: () => void
@@ -223,7 +229,7 @@ function SessionCard({
       <button
         type="button"
         onClick={onOpen}
-        disabled={opening || reprocessing}
+        disabled={busy}
         className="flex w-full items-center gap-3 p-4 text-left transition-colors hover:bg-accent/40 disabled:opacity-60"
       >
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -246,7 +252,7 @@ function SessionCard({
           <button
             type="button"
             onClick={onReprocess}
-            disabled={opening || reprocessing}
+            disabled={busy}
             className="flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80 disabled:opacity-60"
           >
             {reprocessing ? (
