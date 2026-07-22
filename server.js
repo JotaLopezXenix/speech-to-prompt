@@ -30,9 +30,6 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// Serve static frontend
-app.use(express.static(join(__dirname, 'public')));
-
 // API routes
 // Warm-up de la BD: sin identity (no toca datos), para despertar la Serverless.
 app.use('/api/health', healthRouter);
@@ -74,19 +71,22 @@ app.use('/api/v1/prompts', promptsRouter);
 app.use('/api/v1/diagnostics', identity);
 app.use('/api/v1/diagnostics', diagnosticsRouter);
 
-// Frontend nuevo (ciclo 2b) servido en /app — ruta TEMPORAL para desprender R5
-// sin tocar el frontend viejo en /. En el cutover final, el build de web/ pasará
-// a servirse en /. La guarda existsSync evita 500 en local si aún no hay build.
+// Frontend nuevo (web/) servido en la RAÍZ (cutover SPEC-07, cierre del ciclo 2b).
 const webDist = join(__dirname, 'web', 'dist');
-if (existsSync(webDist)) {
-  app.use('/app', express.static(webDist));
-  app.get('/app/*', (req, res) => res.sendFile(join(webDist, 'index.html')));
-}
 
-// Fallback: serve index.html for any non-API route (frontend viejo, intacto)
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'public', 'index.html'));
+// Redirect transitorio: el /app del sub-ciclo 2b ya no existe → raíz (302, no
+// permanente para poder retirarlo en una limpieza posterior). Preserva la query.
+app.get(['/app', '/app/*'], (req, res) => {
+  res.redirect(302, req.originalUrl.replace(/^\/app(?=\/|$)/, '') || '/');
 });
+
+// Estáticos del build + fallback SPA (cualquier ruta no-API → index del SPA). La
+// guarda existsSync evita 500 en local si aún no hay build (solo /api responde;
+// el desarrollo usa Vite en :5173).
+if (existsSync(webDist)) {
+  app.use(express.static(webDist));
+  app.get('*', (req, res) => res.sendFile(join(webDist, 'index.html')));
+}
 
 // Start server with port fallback
 async function startServer(port = 3000) {

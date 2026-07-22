@@ -4,10 +4,10 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// base '/app/': durante 2b el frontend nuevo se sirve en /app (ruta temporal) para
-// desprender R5 sin tocar el frontend viejo en /. En el cutover final pasa a '/'.
+// base '/': el frontend nuevo se sirve en la raíz (cutover SPEC-07, cierre 2b).
+// Durante 2b fue '/app/' (ruta temporal) para desprender R5 sin tocar el viejo.
 export default defineConfig({
-  base: '/app/',
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -22,8 +22,8 @@ export default defineConfig({
         theme_color: '#2F5D50',
         background_color: '#F3EFE7',
         display: 'standalone',
-        start_url: '/app/',
-        scope: '/app/',
+        start_url: '/',
+        scope: '/',
         icons: [
           { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
           { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'maskable' },
