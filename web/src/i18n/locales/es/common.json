@@ -136,11 +136,42 @@
   },
   "history": {
     "title": "Historial",
-    "placeholder": "Pantalla en construcción (SPEC-06)."
+    "filters": { "all": "Todas", "inProgress": "En curso", "completed": "Completadas" },
+    "groups": { "today": "Hoy", "week": "Esta semana", "earlier": "Anteriores" },
+    "status": {
+      "completed": "Completado",
+      "distilling": "En destilado",
+      "capturing": "En captura",
+      "draft": "Borrador"
+    },
+    "meta": {
+      "segments_one": "{{count}} tramo",
+      "segments_other": "{{count}} tramos",
+      "resume": "reanudar"
+    },
+    "reprocess": "Reprocesar",
+    "reprocessing": "Reprocesando…",
+    "reprocessError": "No se pudo reprocesar: {{msg}}",
+    "reopenError": "No se pudo abrir la sesión: {{msg}}",
+    "newDictation": "Nuevo dictado",
+    "empty": "Aún no tienes dictados. Empieza uno nuevo.",
+    "loadError": "No se pudo cargar el historial: {{msg}}",
+    "retry": "Reintentar",
+    "untitled": "(sin título)"
   },
   "settings": {
     "title": "Ajustes",
-    "placeholder": "Pantalla en construcción (SPEC-06)."
+    "account": { "title": "Cuenta", "provider": "Microsoft", "localProvider": "Cuenta local" },
+    "prefs": {
+      "title": "Preferencias",
+      "theme": "Tema",
+      "themeLight": "Claro",
+      "themeDark": "Oscuro",
+      "language": "Idioma",
+      "languageEs": "Español"
+    },
+    "logout": "Cerrar sesión",
+    "version": "Speech-to-Prompt · v{{v}}"
   },
   "login": {
     "title": "Entrar",
