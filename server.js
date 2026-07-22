@@ -77,7 +77,11 @@ const webDist = join(__dirname, 'web', 'dist');
 // Redirect transitorio: el /app del sub-ciclo 2b ya no existe → raíz (302, no
 // permanente para poder retirarlo en una limpieza posterior). Preserva la query.
 app.get(['/app', '/app/*'], (req, res) => {
-  res.redirect(302, req.originalUrl.replace(/^\/app(?=\/|$)/, '') || '/');
+  // req.path excluye la query; el prefijo /app se sustituye sobre el path y se
+  // re-adjunta la query. Así /app?x=1 → /?x=1 (evita el bucle 302: el destino
+  // siempre arranca con '/', no vuelve a casar la ruta /app).
+  const qs = req.originalUrl.slice(req.path.length);
+  res.redirect(302, (req.path.replace(/^\/app/, '') || '/') + qs);
 });
 
 // Estáticos del build + fallback SPA (cualquier ruta no-API → index del SPA). La
