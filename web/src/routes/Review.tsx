@@ -36,6 +36,9 @@ function ReviewInner({ session }: { session: Session }) {
   // Texto editable, sembrado de edited||raw. `savedRef` = último valor persistido.
   const [text, setText] = useState(() => session.transcription_edited || session.transcription_raw || '')
   const savedRef = useRef(text)
+  // Promesa del PUT en vuelo: onBlur y onClick (Destilar/Añadir) pueden llamar a
+  // persist() casi a la vez; reusarla evita un PUT redundante (BAJA-1 del review).
+  const inFlightRef = useRef<Promise<boolean> | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const words = wordCount(text)
@@ -93,19 +96,25 @@ function ReviewInner({ session }: { session: Session }) {
   // (o no había nada que guardar) para poder navegar sin perder la edición.
   async function persist(): Promise<boolean> {
     if (text === savedRef.current) return true
-    setSaving(true)
-    setSaveError(null)
-    try {
-      const updated = await unwrap(api.updateSession(session.id, { transcription_edited: text }))
-      savedRef.current = text
-      setSession(updated)
-      return true
-    } catch (err) {
-      setSaveError(t('review.saveError', { msg: (err as Error).message }))
-      return false
-    } finally {
-      setSaving(false)
-    }
+    if (inFlightRef.current) return inFlightRef.current // reusa el PUT en vuelo (BAJA-1)
+    const run = (async (): Promise<boolean> => {
+      setSaving(true)
+      setSaveError(null)
+      try {
+        const updated = await unwrap(api.updateSession(session.id, { transcription_edited: text }))
+        savedRef.current = text
+        setSession(updated)
+        return true
+      } catch (err) {
+        setSaveError(t('review.saveError', { msg: (err as Error).message }))
+        return false
+      } finally {
+        setSaving(false)
+        inFlightRef.current = null
+      }
+    })()
+    inFlightRef.current = run
+    return run
   }
 
   async function onAddSegment() {
@@ -205,7 +214,9 @@ function TramoChip({
     <>
       <span className="flex size-4 items-center justify-center rounded-full bg-accent text-success">{icon}</span>
       <span className="text-[0.8rem] font-medium text-ink">{label}</span>
-      <span className="font-mono text-[0.72rem] text-muted-foreground">{seconds ? formatTime(seconds) : '—'}</span>
+      <span className="font-mono text-[0.72rem] text-muted-foreground">
+        {seconds != null ? formatTime(seconds) : '—'}
+      </span>
     </>
   )
   const base = 'flex shrink-0 items-center gap-2 rounded-full border bg-surface px-3 py-1.5'
