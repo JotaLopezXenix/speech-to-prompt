@@ -169,3 +169,13 @@ Sin regresión backend (esperable: no se tocó backend).
 - Huecos: 2 hallazgos **BAJA** cosméticos/inocuos (double-persist redundante; duración 0→`—`), **no bloqueantes**. Pendiente el smoke logueado real en Azure (happy-path del LLM, copiado real al portapapeles) que el propio SPEC difiere a §8.7, no verificable en local por la red privada de Azure OpenAI.
 
 Recomendación: **aprobar**. Los dos BAJA pueden atenderse oportunísticamente (no exigen re-revisión). Proceder al smoke logueado en Azure antes del cierre.
+
+---
+
+## 8. Cierre del bucle 3↔4 (2026-07-22)
+
+A elección del usuario, los **2 BAJA se corrigieron** en el commit `5b3de28` (`fix(web): SPEC-05 review — 2 BAJA en Review.tsx`):
+- **BAJA-1**: `persist()` reusa la promesa del `PUT` en vuelo (`inFlightRef`) → sin `PUT` redundante al pulsar Destilar/Añadir tramo con el textarea enfocado.
+- **BAJA-2**: el chip de tramo usa `seconds != null` → `—` solo si es `null` (00:00 para duración 0).
+
+Re-verificado: `web` build (tsc+vite) verde + lint 0 errores; cambios frontend-only, backend intacto. **Veredicto tras el bucle: SÍ, limpio, 0 hallazgos abiertos.** Único pendiente = smoke logueado en Azure (§8.7 del SPEC), no bloqueante para el veredicto de código.
