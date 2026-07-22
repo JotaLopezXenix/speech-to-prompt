@@ -142,3 +142,15 @@ Ninguno de gravedad ALTA ni MEDIA. Todos BAJA (observaciones; **ninguno es incum
 - **Fuera de alcance:** respetado.
 
 **Huecos:** 5 hallazgos, todos **BAJA** (0 ALTA / 0 MEDIA), ninguno incumplimiento ni regresión. B-1 (mensaje de vacío ambiguo con filtro) y B-2 (reabrir Borrador de 0 tramos) son los más sustantivos; el usuario decide si se pulen o se aceptan. Apto para pasar al smoke logueado y, tras él, al cutover (SPEC-07/RUNBOOK).
+
+---
+
+## 8. Cierre del bucle 3↔4 (2026-07-22)
+
+A elección del usuario, se pulieron **B-1 y B-5** en el commit `6e3ad7b`:
+- **B-1**: se distingue el vacío-total ("Aún no tienes dictados") del vacío-por-filtro (nueva clave `history.emptyFilter`: "No hay sesiones en este filtro").
+- **B-5**: prop `busy` → mientras hay una acción en vuelo (abrir/reprocesar) se deshabilitan **todas** las tarjetas, no solo la del item en acción.
+
+**Aceptados sin acción** (documentados): **B-2** (reabrir un Borrador de 0 tramos no reanuda; edge degenerado — el SPEC §4.3 solo exige navegar a `/capture`; tocar la hidratación R1 de SPEC-04 no compensa), **B-3** (`'ahora'`/locale fuera de i18n; app monolingüe hoy), **B-4** (chips/badge propios en vez de primitivas shadcn; §9 no normativa, regla de tokens §2 cumplida).
+
+Re-verificado: `web` build (tsc+vite) verde + lint 0 errores; cambios frontend-only, backend intacto. **Veredicto tras el bucle: SÍ, limpio, 0 hallazgos abiertos** (B-1/B-5 corregidos; B-2/B-3/B-4 aceptados). Único pendiente = smoke logueado en Azure (§8.5 del SPEC), no bloqueante para el veredicto de código.
