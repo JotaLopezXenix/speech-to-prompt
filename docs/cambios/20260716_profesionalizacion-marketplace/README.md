@@ -25,13 +25,13 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 | 0 — preparación | *(en raíz: BRIEF + INVESTIGACION)* | investigación ✅ (Gemini/optimizadores = top-up en ciclo 4); burocracia Partner Center pendiente (Agustín) |
 | 1 — `identidad-entra` | `ciclo-1-identidad-entra/` | **CERRADO** — en prod, login e2e verificado |
 | 2 — `frontend-mobile-first` | `ciclo-2-frontend-mobile-first/` | **CERRADO — en producción** (22-jul). Frontend nuevo (React+Vite+TS+Tailwind+shadcn, mobile-first, **PWA instalable**) sirviéndose en la **raíz `/`**; **7/7 SPEC cerrados** (01 cimiento · 02 api-tipada `/api/v1` · 03 auth-login MSAL · 04 captura-salvaguardas R1 · 05 resto-flujo · 06 marco · 07 cutover `/app→/`), todos con review adversarial limpia + **smoke logueado del usuario** (login en `/`, flujo completo, **PWA instalada en móvil**). |
-| 3 — `marketplace-transactable` | *(pendiente)* | landing + webhook + Fulfillment APIs + suscripciones + gating |
+| 3 — `marketplace-transactable` | `ciclo-3-marketplace-transactable/` | **Diseño en curso** (JCC Fase 1, arrancado 22-jul). Burocracia Partner Center **mapeada** (cuenta ✅, payout ✅, fiscal a falta de 1 acción — ver runbook). Alcance del código: landing + webhook + Fulfillment APIs + suscripciones + gating. |
 | 4 — `destilado-destino` | *(pendiente)* | selección modelo destino + ajustes de formato (funcionalidad estrella) |
 | 5 — `uso-y-costes` | *(pendiente)* | fair-use + costes visibles |
 | 6 — `backoffice-minimo` | *(pendiente)* | métricas + suscripciones + consumo |
 | 7 — `publicacion` | *(pendiente)* | ficha + certificación + compra de prueba |
 
-*(Refinamiento pendiente del troceo: la configuración de Marketplace/Partner Center quizá merezca un ciclo/track propio explícito; decidir al llegar al ciclo 3.)*
+*(Decisión 22-jul: la burocracia de Partner Center se lleva como **track/runbook propio** dentro de `ciclo-3-marketplace-transactable/` (`RUNBOOK-partner-center.md`), en paralelo al DESIGN del código del ciclo 3.)*
 
 ## Documentos por ciclo (existentes)
 
@@ -43,6 +43,12 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
   - Código en `web/` (cimiento + `src/api/` cliente tipado + `src/auth/` MSAL), contrato en `openapi/speech-to-prompt.yaml`, alias `/api/v1` en `server.js`.
   - **Fuentes para el futuro SPEC-04 (captura+salvaguardas):** además del `DESIGN.md` del ciclo (§4.4 cosechar, §5 salvaguardas, §6 R1) y el `DESIGN.md` del programa (§6 "Qué se PRESERVA"), el material real vive en **el código a portar** (`public/js/{audio-recorder,audio-guards,diagnostics,phase1-capture}.js`) y en **los dos cambios previos que construyeron esas salvaguardas con DESIGN/SPEC/REVIEW completos**: `docs/cambios/20260628_grabacion-stop-espontaneo/` y `docs/cambios/20260710_robustez-coldstart-sql/`.
 
+- **Ciclo 3** `ciclo-3-marketplace-transactable/` (arrancado 22-jul; diseño + track burocrático en curso):
+  - `RUNBOOK-partner-center.md` — **track burocrático** del alta como oferta SaaS transactable en Microsoft Marketplace (Partner Center): checklist maestro, estado, bloqueos y bitácora. Regla: los formularios fiscales/bancarios los rellena el usuario.
+  - `BRIEF-reunion-isv-success-2026-07-23.md` (+ `Brief-Speech-to-prompt-ISV-Success.docx`, versión Word para compartir) — brief para la reunión de Microsoft **ISV Success** (*Discovery & Planning*, 23-jul): pitch, estado mapeado a su agenda, preguntas y materiales.
+  - `ARQUITECTURA.md` — diagramas Mermaid (arquitectura actual 100% Azure/secretless + integración Marketplace del ciclo 3); versión presentable publicada como artefacto.
+  - *(pendiente: `DESIGN.md` del código del ciclo 3 — entrevista socrática pausada a la espera de la reunión de Microsoft, que alimenta decisiones estructurales: comprador individual vs. empresa, autoservicio vs. alta manual, fulfillment secretless.)*
+
 ## Handoffs (bitácoras de sesión)
 
 - `handoffs/HANDOFF-2026-07-18.md` — cierre del ciclo 1 (cutover a prod verificado) + arranque del ciclo 2.
@@ -50,3 +56,4 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 - `handoffs/HANDOFF-2026-07-21.md` — ciclo 2b: **SPEC-02 `api-tipada` y SPEC-03 `auth-login` CERRADOS** (ambos desplegados y verificados en Azure; SPEC-03 con login real e2e).
 - `handoffs/HANDOFF-2026-07-21-spec04.md` — ciclo 2b: **SPEC-04 `captura-salvaguardas` (R1) CERRADO** (implementado → review 3↔4 con 2 MEDIA+2 BAJA corregidas → desplegado → smoke logueado del usuario, incl. móvil) + **refactor de documentación JCC v1.2** (recorte de "Fase actual" + creación del índice global `docs/cambios/README.md`). Siguiente: SPEC-05.
 - `handoffs/HANDOFF-2026-07-22.md` — **cierre del ciclo 2 `frontend-mobile-first`**: SPEC-05 `resto-flujo`, SPEC-06 `marco` y SPEC-07 `cutover /app→/` **CERRADOS** (cada uno spec→impl→review 3↔4→deploy→smoke logueado del usuario). El frontend nuevo (mobile-first + **PWA**) se sirve en la **raíz `/`**, `public/` retirado; **7/7 SPEC cerrados**. Siguiente: ciclo 3 `marketplace-transactable` (`/jcc-design`).
+- `handoffs/HANDOFF-2026-07-22-ciclo3-arranque.md` — **arranque del ciclo 3 `marketplace-transactable`** (sesión de diseño, sin código): investigación del Microsoft Marketplace, **mapeo del Partner Center** (cuenta+payout ✅, tax del Seller *Action required*; oferta `speechtoprompt` en Draft), creación del **runbook burocrático** + **brief y arquitectura** para la reunión Microsoft ISV Success (23-jul). **JCC Fase 1 EN CURSO/PAUSADA** hasta la reunión (aún sin `DESIGN.md`). Docs sin commitear al cerrar.
