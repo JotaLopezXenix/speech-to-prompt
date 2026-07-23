@@ -60,7 +60,7 @@ Fuentes en el informe de investigación (Microsoft Learn, artículos 2025-2026).
 | # | Paso | Depende de | Estado |
 |---|---|---|---|
 | A | Cuenta verificada + enrolada en commercial marketplace | — | ✅ hecho |
-| B | **Perfil fiscal (tax)** a nivel cuenta | rol Owner/Financial Contributor | 🟡 MPN ✅; **Seller 87879330 = Action required**. Jesús **PUEDE editar** (sin bloqueo de rol). Pasos 1-2 rellenos; el pendiente está en el paso 3 (residencia fiscal) o 4 (**Formulario fiscal / W-8BEN-E**). ⚠️ *Tipo de organización* = "**Asociación**" — verificar si es correcto para una **S.L.** (¿debería ser Corporación/Sociedad?) |
+| B | **Perfil fiscal (tax)** a nivel cuenta | rol Owner/Financial Contributor | 🟡 MPN ✅; **Seller 87879330 = Action required → EN CURSO**: rellenando **W-8BEN-E** (determinaciones campo a campo en la bitácora 23-jul). **Pendiente:** artículo/tipo del tratado España–EE. UU. (asesor/Microsoft) + **confirmar `Chapter 3 = Corporation`** (⚠️ NO *Partnership/Asociación*) + firma. |
 | B2 | **Asignación** de payout+tax al programa Commercial Marketplace | B, C | 🟡 **"Manage default payment profiles" = vacío** ("No values returned") → falta asignar payout por defecto/por programa aunque los perfiles existan |
 | C | **Perfil de payout** a nivel cuenta | B (tax primero) | ✅ hecho (2 payment profiles Complete) |
 | D | Offer setup: confirmar **"Sell through Microsoft" (transactable)** | — | ❓ verificar en la oferta |
@@ -77,7 +77,7 @@ Fuentes en el informe de investigación (Microsoft Learn, artículos 2025-2026).
 
 ## 5. Bloqueos / a la espera
 
-- **[abierto] Tax profile del Seller 87879330 = "Action required".** Jesús puede editar (sin bloqueo de rol). Pasos 1-2 rellenos; el pendiente está en *Residencia fiscal* o *Formulario fiscal* (probable **W-8BEN-E** por firmar/completar). **Verificar además** el *Tipo de organización* = "Asociación" (¿correcto para una S.L.?). → **Candidato a preguntar en la reunión de Microsoft de mañana** (o completar el wizard y ver el paso 3/4).
+- **[en curso] Tax profile del Seller 87879330 = "Action required".** Se está rellenando el **W-8BEN-E** (ver determinaciones en la bitácora 23-jul). **Bloqueos/pendientes:** (1) el **artículo y tipo de renta del tratado** España–EE. UU. + el % de retención → confirmar con asesor fiscal o en la reunión de MS; (2) **`Chapter 3 = Corporation`** (⚠️ que NO quede como *Partnership/Asociación* — una S.L. tributa por defecto como corporation a efectos US); (3) firma electrónica del formulario.
 - **[abierto] Asignación de payout por defecto vacía** ("Manage default payment profiles" sin valores) → asignar el payout profile al programa/por defecto para que la oferta pueda cobrar.
 - **[decisión 22-jul] No se continúa hoy** con la config del Marketplace. La preocupación principal (burocracia) queda **bien encaminada**: cuenta ✅, payout ✅, fiscal casi ✅ (1 acción), oferta en borrador. Se retoma tras la reunión de Microsoft.
 
@@ -85,7 +85,8 @@ Fuentes en el informe de investigación (Microsoft Learn, artículos 2025-2026).
 
 ## 6. Dudas abiertas (para Microsoft o para decidir)
 
-- (pendiente de ir capturando)
+- **[fiscal] Tratado España–EE. UU. en el W-8BEN-E:** ¿qué **artículo** y **tipo de renta** aplica a los pagos del Marketplace (¿beneficios empresariales 0% sin establecimiento permanente, o cánones/royalties con tipo reducido?) y qué **% de retención**? → asesor fiscal o Microsoft.
+- **[fiscal] Confirmar `Chapter 3 = Corporation`** para una S.L. (por defecto sí; salvo elección Form 8832 improbable).
 
 ---
 
@@ -94,3 +95,12 @@ Fuentes en el informe de investigación (Microsoft Learn, artículos 2025-2026).
 - **22-jul-2026** — Sesión de diseño del ciclo 3. Creado este runbook. Estado inicial mapeado desde capturas. Siguiente acción: **verificar estado de perfil fiscal + payout** (checkpoint B/C, ruta crítica).
 - **22-jul-2026 (cont.)** — Verificado Payout and tax: **payout ✅ (2 payment profiles CaixaBank Complete)**; **tax: MPN ✅, pero Seller 87879330 = ⚠️ Action required** (expira 31/12/2027). La latencia crítica de "alta desde cero" se elimina; queda **resolver la acción del tax del Seller** + **verificar asignación de perfiles al programa Marketplace**. Rol de Jesús = Account admin (verificar si basta para editar fiscal/payout).
 - **22-jul-2026 (cont. 2)** — Abierto el wizard del tax del Seller: **Jesús puede editar** (sin bloqueo de rol); pasos 1-2 completos; pendiente en paso 3/4 (probable W-8BEN-E). Detectado *Tipo de organización = "Asociación"* (verificar para S.L.) y **"Manage default payment profiles" vacío** (falta asignación de payout por defecto). **Se para la config del Marketplace por hoy.** **Mañana 23-jul: reunión con Microsoft ISV Success** (Marcelo, Consultor Técnico de Partners) — sesión *Discovery and Planning*; foro para resolver dudas. Ver `BRIEF-reunion-isv-success-2026-07-23.md`.
+- **23-jul-2026** — Rellenando el **formulario fiscal del Seller = W-8BEN-E** (correcto para una S.L. española, beneficiaria real de los pagos; descartados W-8IMY/ECI/EXP). **Determinaciones campo a campo (Claude orienta; el usuario introduce; sin datos fiscales por chat):**
+  - *¿Entidad no considerada (disregarded)?* → **No** (la S.L. tiene personalidad propia).
+  - *País de organización* → **España**. *Dirección de residencia* → física (no apartado postal) → *¿es apartado/atención?* **No**. *Dirección postal* → en blanco (igual que residencia).
+  - *US TIN (EIN)* → **vacío + marcar "no tiene TIN de EE. UU."** (no se necesita EIN si se reclama el tratado con el TIN extranjero).
+  - *País de residencia fiscal* → **España**; *TIN* → **NIF `ESB09810946`** (foreign TIN; NO marcar "no tiene"). *(Si lo rechaza por el prefijo, probar `B09810946`.)*
+  - *¿Reclama retención reducida por tratado?* → **Sí** (convenio España–EE. UU.).
+  - *Estado del Capítulo 3* → **Corporation** ⚠️ (una S.L. tributa por defecto como *corporation* a efectos US; **NO** *Partnership/Asociación* — coherencia con el *Tipo de organización* que salía como "Asociación").
+  - *¿Entidad híbrida que reclama tratado?* → **No** (S.L. opaca normal; reclama el tratado en su propio nombre).
+  - **Pendiente antes de firmar:** artículo/tipo de renta del tratado + % de retención (asesor/Microsoft) y confirmar `Chapter 3 = Corporation`. Anotado en §5 y §6.
