@@ -4,3 +4,6 @@ data/
 .env
 .env.dev
 web/dist/
+
+# Ficheros temporales de bloqueo de Office (Word/Excel/PPT: ~$documento.docx)
+~$*
