@@ -115,3 +115,13 @@ Orden por dependencia (1 es cimiento):
 - **Secretless es un invariante del proyecto**: el fulfillment lo respeta vía credencial federada (con certificado como plan B, nunca un secreto plano).
 - La **política de datos** en v1 es fija (90 d + borrar ahora + purga); la agencia total del usuario sobre la duración es evolución.
 - La reunión de Microsoft del 23-jul **confirma**, no condiciona: el diseño del código está cerrado y puede arrancar `/jcc-spec` en paralelo al papeleo.
+
+---
+
+## ADDENDUM 2026-07-22 — provisión de no-suscriptores en `users` (de la review de SPEC-01, F-1)
+
+La revisión adversarial de SPEC-01 ([`REVIEW-SPEC-01.md`](REVIEW-SPEC-01.md), F-1, MEDIA) señaló un **cambio de comportamiento** no reconocido en §7: el gate por suscripción exige aprovisionar el usuario (JIT `ensureUser`) **antes** de comprobar el acceso, porque `hasActiveAccess` necesita el `id` interno y la vinculación de concesiones manuales por email ocurre en el primer login. Consecuencia: **cualquier cuenta Microsoft con token válido queda insertada en `dbo.users` aunque reciba 403 sin acceso**. Con la oferta pública del Marketplace, esto permite crecimiento no acotado de la tabla `users`.
+
+- **Estado:** el orden es correcto y **mandado por el SPEC** (SPEC-01 §4.3); no es un defecto. La implementación cumple.
+- **Cuándo importa:** solo cuando la oferta sea **pública** (a partir de SPEC-03 / ciclo 7); hoy ningún flujo trae a esos usuarios (acceso solo por concesión manual).
+- **Decisión (mesa común):** **se acepta para v1**; la mitigación se decide al abrir la oferta pública. Opciones anotadas: (a) limpieza periódica de `users` sin entitlement asociado; (b) resolver el acceso por `oid`/email **antes** del JIT (no provisionar hasta confirmar acceso o concesión pendiente). No urge y no bloquea el despliegue de SPEC-01.

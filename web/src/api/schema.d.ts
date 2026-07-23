@@ -484,7 +484,7 @@ export interface components {
                 "application/json": components["schemas"]["Error"];
             };
         };
-        /** @description Cuenta no autorizada (NOT_ALLOWLISTED). */
+        /** @description Sin acceso: la cuenta no tiene una suscripción o concesión activa (NO_ACCESS). */
         Forbidden: {
             headers: {
                 [name: string]: unknown;

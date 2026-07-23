@@ -521,7 +521,7 @@ components:
           schema:
             $ref: "#/components/schemas/Error"
     Forbidden:
-      description: Cuenta no autorizada (NOT_ALLOWLISTED).
+      description: "Sin acceso: la cuenta no tiene una suscripción o concesión activa (NO_ACCESS)."
       content:
         application/json:
           schema:
