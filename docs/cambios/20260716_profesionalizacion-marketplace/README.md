@@ -25,7 +25,7 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
 | 0 — preparación | *(en raíz: BRIEF + INVESTIGACION)* | investigación ✅ (Gemini/optimizadores = top-up en ciclo 4); burocracia Partner Center pendiente (Agustín) |
 | 1 — `identidad-entra` | `ciclo-1-identidad-entra/` | **CERRADO** — en prod, login e2e verificado |
 | 2 — `frontend-mobile-first` | `ciclo-2-frontend-mobile-first/` | **CERRADO — en producción** (22-jul). Frontend nuevo (React+Vite+TS+Tailwind+shadcn, mobile-first, **PWA instalable**) sirviéndose en la **raíz `/`**; **7/7 SPEC cerrados** (01 cimiento · 02 api-tipada `/api/v1` · 03 auth-login MSAL · 04 captura-salvaguardas R1 · 05 resto-flujo · 06 marco · 07 cutover `/app→/`), todos con review adversarial limpia + **smoke logueado del usuario** (login en `/`, flujo completo, **PWA instalada en móvil**). |
-| 3 — `marketplace-transactable` | `ciclo-3-marketplace-transactable/` | **Diseño en curso** (JCC Fase 1, arrancado 22-jul). Burocracia Partner Center **mapeada** (cuenta ✅, payout ✅, fiscal a falta de 1 acción — ver runbook). Alcance del código: landing + webhook + Fulfillment APIs + suscripciones + gating. |
+| 3 — `marketplace-transactable` | `ciclo-3-marketplace-transactable/` | **Diseño CERRADO** (`DESIGN.md`, 22-jul); **siguiente `/jcc-spec`**. Burocracia Partner Center **mapeada** (cuenta ✅, payout ✅, fiscal a falta de 1 acción — ver runbook). Alcance del código: landing + webhook + Fulfillment APIs + entitlement unificado (marketplace + concesiones manuales) + gate por suscripción. |
 | 4 — `destilado-destino` | *(pendiente)* | selección modelo destino + ajustes de formato (funcionalidad estrella) |
 | 5 — `uso-y-costes` | *(pendiente)* | fair-use + costes visibles |
 | 6 — `backoffice-minimo` | *(pendiente)* | métricas + suscripciones + consumo |
@@ -43,11 +43,11 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
   - Código en `web/` (cimiento + `src/api/` cliente tipado + `src/auth/` MSAL), contrato en `openapi/speech-to-prompt.yaml`, alias `/api/v1` en `server.js`.
   - **Fuentes para el futuro SPEC-04 (captura+salvaguardas):** además del `DESIGN.md` del ciclo (§4.4 cosechar, §5 salvaguardas, §6 R1) y el `DESIGN.md` del programa (§6 "Qué se PRESERVA"), el material real vive en **el código a portar** (`public/js/{audio-recorder,audio-guards,diagnostics,phase1-capture}.js`) y en **los dos cambios previos que construyeron esas salvaguardas con DESIGN/SPEC/REVIEW completos**: `docs/cambios/20260628_grabacion-stop-espontaneo/` y `docs/cambios/20260710_robustez-coldstart-sql/`.
 
-- **Ciclo 3** `ciclo-3-marketplace-transactable/` (arrancado 22-jul; diseño + track burocrático en curso):
+- **Ciclo 3** `ciclo-3-marketplace-transactable/` (arrancado 22-jul; **DESIGN cerrado**, siguiente `/jcc-spec`; track burocrático en curso):
+  - `DESIGN.md` — **DESIGN del ciclo** (JCC Fase 1, cerrado 22-jul): objetivo, usuarios, alcance/fuera de alcance, **decisiones estructurales** (reconciliación identidad-comprador "misma cuenta" · entitlement unificado marketplace+manual · gate que retira `ALLOWED_EMAILS` · fulfillment secretless por credencial federada · retención v1-A) + flujos, superficie de regresión, riesgos y **troceo sugerido en 6 specs**.
   - `RUNBOOK-partner-center.md` — **track burocrático** del alta como oferta SaaS transactable en Microsoft Marketplace (Partner Center): checklist maestro, estado, bloqueos y bitácora. Regla: los formularios fiscales/bancarios los rellena el usuario.
   - `BRIEF-reunion-isv-success-2026-07-23.md` (+ `Brief-Speech-to-prompt-ISV-Success.docx`, versión Word para compartir) — brief para la reunión de Microsoft **ISV Success** (*Discovery & Planning*, 23-jul): pitch, estado mapeado a su agenda, preguntas y materiales.
   - `ARQUITECTURA.md` — diagramas Mermaid (arquitectura actual 100% Azure/secretless + integración Marketplace del ciclo 3); versión presentable publicada como artefacto.
-  - *(pendiente: `DESIGN.md` del código del ciclo 3 — entrevista socrática pausada a la espera de la reunión de Microsoft, que alimenta decisiones estructurales: comprador individual vs. empresa, autoservicio vs. alta manual, fulfillment secretless.)*
 
 ## Handoffs (bitácoras de sesión)
 
