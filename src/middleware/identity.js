@@ -1,21 +1,19 @@
 import { ensureUser } from '../services/user-store.js';
 import { verifyAccessToken, buildExternalId } from '../services/token-verify.js';
-import { parseAllowlist, isAllowed } from '../utils/allowlist.js';
+import { hasActiveAccess, bindPendingEntitlements } from '../services/entitlement-store.js';
 
 // Middleware de identidad para las rutas protegidas. Resuelve el principal
 // autenticado y deja `req.user = { id, externalId, tenantId, oid, email, name }`
 // (id = users.id interno, vía JIT). Ciclo identidad-entra: sustituye Easy Auth por
 // validación stateless de token bearer (Entra multi-tenant + MSA).
 //
-//  - Azure: exige `Authorization: Bearer <access token>`; valida el token, aplica la
-//    lista blanca interina y aprovisiona/actualiza el usuario (JIT).
+//  - Azure: exige `Authorization: Bearer <access token>`; valida el token, aprovisiona/
+//    actualiza el usuario (JIT) y aplica el gate por suscripción (¿acceso activo?).
+//    (Ciclo marketplace-transactable SPEC-01: sustituye la lista blanca interina.)
 //  - Local (sin WEBSITE_HOSTNAME y sin cabecera Authorization): usuario dev de
-//    entorno (DEV_USER_*), sin tokens, para no frenar el desarrollo.
+//    entorno (DEV_USER_*), sin tokens y sin gate, para no frenar el desarrollo.
 
 const isAzure = !!process.env.WEBSITE_HOSTNAME;
-
-// Lista blanca leída una vez del entorno (interina; se retira con el gate de suscripción).
-const allowlist = parseAllowlist(process.env.ALLOWED_EMAILS);
 
 function devPrincipal() {
   return {
@@ -51,13 +49,16 @@ export async function identity(req, res, next) {
       return res.status(401).json({ error: { code: 'TOKEN_INVALID', message: 'Token inválido o expirado' } });
     }
 
-    // Gate interino: solo correos en lista blanca (fail-closed).
-    if (!isAllowed(claims.email, allowlist)) {
-      return res.status(403).json({ error: { code: 'NOT_ALLOWLISTED', message: 'Cuenta no autorizada (acceso restringido)' } });
-    }
-
+    // Aprovisiona/actualiza el usuario (JIT) → necesitamos su id interno para el gate.
     const externalId = buildExternalId(claims.tid, claims.oid);
     const id = await ensureUser({ externalId, tenantId: claims.tid, email: claims.email, name: claims.name });
+
+    // Gate por suscripción: vincula concesiones creadas por email (primer login) y exige acceso activo.
+    await bindPendingEntitlements(id, claims.email);
+    if (!(await hasActiveAccess(id))) {
+      return res.status(403).json({ error: { code: 'NO_ACCESS', message: 'Tu cuenta no tiene una suscripción activa' } });
+    }
+
     req.user = { id, externalId, tenantId: claims.tid, oid: claims.oid, email: claims.email, name: claims.name };
     next();
   } catch (err) {
