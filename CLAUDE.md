@@ -15,7 +15,7 @@ https://raw.githubusercontent.com/Xenix-Solutions/jcc-metodologia-claude-code/ma
 ### Backlog
 
 <!-- Pendientes durables (decidido no-ahora), una línea cada uno; se PODA: lo hecho o caducado se borra (su historia vive en los handoffs). -->
-- Retirar el App Setting `ALLOWED_EMAILS` (ya es código muerto tras el gate por `entitlements`; su retirada reinicia la app — hacerlo en ventana tranquila).
+_(sin pendientes durables)_
 
 ## Commands
 
