@@ -81,4 +81,36 @@ Convertir la herramienta en un **producto SaaS transactable en Microsoft Marketp
 
 ## 6. Notas post-reunión
 
-*(rellenar durante/después: respuestas de Microsoft, compromisos, próximos pasos, quién hace qué)*
+*(volcadas el 27-jul desde la transcripción oficial de Teams: `docs/reuniones/Primera reunión con Microsoft. Transcript. Discovery and Planning.docx`, 23-jul 09:58, 25 min. Asistentes: Marcelo Miranda y Laura Granda (Accenture, por Microsoft ISV Success), Agustín, Jesús.)*
+
+**Carácter de la sesión.** Fue *Discovery and Planning*: Microsoft escucha, encuadra y propone siguientes pasos. **No fue una sesión técnica de profundidad** — de las 12 preguntas del §4 solo se abordaron 2 (la 8 y, parcialmente, la 5). Las técnicas de fulfillment y todo el papeleo quedaron sin tratar.
+
+**Respondido:**
+
+- **[P8 — nativo vs SaaS Accelerator] Microsoft recomienda implementación NATIVA para nuestro caso.** Marcelo, tras conocer que queremos experiencia 100% self-service: *"yo personalmente recomendaría crear"*. Su razón: el SaaS Accelerator es una capa de integración **sin conexión con la aplicación** — el cliente compra, aterriza en la landing del Accelerator y **lo único que ocurre es que llega un email al partner, que crea la cuenta a mano**. Sirve como base o referencia, no como atajo. **Confirma la decisión [E]5 del DESIGN.**
+- **Flujo landing + webhook.** Al completarse el pago, Partner Center llama al **webhook** (con plan ID, cliente y demás) **y al mismo tiempo** el cliente es redirigido a la **landing**, a la que llega **con el mismo login con el que compró**. La landing es "la primera experiencia gestionada por vosotros" y puede hacer el alta directa. **Respalda la decisión [E]1 ("misma cuenta", match estricto).**
+- **[P5, parcial] Modelo comercial.** Dos opciones: (a) **por usuario** — el cliente indica cantidad en la compra, llega por webhook y la app asigna usuarios; (b) **flat rate + pay-as-you-go (metered billing)** — cuota fija (posiblemente 0) más dimensiones de consumo (nº de solicitudes, tokens) definidas en Partner Center y **reportadas por la app vía Metering API**. Marcelo la ve encajar aquí por el coste variable de IA. **Agustín manifestó que quieren pay-as-you-go.** Sobre el reporte: *"lo recomendamos que la aplicación directamente haga la llamada de API a Microsoft reportando el consumo… sería importante poner esa lógica en la aplicación ya"*.
+- **Leads.** Cada intento de suscripción genera un *lead* en la sección **Referrals** de Partner Center (útil para contactar a quien no completa la compra); configurable en *Offer setup* hacia CRM externo, webhook o Azure Table.
+
+**No tratado (sigue abierto):**
+
+- **[P7] Credencial federada / secretless del fulfillment** — la pregunta no llegó a plantearse. *Resuelto por nuestra cuenta el 27-jul contra la documentación de Microsoft: es viable en same-tenant (el bloqueo `AADSTS700236` es exclusivo de cross-tenant). Ver `SPEC-02_fulfillment-secretless.md` §2.2. Se llevará al 29-jul como validación, no como bloqueo.*
+- **[P1–P3] Programa, créditos Azure, Marketplace Rewards, Engagement Manager.**
+- **[P4] Qué revisa exactamente la certificación y plazos reales.**
+- **[P6] Autoservicio desde el día 1 vs. alta manual.**
+- **[P9] Compra de prueba en Preview sin coste** (private plan a $1 / cancelar en 72 h / oferta DEV).
+- **[P10] Crédito vs. Marketplace-billing** para modelos de partner (Claude en Foundry).
+- **[P11–P12] Papeleo fiscal y payout.** *(Nota: la cancelación dentro de 72 h desde la compra no se factura — dato suelto que Marcelo mencionó y que sirve para P9.)*
+
+**Compromisos y siguientes pasos:**
+
+| Quién | Qué | Estado |
+|---|---|---|
+| Marcelo | Enviar email con enlaces y documentación de Marketplace | ¿recibido? — verificar |
+| Marcelo | Enviar la transcripción | ✅ recibida (en `docs/reuniones/`) |
+| Marcelo | Enviar encuesta de la sesión e invitación al seguimiento | — |
+| Ambos | **Reunión de seguimiento: 29-jul-2026, 15:30** (se movió del 30 por viaje de Agustín) | ✅ agendada → `BRIEF-reunion-isv-success-2026-07-29.md` |
+| Microsoft (oferta) | Sesión de **revisión de arquitectura con un arquitecto** del equipo | ofrecida, sin agendar |
+| Microsoft (oferta) | Ayuda con **private offers** cuando haya primer cliente | ofrecida |
+
+**Consecuencia para el ciclo:** aparece una **tensión no resuelta** entre lo que se le comunicó a Microsoft (pay-as-you-go / metered billing) y el `DESIGN.md` §4, que deja el metered billing **fuera de alcance de v1** y asume comprador individual sin `quantity`. No afecta a SPEC-02, pero sí a SPEC-03/06. Decisión de negocio pendiente; primera pregunta del brief del 29.
