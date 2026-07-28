@@ -22,6 +22,8 @@
 
 *(Por qué importa: nuestro DESIGN dejó el metered billing fuera de v1 y asume un comprador individual sin cantidad de licencias. Según lo que respondan, o cerramos v1 con tarifa plana o reabrimos el diseño ahora — mucho más barato que después.)*
 
+> **Dato duro que llevamos a la mesa** ([`ANALISIS-costes-por-sesion.md`](../ANALISIS-costes-por-sesion.md), medido sobre un mes de uso real en producción): el coste variable es de **~$0.024 por sesión** — un cliente medio cuesta **~$1,30/mes** y el más intenso imaginable **~$10/mes**. Con esas cifras, el *metered billing* repercutiría céntimos a cambio de bastante complejidad. Nuestra hipótesis de partida es **tarifa plana + tope fair-use**, y la pregunta A1 es si eso nos cierra la puerta a añadir metering después. *(Si sale el tema: la palanca de coste real no es el volumen, es el modelo de IA — pasar el destilador a Opus triplicaría el coste del cliente intenso.)*
+
 ### B. Fulfillment secretless — **validación de nuestro diseño** *(técnico — Jesús)*
 
 5. **La pregunta que quedó sin hacer el 23.** Somos **secretless por Managed Identity** (SQL, Blob y Azure OpenAI ya lo son) y no queremos un client secret en la app del fulfillment. Nuestro diseño: **UAMI del App Service como credencial federada de la app de Entra dedicada**, intercambio de assertion y token contra `20e940b3-…`. **¿Lo respaldáis?** ¿Algún ISV lo tiene así en producción? *(Lo hemos verificado en vuestra documentación: mismo tenant, así que el bloqueo `AADSTS700236` no aplica. Buscamos confirmación, no permiso.)*

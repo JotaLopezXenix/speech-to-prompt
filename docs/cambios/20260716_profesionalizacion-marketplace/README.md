@@ -15,6 +15,7 @@ Carpeta del **programa multi-ciclo** que profesionaliza la app para publicarla e
   - `DESIGN.md` — DESIGN del **programa** (objetivo, troceo en 7 ciclos, decisiones estructurales, riesgos). Base de todo.
   - `BRIEF-marketplace-agustin.md` / `.docx` — material de negocio (ciclo 0): niveles de oferta y requisitos del Marketplace.
   - `INVESTIGACION-modelo-destino-prompt-guides.md` — investigación (ciclo 0) de prompt-guides por modelo destino; **alimenta el ciclo 4** (`destilado-destino`).
+  - `ANALISIS-costes-por-sesion.md` — **coste variable real por sesión** (spike de solo lectura contra producción, 27-jul): ~$0.024/sesión, **~70% STT y 30% LLM**, y el hallazgo de que **en producción no se mide la duración del audio** (ffprobe ausente + clave de precio desalineada) → el coste de STT sale a 0. Conclusión: el coste variable es marginal frente a cualquier precio plausible, **el metering no lo justifica**, y la palanca real es la elección de modelo del ciclo 4. **Alimenta** el modelo de precio del ciclo 3, el ciclo 4 y el ciclo 5.
   - `handoffs/` — **bitácoras de cierre de sesión** (snapshots fechados con evidencia; pueden abarcar varios ciclos).
 - **Nivel ciclo (`ciclo-N-<slug>/`):** artefactos JCC de ese ciclo (DESIGN, SPEC, RUNBOOK, y la REVIEW como ADDENDUM dentro del DESIGN).
 
