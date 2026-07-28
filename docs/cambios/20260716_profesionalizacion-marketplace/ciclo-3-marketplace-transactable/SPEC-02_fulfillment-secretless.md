@@ -318,6 +318,42 @@ Si alguna fallase, la causa esperable es que el entorno esté resolviendo la UAM
 
 ---
 
+## ADDENDUM 2026-07-27 — provisión Azure ejecutada (as-built) + dos enmiendas al §6
+
+La provisión de §6.1–6.5 se ejecutó el 27-jul **antes** de implementar, para que la verificación §8.3/§8.4 no quedara pendiente de ops. Resultado y desviaciones:
+
+**Identificadores as-built** (ninguno es secreto):
+
+| Recurso | Valor |
+|---|---|
+| Tenant (Xenix) | `3b1870f6-ff96-440e-9d46-a3db343eae1c` |
+| Suscripción | `247bb14b-bd75-4dc3-a695-0d22baf00b87` |
+| App de Entra `speech-to-prompt-fulfillment` — **client ID** | `a29c76de-8827-4f6a-97e0-7d94e058601b` |
+| ídem — object ID / SP object ID | `56f0fa6f-6e1b-4a46-913b-27c5fa9fc15a` / `f5002b4a-7eb5-4f68-9265-fcc027e9f74b` |
+| UAMI `id-speech-to-prompt-fulfillment` — **client ID** (→ `MARKETPLACE_MI_CLIENT_ID`) | `8fab969a-f149-4820-bda0-b1acbc61e3ea` |
+| ídem — **principal ID** (→ *subject* de la FIC) | `1a63ee6b-af62-45c3-afad-6fb9b555ffec` |
+| Credencial federada | `speech-to-prompt-uami` (id `9fd18f7d-…`), issuer `…/3b1870f6-…/v2.0`, audience `api://AzureADTokenExchange` |
+
+**Enmienda 1 — §6.1 ya estaba satisfecho.** El service principal del recurso de Marketplace (`20e940b3-…`, *MarketplaceAPI ISV*) **ya existía** en el tenant; no hubo que crearlo. Queda descartada de antemano la causa habitual de los 403.
+
+**Enmienda 2 — falta un paso: el service principal de NUESTRA app.** El §6.2 describía el registro asumiendo el flujo de portal, que crea el *application object* y su *service principal* juntos. **`az ad app create` crea solo el application object**, y sin service principal el flujo client-credentials no emitiría token. Se añadió `az ad sp create --id <appId>`. Si algún día se rehace la provisión por CLI, este paso es obligatorio.
+
+**Estado secretless verificado:** la app tiene `passwordCredentials: 0` y `keyCredentials: 0`; no se creó ningún secreto ni certificado. `AZURE_CLIENT_ID` **no** se definió (habría alterado `DefaultAzureCredential` globalmente).
+
+**Regresión §8.4 — lo verificado tras enganchar la UAMI** (el App Service pasó de `SystemAssigned` a `SystemAssigned, UserAssigned`, conservando el mismo `principalId` de sistema `2990520e-…`, por lo que los RBAC de Blob/AOAI y el usuario contenido de SQL siguen válidos):
+
+- `GET /api/health/db` → **200 `{"ok":true}`** — Azure SQL sigue autenticando por la MI **de sistema**. Es la pieza de mayor riesgo y está verde.
+- `GET /` → **200 text/html** — la SPA arranca y se sirve.
+- `GET /api/v1/sessions` sin token → **401 `UNAUTHENTICATED`** — el middleware de identidad y el gate siguen intactos.
+- **Azure OpenAI** → **verificado por el usuario** (destilación real, 27-jul). ✔
+- **Blob** → pendiente de smoke logueado. **Corrección del método:** el §8.4 pedía "servir audio de una sesión existente", pero **no existe reproductor de audio en la UI** (el endpoint `GET /sessions/:id/audio/:ordinal` existe en backend y en el cliente tipado, pero ninguna pantalla lo consume). Las pruebas válidas son: **grabar un segmento** (escritura, `transcribe.js` → `store.put`) y **Reprocesar** desde Historial (lectura, `store.exists` + re-transcripción del audio guardado). Hacerlo sobre una **sesión nueva desechable**: Reprocesar recalcula la transcripción de la sesión.
+
+**Nota de método:** se intentó verificar los peldaños 1–2 del §8.3 sin desplegar, ejecutando la prueba vía la API de comandos de Kudu. **No es posible:** el contenedor de Kudu **no** recibe el endpoint de Managed Identity (`IDENTITY_ENDPOINT` ausente) y su `node_modules` es un symlink a `/node_modules` del contenedor de la app. La MI solo existe en el contenedor de la aplicación → **el intercambio federado solo se puede probar con código desplegado**. Sí se confirmó que los App Settings se heredan y que el runtime es **Node 24.7**.
+
+**Deuda detectada de paso (fuera de este spec):** el App Service conserva el App Setting `MICROSOFT_PROVIDER_AUTHENTICATION_SECRET`, secreto residual de **Easy Auth**, retirado en el ciclo 1. Antes de borrarlo hay que confirmar que Easy Auth está desactivado a nivel de plataforma. Equivalente a la deuda de `ALLOWED_EMAILS`, ya saldada.
+
+---
+
 ### Nota — tensión pendiente con el modelo de precio (mesa común)
 
 En la reunión con Microsoft ISV Success (23-jul) se le comunicó a Microsoft la intención de vender **pay-as-you-go**, y su consultor recomendó *flat rate + metered billing* reportando consumo por API, sugiriendo incorporarlo pronto a la lógica de la aplicación. El **DESIGN §4 de este ciclo deja el metered billing fuera de v1** y asume comprador individual sin `quantity`. **Este spec no se ve afectado** (el transporte y el token son los mismos para cualquier modelo, y `token.js` ya sirve a las Metering APIs), pero **SPEC-03 y SPEC-06 sí lo estarán**. Decisión de negocio a cerrar — anotada como pregunta prioritaria para la reunión del 29-jul.

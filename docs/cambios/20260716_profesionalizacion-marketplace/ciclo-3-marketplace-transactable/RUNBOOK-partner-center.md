@@ -69,7 +69,7 @@ Fuentes en el informe de investigación (Microsoft Learn, artículos 2025-2026).
 | G | **Plans & pricing** (definir Basic/Trial, precio €/mes flat, mercados, visibilidad) | decisión de negocio (precio) | 🟡 esbozado (2 planes draft). ⚠️ **Modelo sin cerrar**: a Microsoft se le dijo *pay-as-you-go*; su propuesta es **flat rate + metered billing** (dimensiones de consumo reportadas por API) — choca con el `DESIGN.md` §4 del ciclo, que deja el metering fuera de v1. **Primera pregunta del 29-jul** |
 | G2 | **Leads** (Referrals): conectar a CRM externo / webhook / Azure Table desde *Offer setup* | D | ⬜ pendiente (opcional v1; Marcelo lo señaló el 23-jul) |
 | H | Preview audience | — | ⬜ pendiente |
-| I | **Technical configuration** (Landing URL + Webhook URL + Entra tenant/app ID) | **código ciclo 3** | ⬜ bloqueado por código |
+| I | **Technical configuration** (Landing URL + Webhook URL + Entra tenant/app ID) | **código ciclo 3** | 🟡 **mitad desbloqueada (27-jul)**: los dos campos de Entra ya se pueden rellenar → **Tenant ID `3b1870f6-ff96-440e-9d46-a3db343eae1c`** · **App ID `a29c76de-8827-4f6a-97e0-7d94e058601b`** (app `speech-to-prompt-fulfillment`, provisionada en SPEC-02). Landing URL y Webhook URL siguen esperando a SPEC-03/04. **Hasta grabar estos campos, las Fulfillment APIs devuelven 401/403 por diseño** |
 | J | Publicar en Preview + **compra de prueba e2e** | I + G + (B,C para Go live) | ⬜ hito de convergencia |
 | K | Certificación (manual < 2 días hábiles) | J | ⬜ pendiente |
 | L | Go live | K + B + C | ⬜ pendiente |
