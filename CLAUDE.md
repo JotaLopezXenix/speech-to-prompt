@@ -18,7 +18,6 @@ https://raw.githubusercontent.com/Xenix-Solutions/jcc-metodologia-claude-code/ma
 - **Modelo de precio del Marketplace sin cerrar** (decisión de negocio, Agustín+Jesús): a Microsoft se le dijo *pay-as-you-go* y ellos proponen *flat rate + metered*; el DESIGN §4 del ciclo 3 deja el metering fuera de v1. **No bloquea a SPEC-03** — la doc confirma que nacer *flat rate* permite añadir metering después (auditoría §3.5) — pero sí al paso G del runbook.
 - **2ª reunión Microsoft ISV Success pospuesta ~1 mes** (cancelada el 29-jul, se retoma tras vacaciones): reciclar [`BRIEF-…-29.md`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/BRIEF-reunion-isv-success-2026-07-29.md) en el brief de la nueva fecha (varias preguntas ya respondidas por doc; la de auto-activation pasa a confirmación de una decisión ya tomada).
 - **Antes del go-live: quitar o gatear el parámetro `systemPrompt` de `POST /sessions/:id/distill`** (decisión 29-jul, mesa común). Hoy no lo consume ninguna UI, pero en un SaaS de pago permite a un cliente inyectar su propio system prompt (anula nuestros prompts, que son el núcleo del valor). Va con la retirada de `GET /api/prompts`, también sin consumidor.
-- **Secreto residual de Easy Auth en Azure:** el App Setting `MICROSOFT_PROVIDER_AUTHENTICATION_SECRET` sobrevive al ciclo 1; antes de borrarlo, confirmar que Easy Auth está desactivado a nivel de plataforma.
 
 ## Commands
 

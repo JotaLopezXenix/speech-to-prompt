@@ -353,7 +353,9 @@ La provisión de §6.1–6.5 se ejecutó el 28-jul **antes** de implementar, par
 
 **Nota de método:** se intentó verificar los peldaños 1–2 del §8.3 sin desplegar, ejecutando la prueba vía la API de comandos de Kudu. **No es posible:** el contenedor de Kudu **no** recibe el endpoint de Managed Identity (`IDENTITY_ENDPOINT` ausente) y su `node_modules` es un symlink a `/node_modules` del contenedor de la app. La MI solo existe en el contenedor de la aplicación → **el intercambio federado solo se puede probar con código desplegado**. Sí se confirmó que los App Settings se heredan y que el runtime es **Node 24.7**.
 
-**Deuda detectada de paso (fuera de este spec):** el App Service conserva el App Setting `MICROSOFT_PROVIDER_AUTHENTICATION_SECRET`, secreto residual de **Easy Auth**, retirado en el ciclo 1. Antes de borrarlo hay que confirmar que Easy Auth está desactivado a nivel de plataforma. Equivalente a la deuda de `ALLOWED_EMAILS`, ya saldada.
+**Deuda detectada de paso (fuera de este spec) — ✅ SALDADA el 30-jul-2026.** El App Service conservaba el App Setting `MICROSOFT_PROVIDER_AUTHENTICATION_SECRET`, secreto residual de **Easy Auth** (retirado en el ciclo 1), y con él `WEBSITE_AUTH_AAD_ALLOWED_TENANTS`. Comprobado antes de borrar: `az webapp auth show` → **`enabled: false`**, `defaultProvider: null`, `unauthenticatedClientAction: AllowAnonymous` (Easy Auth desactivado a nivel de plataforma), y **cero referencias en código** a ninguno de los dos (grep sobre `src/`, `web/src/`, `server.js`, `scripts/`, `.github/`). Borrados ambos; regresión post-reinicio verde (`/api/v1/health/db` → 200 `{"ok":true}`, `/` → 200, `/api/v1/sessions` sin token → 401).
+
+**Consecuencia que refuerza este spec:** el App Service ya **no tiene ningún App Setting con un secreto** — los 19 restantes son endpoints, identificadores públicos, nombres de recurso y flags. El invariante *secretless* del §2 deja de tener excepción, justo antes de implementar el cliente de fulfillment que lo extiende.
 
 ---
 
