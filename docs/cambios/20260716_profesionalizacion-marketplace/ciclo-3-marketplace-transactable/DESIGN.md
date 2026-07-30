@@ -1,7 +1,7 @@
 # DESIGN — Ciclo 3 `marketplace-transactable`
 
 **Fecha:** 22-jul-2026 · **Fase JCC:** análisis (este documento la cierra) · **Tipo:** ciclo de un programa multi-ciclo.
-**Material previo:** `../DESIGN.md` (DESIGN del programa, §3 troceo · §5 decisiones · §6 preservar) · `../BRIEF-marketplace-agustin.md` (niveles de oferta) · `RUNBOOK-partner-center.md` (estado real del alta) · investigación del Microsoft Marketplace (informe de sesión, fuentes MS Learn 2025-2026) · `ARQUITECTURA.md`.
+**Material previo:** `../DESIGN.md` (DESIGN del programa, §3 troceo · §5 decisiones · §6 preservar) · `../BRIEF-marketplace-agustin.md` (niveles de oferta) · `RUNBOOK-partner-center.md` (estado real del alta) · investigación del Microsoft Marketplace (informe de sesión, fuentes MS Learn 2025-2026 — ⚠️ **ese informe nunca se persistió en el repo**; sus hechos quedaron re-verificados con URL en el **§3 de la [`AUDITORIA-integridad-documental-2026-07-28.md`](../AUDITORIA-integridad-documental-2026-07-28.md)**, que es la referencia citable, H-09) · `ARQUITECTURA.md`.
 **Estado del alta (contexto):** cuenta Xenix verificada + enrolada ✅; payout ✅; fiscal a falta de 1 acción (tax del Seller); oferta SaaS `speechtoprompt` en Draft. Detalle vivo en el runbook.
 
 > **Alcance del documento (JCC v1.2):** objetivo, usuarios, alcance/fuera de alcance, decisiones estructurales acordadas, flujos conceptuales, superficie de regresión y riesgos. **No** entra en stack ni detalle de implementación (SQL, endpoints exactos, columnas) — eso es la fase `/jcc-spec`.
@@ -54,6 +54,7 @@
 6. **[E] Política de retención en baja/suspensión (v1-A).** En `Unsubscribe`/`Suspend` → **se bloquea el acceso** y **se conservan los datos una ventana fija (90 días)**. Durante la ventana, una **pantalla post-baja** ofrece **[Borrar ahora]** y **[Reactivar]**. Pasada la ventana → **borrado automático** (trabajo programado). En `Reinstate` → se restaura. **Futuro:** duración elegible por el usuario, recordatorios, exportar.
 7. **Punto y forma del gate.** Se mantiene **donde hoy está la lista blanca** (capa de identidad, tras validar el token; el contrato `req.user` no cambia): cambia el criterio "¿está en la lista?" por "¿tiene acceso activo?". **Exenciones:** landing/activación (un usuario recién logueado aún no tiene suscripción) y webhook (lo llama Microsoft, no un usuario). El resto de app/API, gateado.
 8. **Hueco H6 resuelto en este ciclo:** el alta JIT no debe depender de que el token traiga email.
+9. **[E] Auto-activation OFF** (añadida el 29-jul; detalle y razones en el **ADDENDUM 2026-07-29**). El flujo de activación es el explícito `resolve`/`activate` del §6, no la activación automática de Microsoft — es la única variante en la que [E]1 (match estricto **antes** de activar) es realizable, y evita facturar a un comprador que aún no ha conseguido entrar.
 
 ## 6. Flujos conceptuales (contrato externo, no implementación)
 
@@ -81,9 +82,9 @@
 
 ## 8. Supuestos y riesgos
 
-- **S1 — credencial federada viable** para obtener el token de las Fulfillment APIs sin secreto. *A confirmar (reunión MS / prueba).* Mitigación: plan B certificado en Key Vault.
-- **S2 — el token de activación (`resolve`) entrega un beneficiario con `oid`/email utilizable** para el match estricto. *A validar en Preview.*
-- **S3 — la gestión/cancelación del cliente vive en el lado de Microsoft y nos llega por webhook.** *Confirmar la superficie exacta con MS.* Condiciona que el diálogo de retención sea **post-baja/preferencia**, no en el instante de cancelar.
+- **S1 — credencial federada viable** para obtener el token de las Fulfillment APIs sin secreto. **CONFIRMADO** contra fuente primaria (auditoría §3.2, 28-jul): solo se admiten Managed Identities **asignadas por el usuario** como sujeto de una FIC, app y MI **en el mismo tenant** (nuestro caso), y el bloqueo `AADSTS700236` es **exclusivo de escenarios cross-tenant**. El **plan B (certificado en Key Vault) queda descartado como trabajo** (SPEC-02 §7); se reactivaría solo si el intercambio del §8.3 fallara de forma irrecuperable. *Pendiente: la prueba real del intercambio, que exige código desplegado.*
+- **S2 — el token de activación (`resolve`) entrega un beneficiario con `oid`/email utilizable** para el match estricto. **CONFIRMADO por doc, a validar aún contra compra real** (auditoría §3.3): la respuesta trae `subscription.beneficiary.{emailId, objectId, tenantId, puid}` y el token de compra vive **24 h** y llega URL-encoded. Matiz: la doc marca `objectId`/`puid` como *«for informational purposes»* — suficiente para [E]1, pero **la validación definitiva sigue siendo la compra en Preview**.
+- **S3 — la gestión/cancelación del cliente vive en el lado de Microsoft y nos llega por webhook.** **CONFIRMADO** (auditoría §3.4): *«The publisher doesn't have to use this API. Direct customers to Microsoft Marketplace to cancel»*; `Unsubscribe` llega por webhook y es *notify-only*. Extra: **no se factura si se cancela dentro de las 72 h** desde la compra. El diseño de retención post-baja (v1-A) es compatible.
 - **R1 — match estricto frustra** a quien se loguea con otra cuenta. Mitigación: mensaje claro; reasignación queda para v2.
 - **R2 — token de suscriptor sin email** (H6) rompería el alta. Mitigación: resolver el JIT sin depender de email.
 - **R3 — certificación transactable prueba la compra e2e** → necesita Preview + tax del Seller resuelto (runbook). Mitigación: resubmisión ilimitada; oferta DEV para ensayar.
@@ -94,7 +95,7 @@
 ## 9. Preguntas abiertas
 
 1. **Precio €/mes y estructura de planes** (¿un plan de pago + *free trial* del Marketplace?, ¿un solo plan?). La oferta tiene esbozados "Basic" y "Trial". Decisión de negocio; no bloquea el diseño del código (el código maneja `planId` genérico). *Nota:* para probar en Preview vale un **private plan a $1**; las pruebas internas se cubren con **concesiones manuales**.
-2. **Confirmaciones con Microsoft (reunión 23-jul):** viabilidad de la credencial federada (S1); superficie de gestión/cancelación del cliente (S3); conveniencia de **auto-activation** del plan vs. flujo `resolve`/`activate` explícito.
+2. **Confirmaciones con Microsoft (reunión 23-jul):** viabilidad de la credencial federada (S1); superficie de gestión/cancelación del cliente (S3); conveniencia de **auto-activation** del plan vs. flujo `resolve`/`activate` explícito. → **CERRADAS todas contra fuente primaria (MS Learn), ver ADDENDUM 2026-07-29.** La reunión del 23 no llegó a tratar ninguna de las tres; la del 29 se canceló y se retoma en ~1 mes, así que se resolvieron por documentación.
 3. **¿`free trial` del Marketplace como plan**, además de las concesiones manuales? (relacionado con la estructura de planes; decisión de negocio).
 
 ## 10. Posible troceo en specs (guía no vinculante para `/jcc-spec`)
@@ -125,3 +126,34 @@ La revisión adversarial de SPEC-01 ([`REVIEW-SPEC-01.md`](REVIEW-SPEC-01.md), F
 - **Estado:** el orden es correcto y **mandado por el SPEC** (SPEC-01 §4.3); no es un defecto. La implementación cumple.
 - **Cuándo importa:** solo cuando la oferta sea **pública** (a partir de SPEC-03 / ciclo 7); hoy ningún flujo trae a esos usuarios (acceso solo por concesión manual).
 - **Decisión (mesa común):** **se acepta para v1**; la mitigación se decide al abrir la oferta pública. Opciones anotadas: (a) limpieza periódica de `users` sin entitlement asociado; (b) resolver el acceso por `oid`/email **antes** del JIT (no provisionar hasta confirmar acceso o concesión pendiente). No urge y no bloquea el despliegue de SPEC-01.
+
+---
+
+## ADDENDUM 2026-07-29 — auto-activation: cerrada contra fuente primaria y **decidida OFF** ([E]9)
+
+Enmienda 7 del §6 de la [`AUDITORIA-integridad-documental-2026-07-28.md`](../AUDITORIA-integridad-documental-2026-07-28.md) (**H-08**). Cierra la pregunta abierta §9.2 y añade una decisión estructural que el §5 no tenía. Se resuelve por documentación y no por reunión: la del 23-jul no llegó a tratarla y la del 29-jul se **canceló** (se retoma en ~1 mes).
+
+**Qué es, exactamente** (fuentes: [Create plans for a SaaS offer → auto activation](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/create-new-saas-offer-plans) · [Subscription APIs v2](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/pc-saas-fulfillment-subscription-api) · [Webhook](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/pc-saas-fulfillment-webhook), leídas el 28-jul):
+
+| | Auto-activation **OFF** | Auto-activation **ON** |
+|---|---|---|
+| Estado tras la compra | `PendingFulfillmentStart` | **`Subscribed` en el momento de la compra** |
+| Facturación | empieza al hacer `activate` | **empieza en la compra** |
+| `resolve` / `activate` | los llamamos nosotros | **no se llaman nunca** |
+| De dónde salen los datos | de la respuesta del `resolve` | del webhook **`Subscribe`** (trae `beneficiary` y `purchaser`) |
+| Landing | pieza funcional del flujo | sigue existiendo, pero «account configuration isn't required for billing to start» |
+
+Es un **toggle por plan** en Partner Center.
+
+**Por qué no es una decisión cosmética.** La decisión **[E]1** de este DESIGN (match estricto beneficiario↔login **antes** de `activate`, con bloqueo estricto si no casa) **solo es realizable con OFF**: con ON no hay `activate` que condicionar, y la reconciliación tendría que volverse **post-facto** — crear el entitlement al recibir el `Subscribe` y casarlo en el primer login. Ese mecanismo *existe* (es el mismo binding pre-login por email que SPEC-01 ya tiene en producción, el caso «Agustín `owner_id NULL`»), así que ON no es imposible; es **otro diseño**.
+
+**Decisión (mesa común, 29-jul) — [E]9: auto-activation OFF en v1.** Razones, en orden:
+
+1. **Preserva [E]1 tal como está diseñado y ya especificado**: el match estricto ocurre antes de que empiece a correr el dinero, y el desajuste se le comunica al comprador en el momento en que puede actuar.
+2. **No se factura a quien no ha conseguido entrar.** Con ON, un comprador que se atasca en el login (o que compra con una cuenta y usa otra) está pagando desde el primer minuto por algo a lo que no accede → reembolsos y soporte en el peor momento del ciclo de vida, el primer día.
+3. **Mantiene el camino estándar y mejor documentado** (`resolve`/`activate`), que es además el que SPEC-02 ya implementa: no hay trabajo tirado.
+4. Coste asumido: **SPEC-03 tiene que construir la landing completa** (token → login → resolve → match → activate), que era el plan del §6 de todos modos.
+
+**Consecuencias para SPEC-03/04** (herédalas, no las re-decidas): la landing es **funcional, no informativa**; el webhook `Subscribe` es *notify-only* y no crea accesos por sí solo; el estado inicial esperado tras la compra es `PendingFulfillmentStart` y el camino feliz termina en `activate` → `Subscribed`; hay que tolerar que el comprador **abandone** entre compra y activación (suscripción viva sin entitlement) — **¿cuánto tiempo tolera Microsoft una suscripción sin activar antes de cancelarla? no verificado**, anotado para la reunión re-agendada.
+
+**Lo que se lleva a la reunión re-agendada** ya no es la pregunta original («¿qué es auto-activation?») sino: *«vamos con OFF por control de facturación y por el match estricto de identidad — ¿veis alguna razón operativa para lo contrario en un self-service puro?»* + la caducidad de una suscripción no activada. Actualizar el brief al re-agendar.

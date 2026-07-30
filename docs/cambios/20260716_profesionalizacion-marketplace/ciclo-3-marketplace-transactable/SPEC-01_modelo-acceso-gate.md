@@ -205,6 +205,8 @@ WHERE LOWER(u.email) IN ('jesus.lopez@xenix.es', 'agustin.hernandez@xenix.es')
 
 ## 6. Migración de datos y despliegue
 
+> ⚠️ **Este §6 tenía dos defectos que causaron una caída de producción de ~8 h el 23-jul. Leer el ADDENDUM 2026-07-29 al final antes de usarlo como plantilla para SPEC-02 y siguientes.**
+
 1. `npm run migrate` aplica la **007** (crea `entitlements`, índices, y `users.email` → NULL). Idempotente.
 2. Ejecutar **una vez** `scripts/sql/seed-entitlements-cutover.sql` (contra la BD, con las credenciales admin de siempre) → siembra a Jesús y Agustín.
 3. Desplegar el código (gate nuevo). Orden seguro: **migrar + sembrar ANTES de desplegar** el código nuevo, para que al arrancar el gate ya encuentre los accesos (si se despliega antes de sembrar, Jesús/Agustín recibirían 403 hasta el seed).
@@ -243,3 +245,43 @@ WHERE LOWER(u.email) IN ('jesus.lopez@xenix.es', 'agustin.hernandez@xenix.es')
 **Prod (tras desplegar, curl + smoke logueado):**
 - Con el seed aplicado, Jesús/Agustín entran y operan igual que antes (sin regresión perceptible).
 - Una cuenta Microsoft **sin** entitlement → 403 `NO_ACCESS` (antes daba `NOT_ALLOWLISTED`).
+
+---
+
+## ADDENDUM 2026-07-29 — despliegue (as-built): el §6 falló en producción, y por qué
+
+Este ADDENDUM cierra la deuda que señaló la auditoría del 28-jul (**H-06**: el despliegue de SPEC-01 no tenía artefacto; su evidencia vivía en el mensaje del commit `6691fd2`). Reconstruido el 29-jul con evidencia primaria. **Lo importante no es la crónica: es que el §6 sigue siendo la plantilla mental para desplegar SPEC-02 y siguientes, y tal como está escrito no funciona.**
+
+### Qué pasó
+
+El código del gate llegó a producción **antes** de que existiera `dbo.entitlements`. Con la tabla ausente, el gate no devolvía 403: **el middleware de identidad lanzaba 500 `IDENTITY_FAILED`** (`Invalid object name 'dbo.entitlements'`) en **toda petición autenticada** → **producción caída para Jesús y Agustín ~8 h**.
+
+Cronología (todo UTC; `gh run list` + `git log` el 29-jul, BD de producción vía la auditoría del 28-jul):
+
+| Hora | Hecho | Evidencia |
+|---|---|---|
+| 08:31:27 → 08:33:19 | Push de `eb21a2c..d20d304` a `main` → **el workflow despliega el gate a producción** | run de `d20d304` |
+| 11:20:49 → 11:24:00 | Segundo deploy (`1396a75`), sin relación con el gate | run de `1396a75` |
+| **16:40:35** | **Migración 007 aplicada** → `dbo.entitlements` existe; fin de la caída | `schema_migrations` |
+| 16:41 | Seed de cutover → Jesús, `owner_id = 1` | `entitlements` |
+| 16:51:14 | Primer evento STT posterior → smoke real de un usuario | `usage_events` |
+| 17:10 | Concesión **pre-login de Agustín** añadida a mano (`owner_id NULL`) | `entitlements` |
+| 17:14:38 | Commit `6691fd2` «SPEC-01 desplegado — fix del orden migrate+seed + Agustín pre-login» | `git log` |
+
+### Los dos defectos del §6
+
+1. **El paso 3 es inejecutable como está escrito.** Dice «desplegar el código» como una acción deliberada y posterior, pero **no existe un paso de despliegue separado**: `.github/workflows/azure-deploy.yml` tiene `on: push: branches: [main]` (líneas 9-13) → **cualquier push a `main` despliega a producción**. La sesión del 23-jul commiteó y pusheó creyendo dejarlo «pusheado, SIN desplegar» (así lo declaró su handoff) y el pipeline lo desplegó a los dos minutos. **El orden correcto no es "migrar antes de desplegar": es migrar antes de PUSHEAR.**
+2. **El paso 3 predice el fallo equivocado.** Dice «si se despliega antes de sembrar, Jesús/Agustín recibirían **403** hasta el seed». Eso solo es cierto si la **tabla ya existe**. Sin migración aplicada no hay 403 degradado, hay **500 para todo el mundo**: el fallo no es de autorización, es de esquema — y por tanto no es "acceso denegado a dos personas", es "aplicación caída".
+
+### Regla para SPEC-02 y siguientes (hereda esto)
+
+- **Toda migración va aplicada a producción ANTES del push que lleva el código que la necesita.** No hay ventana intermedia que administrar.
+- **Un cambio que introduce dependencia de esquema nuevo no degrada: tumba.** Si se quiere degradación elegante, hay que programarla explícitamente (p. ej. tolerar la ausencia de la tabla), y **este spec no lo hizo** — decisión asumida, no defecto oculto.
+- **Migrar contra Azure NO es `npm run migrate`**: ese script carga el `.env` local y apuntaría a la BD de desarrollo. Se invoca el script con la conexión de producción explícita: `SQL_SERVER=sql-speech-to-prompt.database.windows.net`, `SQL_DATABASE=db-speech-to-prompt`, `SQL_AUTH=entra-default`, `node scripts/migrate-db.js`.
+- **El seed de cutover no cubre a quien nunca ha hecho login.** `scripts/sql/seed-entitlements-cutover.sql` siembra `FROM dbo.users`, y el 23-jul **solo existía Jesús** (`users.id = 1`): Agustín nunca se había logueado. De ahí la concesión **pre-login** creada a mano (`grantManual`, `owner_id NULL`, se vincula en su primer login) — que es también la primera prueba real, en producción, del binding pre-login que SPEC-03 necesitará para las suscripciones.
+
+### Recuperación
+
+Restaurar producción fue **solo BD** (aplicar la migración y sembrar): no hizo falta re-deploy ni reinicio, porque el código correcto ya estaba desplegado. Un dictado de ~14 min que se había quedado sin subir sobrevivió en la memoria de la pestaña (`pendingRetryRef`, salvaguarda R1 del ciclo 2) y subió con **Reintentar** sin recargar — la salvaguarda hizo exactamente su trabajo en un incidente real.
+
+*(Nota: el App Setting `ALLOWED_EMAILS` — paso 4 del §6 — no se retiró el 23-jul, como afirmaron algunos apuntes, sino el **27-jul**: commit `a6983bd`, 16:21Z. El commit del 23-jul lo dejaba explícitamente como «higiene pendiente».)*

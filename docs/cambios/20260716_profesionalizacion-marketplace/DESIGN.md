@@ -27,7 +27,7 @@
 | 2 | `frontend-mobile-first` | Estudio y diseño gráfico (design system, dirección visual, wizard vs. pantalla única — con maquetas) + frontend nuevo portando los módulos ganados con sangre (§6). API formalizada de paso (los futuros clientes móviles la consumirán). |
 | 3 | `marketplace-transactable` | Landing de activación, webhook, Fulfillment APIs (nativo en nuestro backend Node), tabla de suscripciones + gating por estado, plan de precio. |
 | 4 | `destilado-destino` | **Funcionalidad estrella:** selección del modelo destino del prompt + ajustes de formato (encabezados, inferencias, preguntas abiertas…). Incluye el switch del destilador a Claude en Azure (condicionado a §7-S1) con re-afinado y eval. Aquí se decide si la matriz de prompts cambia de dimensión (estructural). |
-| 5 | `uso-y-costes` | Tope fair-use mensual por usuario + costes visibles por operación (los datos ya existen en `usage_events`/`model_prices`; falta la superficie). |
+| 5 | `uso-y-costes` | Tope fair-use mensual por usuario + costes visibles por operación (los datos ya existen en `usage_events`/`model_prices`; falta la superficie). ⚠️ **Supuesto corregido — ver ADDENDUM 2026-07-29:** cierto para el LLM, **falso para el STT** (el ~70 % del coste). |
 | 6 | `backoffice-minimo` | Métricas de uso, estado de suscripciones, consumo por usuario. |
 | 7 | `publicacion` | Ficha (textos, capturas del frontend nuevo, vídeo), certificación, compra de prueba en Preview, go-live. |
 
@@ -63,7 +63,7 @@ Valor depurado que ningún ciclo puede romper; lo portable se porta como módulo
 - **Contrato de sesión:** `segments[]` + `transcription_raw/edited` materializados; multi-segmento iterativo.
 - **Módulos de captura ganados con sangre:** `audio-recorder.js` (stop intencional/externo, contrato Promise→blob), `audio-guards.js`, patrón de retención de blob + banner Reintentar, warm-up de BD, telemetría `diagnostic_events`.
 - **Backend:** abstracción de proveedores (LLM/STT/BlobStore + registries), workaround Groq (reconstrucción desde `words[]`), normalización ffmpeg opcional, robustez del pool (timeouts tarn + `propagateCreateError:false`).
-- **Datos:** esquema SQL con owner isolation en capa de datos (`callerId`, cross-owner→404), `usage_events` + `model_prices` (la mitad del control de costes ya hecha), prompts familia×modo en BD con seed desde git (la dimensión puede crecer en el ciclo 4, sin perder el mecanismo).
+- **Datos:** esquema SQL con owner isolation en capa de datos (`callerId`, cross-owner→404), `usage_events` + `model_prices` (la mitad del control de costes ya hecha — ⚠️ **matizado en el ADDENDUM 2026-07-29**: el mecanismo se preserva, pero para el STT no hay dato que superficializar), prompts familia×modo en BD con seed desde git (la dimensión puede crecer en el ciclo 4, sin perder el mecanismo).
 - **Infra:** pipeline secretless (Managed Identity, red privada), despliegue GitHub Actions, migraciones versionadas.
 - **Eval:** `scripts/eval-distill.mjs` + goldens — es la red de seguridad del ciclo 4.
 
@@ -85,3 +85,19 @@ Valor depurado que ningún ciclo puede romper; lo portable se porta como módulo
 4. **Nombre comercial y marca** del producto para la ficha → necesario antes del ciclo 7 (idealmente antes del 2, para el diseño visual).
 5. **Multilenguaje**: ¿solo interfaz o también prompts de destilado por idioma? Dimensionar en el ciclo 2 (i18n del front es barato de prever, caro de retrofitar).
 6. Resultado de la investigación del ciclo 0 → puede reordenar el ciclo 4 (matriz de prompts, ajustes de formato que merecen UI).
+
+---
+
+## ADDENDUM 2026-07-29 — el supuesto de datos del ciclo 5 es falso para el STT (corrección con backport)
+
+Enmienda 2 del §6 de [`AUDITORIA-integridad-documental-2026-07-28.md`](AUDITORIA-integridad-documental-2026-07-28.md) (H-03). Corrige el §3 (fila del ciclo 5) y el §6 (bullet de *Datos*), que afirmaban que **los datos de coste «ya existen»** y que «la mitad del control de costes» está hecha. El [`ANALISIS-costes-por-sesion.md`](ANALISIS-costes-por-sesion.md) §2 (27-jul) demostró que eso es **cierto para el LLM y falso para el STT**, y la auditoría lo re-verificó contra la BD de producción el 28-jul. El ADDENDUM existe porque la corrección vivía solo en el ANALISIS: quien leyera este DESIGN para arrancar el ciclo 5 planificaría sobre un supuesto falso.
+
+**Qué está roto, con su evidencia (BD de producción, 28-jul):**
+
+- `usage_events.audio_seconds` es **NULL en 32/32** eventos STT, y `segments.duration_seconds` **NULL en 32/32** segmentos → no hay magnitud que facturar ni mostrar para el STT. Causa (diagnóstico del ANALISIS §2, no re-verificada en Azure): `probeDuration` (`src/services/audio-normalize.js`) invoca **`ffprobe`** y devuelve `null` si falla, y `ffmpeg`/`ffprobe` no está instalado en el App Service — coherente con el diseño (ffmpeg es opcional y degrada elegantemente), pero el efecto colateral es que en producción **no se registra ni un segundo de audio**.
+- La clave de precio sembrada es `azure-whisper:whisper` (`migrations/002_usage_and_prices.sql:39`) mientras los eventos registran `azure-whisper:whisper-large-v3` → `estimateCost` (`src/services/pricing.js:29`) no encuentra tarifa y **devuelve 0**.
+- Consecuencia doble: el coste de STT registrado en prod es **0** aunque sea el **~70 %** del coste real (~$0.024/sesión estimado por proxy de caracteres), y los chips de duración de Revisión muestran siempre «—» (H-14 de la auditoría; `Review.tsx:140`).
+
+**Consecuencia para el ciclo 5 (`uso-y-costes`):** su primer trabajo **no** es la superficie, es la **medición**. La vía que recomienda el ANALISIS §2 (y que no se aplicó allí porque merece su spec): **el frontend ya mide la duración** (`getElapsedSeconds` del grabador), así que **enviarla con el upload** es más robusto y más barato que instalar ffmpeg en el App Service — a cambio de tocar el contrato de la API. Después, alinear la **clave de precio** con el modelo que realmente se registra (una fila de SQL) — arreglar solo la clave no sirve de nada mientras la duración sea NULL — y decidir si se recalculan los eventos históricos (probablemente no: el coste pasado no se factura). Solo entonces tiene sentido "falta la superficie". El **fair-use** también depende de esto: un tope en minutos de audio/mes no es medible hoy.
+
+**Lo que sí se preserva del bullet de §6:** el *mecanismo* (`usage_events` append-only + `model_prices` + `estimateCost`) es correcto y está en producción; lo que falta es alimentarlo. La decisión del ANALISIS de **no** corregir la clave de precio en caliente sigue vigente (cambiarla sin medir duración no arregla nada: seguiría multiplicando por NULL).

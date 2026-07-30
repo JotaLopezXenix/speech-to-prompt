@@ -1,6 +1,16 @@
 # Brief — 2ª reunión Microsoft ISV Success · seguimiento técnico
 
-**Cuándo:** miércoles **29-jul-2026, 15:30**. **Con:** Marcelo Miranda (consultor técnico de partners) y equipo.
+> ## ⚠️ REUNIÓN CANCELADA Y POSPUESTA (~1 mes) — actualización 29-jul-2026
+>
+> La sesión del 29-jul **no se celebró**: se pospone hasta después de vacaciones (~finales de agosto, fecha por confirmar). **Este brief no se tira: se recicla** para la nueva fecha. Antes de reutilizarlo, aplicar estas tres cosas, porque varias preguntas han cambiado de naturaleza mientras la reunión no ocurría (auditoría del 28-jul + saneo del 29-jul):
+>
+> 1. **Ya respondidas por documentación, bajan a "confirmación operativa"** (no gastar la reunión en ellas): **A1/A2** (§3.5 de la [auditoría](../AUDITORIA-integridad-documental-2026-07-28.md) — el metering exige *flat rate*; el **pricing model** de la oferta es lo irreversible tras publicar; **añadir un plan con dimensiones nuevas a una oferta flat-rate ya publicada está soportado**, así que *empezar plano y meter metering después es viable*), **B5** (credencial federada: viable, same-tenant; `AADSTS700236` es solo cross-tenant), **C9/C10** (cancelación en el lado de Microsoft, *notify-only*, 72 h sin factura; webhook con **500 reintentos en 8 h** y **sin garantía de orden**), **D12** (72 h + *«you are still required to pay the invoices for test purchases»*, el reembolso llega en la factura siguiente).
+> 2. **B8 (auto-activation) ya no es una pregunta abierta:** se **decidió OFF** en mesa común el 29-jul (ADDENDUM del [`DESIGN.md`](DESIGN.md)). Se reformula como: *«vamos con OFF por control de facturación y por el match estricto de identidad — ¿alguna razón operativa para lo contrario en self-service puro?»*, más la que sigue sin respuesta: **¿cuánto tolera Microsoft una suscripción sin activar antes de cancelarla?**
+> 3. **Lo que sigue intacto y es lo que hay que preguntar:** **B7** (¿basta guardar el borrador de la oferta para que las Fulfillment APIs autoricen el app ID, o hace falta Preview?), **B6** (¿la certificación presupone un client secret?), **C11** (¿re-compra = misma `subscriptionId`?), **D13** (qué revisa certificación y rechazos típicos), **D14/D15** (tratado España–EE. UU. y payout por defecto — pero **el tax del Seller NO debe esperar a esta reunión**: va por asesor fiscal), **E17/E18** (sesión con arquitecto, email de documentación).
+>
+> Además, lo que ha cambiado en nuestro lado desde que se escribió el §1: la **provisión Azure de SPEC-02 está ejecutada** (28-jul, app de Entra + UAMI + credencial federada, secretless verificado) — ya no es solo "especificado".
+
+**Cuándo:** ~~miércoles **29-jul-2026, 15:30**~~ → **por re-agendar** (tras vacaciones). **Con:** Marcelo Miranda (consultor técnico de partners) y equipo.
 **Antecedente:** [`BRIEF-reunion-isv-success-2026-07-23.md`](BRIEF-reunion-isv-success-2026-07-23.md) (§6 = notas de la 1ª sesión, volcadas de la transcripción).
 
 > **Encuadre.** La primera fue *Discovery and Planning*: Microsoft escuchó y encuadró, y solo se abordaron 2 de las 12 preguntas. Agustín cerró pidiendo seguimiento *"cuando nos vayamos encontrando dudas al hacer la configuración técnica"* — así que **esta sesión debería ser la técnica**. Conviene decirlo al abrir, para que venga con el perfil adecuado (o con un arquitecto, que ya ofrecieron).

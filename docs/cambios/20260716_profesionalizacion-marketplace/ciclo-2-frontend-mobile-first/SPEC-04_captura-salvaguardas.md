@@ -363,5 +363,3 @@ Tras merge y deploy: `/app/capture` sirve el build nuevo; warm-up y diagnostics 
 - StrictMode dev doble-invoca efectos: el efecto de montaje de `useCapture` debe ser idempotente (crear el recorder una vez vía ref; no duplicar warm-up de forma dañina — es fire-and-forget).
 - El singleton `diag` persiste entre navegaciones de la SPA; los runs se aíslan por `captureRunId`. Al desmontar la Captura, `endCaptureRun()` + `flush()`.
 - Los tres banners (suspect/safeguard/retry) comparten "canal" visual (como el `warnBox` viejo) pero son estados distintos de `banner.kind`.
-</content>
-</invoke>

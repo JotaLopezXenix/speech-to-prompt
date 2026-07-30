@@ -12,7 +12,7 @@ Añade un **cliente de las SaaS Fulfillment APIs de Microsoft Marketplace** que 
 
 - **Node.js 24 + Express**, sin build, ESM. `fetch` nativo. Tests con `node --test` (lógica pura, sin red ni BD).
 - **Invariante del proyecto: secretless.** SQL, Blob y Azure OpenAI ya autentican por **Managed Identity asignada por el sistema** del App Service `speech-to-prompt-xenix` (`DefaultAzureCredential` en Storage/AOAI; `azure-active-directory-msi-app-service` en SQL). Este spec **no rompe ese patrón: lo extiende**.
-- **Sin dependencias nuevas.** `@azure/identity` **4.13.1** (ya instalado) trae `ManagedIdentityCredential` y `ClientAssertionCredential`, que son exactamente el patrón Node que documenta Microsoft para *managed identity como credencial federada*.
+- **Sin dependencias nuevas.** `@azure/identity` **^4.5.0** (ya instalado; el lock resuelve **4.13.1** — H-12) trae `ManagedIdentityCredential` y `ClientAssertionCredential`, que son exactamente el patrón Node que documenta Microsoft para *managed identity como credencial federada*.
 - **Encaje:** un servicio nuevo y aislado en `src/services/fulfillment/`. Nadie lo importa todavía (lo harán SPEC-03/04). Ni `server.js`, ni las rutas, ni el middleware de identidad se tocan.
 
 ### 2.1 Por qué una app de Entra **aparte** de la del login
@@ -156,6 +156,7 @@ export function retryDelayMs(attempt, retryAfterHeader) {
 | Código | Significado | Reacción |
 |---|---|---|
 | 400 | En `resolve`: el `x-ms-marketplace-token` falta, está mal formado o **caducó** (vive 24 h). | No reintentar. SPEC-03 muestra el mensaje de "reabre la suscripción y pulsa Configurar cuenta". |
+| 400 | En `activate`: la suscripción está en estado ***Suspended*** (añadido 29-jul, H-13). | No reintentar, y **no** confundir con el 400 de `resolve`: no se resuelve reabriendo la suscripción. |
 | 401 | Token inválido/expirado, **o el app ID usado no es el de la *Technical configuration* de la oferta**. | No reintentar. Suele ser configuración, no transitorio. |
 | 403 | Registro SaaS mal hecho (típicamente falta el service principal del recurso, §6.1). | No reintentar. |
 | 404 | Suscripción/operación no encontrada (en `activate`, además: suscripción en *Unsubscribed*). | No reintentar. |
@@ -318,9 +319,11 @@ Si alguna fallase, la causa esperable es que el entorno esté resolviendo la UAM
 
 ---
 
-## ADDENDUM 2026-07-27 — provisión Azure ejecutada (as-built) + dos enmiendas al §6
+## ADDENDUM 2026-07-28 — provisión Azure ejecutada (as-built) + dos enmiendas al §6
 
-La provisión de §6.1–6.5 se ejecutó el 27-jul **antes** de implementar, para que la verificación §8.3/§8.4 no quedara pendiente de ops. Resultado y desviaciones:
+> **Fecha corregida (29-jul, H-07 de la auditoría).** Este ADDENDUM se escribió etiquetado «2026-07-27» por arrastre de fecha; la provisión es del **28-jul** (app de Entra creada `2026-07-28T09:15:14Z`, `az ad app show --query createdDateTime`; commit `f1bed76` del 28-jul 09:41Z). Corregido aquí y en las menciones internas. Segunda reincidencia del mismo patrón (la 1ª, en el handoff del 23-jul) sobre una regla que ya existe: *las fechas salen de `git log` o del sistema, no de memoria*.
+
+La provisión de §6.1–6.5 se ejecutó el 28-jul **antes** de implementar, para que la verificación §8.3/§8.4 no quedara pendiente de ops. Resultado y desviaciones:
 
 **Identificadores as-built** (ninguno es secreto):
 
@@ -345,8 +348,8 @@ La provisión de §6.1–6.5 se ejecutó el 27-jul **antes** de implementar, par
 - `GET /api/health/db` → **200 `{"ok":true}`** — Azure SQL sigue autenticando por la MI **de sistema**. Es la pieza de mayor riesgo y está verde.
 - `GET /` → **200 text/html** — la SPA arranca y se sirve.
 - `GET /api/v1/sessions` sin token → **401 `UNAUTHENTICATED`** — el middleware de identidad y el gate siguen intactos.
-- **Azure OpenAI** → **verificado por el usuario** (destilación real, 27-jul). ✔
-- **Blob** → pendiente de smoke logueado. **Corrección del método:** el §8.4 pedía "servir audio de una sesión existente", pero **no existe reproductor de audio en la UI** (el endpoint `GET /sessions/:id/audio/:ordinal` existe en backend y en el cliente tipado, pero ninguna pantalla lo consume). Las pruebas válidas son: **grabar un segmento** (escritura, `transcribe.js` → `store.put`) y **Reprocesar** desde Historial (lectura, `store.exists` + re-transcripción del audio guardado). Hacerlo sobre una **sesión nueva desechable**: Reprocesar recalcula la transcripción de la sesión.
+- **Azure OpenAI** → **verificado por el usuario** (destilación real, **28-jul** — el único evento LLM posterior al 24-jul en `usage_events` es del 28-jul 09:38:06Z; corregido de "27-jul", H-07). ✔
+- **Blob** → ✅ **verificado el 30-jul** (smoke logueado del usuario: reproducción de un tramo en Revisión). ⚠️ **La "corrección del método" que traía este bullet era FALSA y queda RETIRADA — ver ADDENDUM 2026-07-29 (H-01/H-02).** Texto original, para el registro: *«no existe reproductor de audio en la UI … las pruebas válidas son grabar un segmento y Reprocesar desde Historial … sobre una sesión nueva desechable»*. El reproductor **sí existe** y **Reprocesar es inalcanzable** en ese escenario. El método válido es el que pedía el §8.4 original: **reproducir un tramo en Revisión**.
 
 **Nota de método:** se intentó verificar los peldaños 1–2 del §8.3 sin desplegar, ejecutando la prueba vía la API de comandos de Kudu. **No es posible:** el contenedor de Kudu **no** recibe el endpoint de Managed Identity (`IDENTITY_ENDPOINT` ausente) y su `node_modules` es un symlink a `/node_modules` del contenedor de la app. La MI solo existe en el contenedor de la aplicación → **el intercambio federado solo se puede probar con código desplegado**. Sí se confirmó que los App Settings se heredan y que el runtime es **Node 24.7**.
 
@@ -354,6 +357,33 @@ La provisión de §6.1–6.5 se ejecutó el 27-jul **antes** de implementar, par
 
 ---
 
+## ADDENDUM 2026-07-29 — correcciones de la auditoría de integridad documental
+
+Enmienda 1 y 9 del §6 de [`AUDITORIA-integridad-documental-2026-07-28.md`](../AUDITORIA-integridad-documental-2026-07-28.md). Verificado en la sesión del 29-jul contra el código, no heredado del informe.
+
+**H-01 (ALTA) — el reproductor de audio SÍ existe; se retira la afirmación contraria.** La pantalla **Revisión** reproduce el audio de cada tramo desde el cutover del ciclo 2: [`web/src/routes/Review.tsx:46-91`](../../../../web/src/routes/Review.tsx) (elemento `Audio`, `togglePlay`, `api.getSegmentAudio(session.id, ordinal)` en la línea 79) y chips con `playable={!!s.audio_file}` en la línea 142; fachada en `web/src/api/client.ts:126`. Es lo que `SPEC-05 §3.1/§4.3` del ciclo 2 especificó y lo que `REVIEW-SPEC-05.md` verificó e2e. Está en producción (bundle `/assets/index-fSNESM5h.js`, mismo hash que registró `REVIEW-SPEC-07.md:102`), y los 32 segmentos de prod tienen `audio_file`, así que los chips son interactivos.
+
+**H-02 (ALTA) — el método sustituto (Reprocesar) era inalcanzable.** El botón solo se dibuja si `has_audio && !has_transcription` ([`web/src/routes/History.tsx:224`](../../../../web/src/routes/History.tsx), render en :249). Una sesión recién grabada con STT correcto tiene `has_transcription = true`, así que **el botón nunca aparece sobre la "sesión nueva desechable"** que prescribía el bullet; y si el STT falla en la subida, el segmento no se crea (`addSegment` va *después* de transcribir en `transcribe.js:108`) → tampoco genera candidatas. La auditoría contó **0 candidatas** en prod el 28-jul. Solo un audio mudo lo haría alcanzable.
+
+**Método válido para cerrar el §8.4 (Blob), reemplaza al bullet retirado:**
+
+1. **Lectura** — Historial → reabrir cualquier sesión con audio → **Revisión** → tocar el chip de un tramo: reproduce (`GET /api/v1/sessions/:id/audio/:ordinal` → `store.get`). Es la prueba directa de lectura de Blob y **es alcanzable hoy** para las 32 sesiones de prod.
+2. **Escritura** — grabar un tramo nuevo (`transcribe.js` → `store.put`), que además ejercita STT.
+
+**Estado: ✅ VERIFICADO (30-jul-2026) — el §8.4 queda CERRADO.** El usuario ejecutó el smoke logueado en producción y la reproducción de audio funciona. Con esto, **la regresión completa de la provisión (§8.4) está verde**: SQL por MI de sistema, `/` sirviendo la SPA, API gateada, Azure OpenAI destilando y **Blob leyendo**. Añadir la UAMI al App Service **no perturbó ninguna de las cuatro rutas de identidad existentes**, que era el único riesgo real que introducía este spec.
+
+Lo único que sigue sin probar de la verificación del spec es el **§8.3 peldaño 2 (intercambio federado)**, que exige código desplegado y se cerrará en el `/jcc-implement`.
+
+**H-13 (INFO) — falta un 400 en la tabla de errores del §4.3.** `activate` devuelve además **400** si la suscripción está en estado *Suspended* ([Subscription APIs v2](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/pc-saas-fulfillment-subscription-api)). La fila 400 del §4.3 cubría solo `resolve`; la de 404 cubría *Unsubscribed* en `activate`. **SPEC-03/04 deben distinguir los dos 400** (token caducado vs. suscripción suspendida): el primero se resuelve reabriendo la suscripción, el segundo no se resuelve desde nuestra landing.
+
+**H-12 (BAJA) — precisión de dependencia.** El §2 afirma «`@azure/identity` 4.13.1 (ya instalado)»: 4.13.1 es lo que resuelve el **lock** (`package-lock.json`), mientras el manifest declara `^4.5.0` (`package.json:21`, verificado). No se fija la versión — `ClientAssertionCredential` está en toda la serie 4.x reciente y fijarla añadiría mantenimiento sin beneficio —, pero la afirmación correcta es **«`@azure/identity` ^4.5.0 (ya instalado; el lock resuelve 4.13.1)»**.
+
+**Lo que la auditoría CONFIRMÓ de este spec** (para que no se re-verifique): la provisión as-built §6.1–6.5 punto por punto contra `az` (app, FIC, UAMI, identidades del App Service, ambos service principals, App Settings), el estado secretless real (`passwordCredentials: 0`, `keyCredentials: 0`, sin `AZURE_CLIENT_ID`), y la regresión de §8.4 en SQL/`/`/401. El peldaño §8.3 (intercambio federado) sigue **sin probar** y solo es probable con código desplegado.
+
+---
+
 ### Nota — tensión pendiente con el modelo de precio (mesa común)
 
-En la reunión con Microsoft ISV Success (23-jul) se le comunicó a Microsoft la intención de vender **pay-as-you-go**, y su consultor recomendó *flat rate + metered billing* reportando consumo por API, sugiriendo incorporarlo pronto a la lógica de la aplicación. El **DESIGN §4 de este ciclo deja el metered billing fuera de v1** y asume comprador individual sin `quantity`. **Este spec no se ve afectado** (el transporte y el token son los mismos para cualquier modelo, y `token.js` ya sirve a las Metering APIs), pero **SPEC-03 y SPEC-06 sí lo estarán**. Decisión de negocio a cerrar — anotada como pregunta prioritaria para la reunión del 29-jul.
+En la reunión con Microsoft ISV Success (23-jul) se le comunicó a Microsoft la intención de vender **pay-as-you-go**, y su consultor recomendó *flat rate + metered billing* reportando consumo por API, sugiriendo incorporarlo pronto a la lógica de la aplicación. El **DESIGN §4 de este ciclo deja el metered billing fuera de v1** y asume comprador individual sin `quantity`. **Este spec no se ve afectado** (el transporte y el token son los mismos para cualquier modelo, y `token.js` ya sirve a las Metering APIs), pero **SPEC-03 y SPEC-06 sí lo estarán**. Decisión de negocio a cerrar.
+
+> **Actualización 29-jul.** La reunión del 29-jul se **canceló y se pospuso ~1 mes** (tras vacaciones), así que la decisión ya **no puede esperar a Microsoft**. La buena noticia: la auditoría cerró la parte documental contra fuente primaria (`AUDITORIA §3.5`) — **añadir metering a una oferta que nazca *flat rate* está explícitamente soportado** («You can publish a flat-rate plan without any dimensions, then add a new plan and configure a new dimension for that plan»), y lo verdaderamente irreversible es el **pricing model de la oferta** (flat rate vs per-user), que no se puede cambiar tras publicar. Conclusión operativa: **nacer flat rate no cierra ninguna puerta**; queda solo la decisión de negocio del precio (Agustín + Jesús), que no bloquea a SPEC-03 si se mantiene el alcance del DESIGN §4 (sin metering en v1).

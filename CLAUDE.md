@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Este proyecto se desarrolla con la metodología JCC. Doc (URL estable, consultable en sesión):
 https://raw.githubusercontent.com/Xenix-Solutions/jcc-metodologia-claude-code/main/docs/JCC_Metodologia.md
 
-- **Fase actual:** Programa **`profesionalizacion-marketplace`** (multi-ciclo). **Ciclo 3 `marketplace-transactable` ACTIVO.** DESIGN cerrado; **SPEC-01 (modelo de acceso + gate) CERRADO y en prod** (23-jul). **SPEC-02 (fulfillment secretless) ESPECIFICADO** (27-jul, [`SPEC-02_fulfillment-secretless.md`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/SPEC-02_fulfillment-secretless.md)): app de Entra dedicada + **UAMI como credencial federada** (verificado viable: `AADSTS700236` es solo cross-tenant), cliente de las Fulfillment APIs + doble local; sin deps nuevas ni cambios en código existente; la **provisión Azure (§6) es prerrequisito** y las llamadas reales dan 401/403 hasta grabar el app ID en la *Technical configuration*. **Siguiente:** **`/jcc-implement` de SPEC-02**; 03–06 después. **Abierto (mesa común):** el **modelo de precio** (a Microsoft se le dijo *pay-as-you-go*; el DESIGN §4 deja el metering fuera de v1) → condiciona SPEC-03/06; 1ª pregunta de la **2ª reunión Microsoft ISV Success, 29-jul 15:30** ([brief](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/BRIEF-reunion-isv-success-2026-07-29.md)). Decisiones estructurales en [`DESIGN.md`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/DESIGN.md) §5 (+ADDENDUM F-1). En paralelo: track burocrático [`RUNBOOK-partner-center.md`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/RUNBOOK-partner-center.md) (tax del Seller pendiente). (Ciclos 0–2 cerrados y en prod.) Pendientes cross-cutting y toda la evidencia, en los handoffs. — Mapa del cambio activo: [`README`](docs/cambios/20260716_profesionalizacion-marketplace/README.md) · última bitácora: [`handoffs/HANDOFF-2026-07-23.md`](docs/cambios/20260716_profesionalizacion-marketplace/handoffs/HANDOFF-2026-07-23.md) · historia completa de TODOS los cambios: [`índice global docs/cambios/README.md`](docs/cambios/README.md). — *Esta línea es SOLO un puntero al trabajo ACTIVO y se sobrescribe (NO acumula historia). El detalle de cada cambio —activo o cerrado— vive en su carpeta `docs/cambios/<fecha>_<slug>/` (con su README/DESIGN/SPEC) y la historia fechada con evidencia en sus `handoffs/`. Reconciliación: contrasta esta línea con los artefactos reales del repo al arrancar.*
+- **Fase actual:** Programa **`profesionalizacion-marketplace`** (multi-ciclo). **Ciclo 3 `marketplace-transactable` ACTIVO**: DESIGN cerrado · **SPEC-01 (modelo de acceso + gate) CERRADO y en prod** (23-jul) · **SPEC-02 (fulfillment secretless) ESPECIFICADO con la provisión Azure §6 ya EJECUTADA** (28-jul) pero **sin implementar** · specs 03–06 pendientes. **Siguiente:** **`/jcc-implement` de SPEC-02**. Detalle y verificaciones pendientes, en su [`SPEC-02`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/SPEC-02_fulfillment-secretless.md); decisiones estructurales en el [`DESIGN`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/DESIGN.md) §5 (+ADDENDA); track burocrático en el [`RUNBOOK`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/RUNBOOK-partner-center.md). (Ciclos 0–2 cerrados y en prod.) — Mapa del cambio activo: [`README`](docs/cambios/20260716_profesionalizacion-marketplace/README.md) · última bitácora: [`handoffs/HANDOFF-2026-07-29.md`](docs/cambios/20260716_profesionalizacion-marketplace/handoffs/HANDOFF-2026-07-29.md) (+ [`…-recuperacion.md`](docs/cambios/20260716_profesionalizacion-marketplace/handoffs/HANDOFF-2026-07-29-recuperacion.md), que cubre 23/27/28-jul) · historia completa de TODOS los cambios: [`índice global docs/cambios/README.md`](docs/cambios/README.md). — *Esta línea es SOLO un puntero al trabajo ACTIVO y se sobrescribe (NO acumula historia). El detalle de cada cambio —activo o cerrado— vive en su carpeta `docs/cambios/<fecha>_<slug>/` (con su README/DESIGN/SPEC) y la historia fechada con evidencia en sus `handoffs/`. Reconciliación: contrasta esta línea con los artefactos reales del repo al arrancar.*
 - **Operas como COPILOTO.** En las transiciones de fase, recuerda y ofrece el command que toca (`/jcc-design`, `/jcc-spec`, `/jcc-implement`, `/jcc-review`); **no bloquees**, el usuario decide. Las decisiones **estructurales o difíciles de revertir** (modelo de datos, abstracciones, contratos, stack) van a la **mesa común**: no las absorbas en silencio. **Mantienes CLAUDE.md actualizado** en cada transición de fase sin que el usuario tenga que pedirlo — **pero la línea "Fase actual" se SOBRESCRIBE** (puntero corto al trabajo activo, nunca un changelog): la historia con evidencia va a los `handoffs/` del cambio y al índice global [`docs/cambios/README.md`](docs/cambios/README.md), no a esta línea (modelo JCC). **Ajustas la longitud de cada documento a lo que el trabajo pide**: cubre la sustancia, sin relleno ni boilerplate.
 - **Las convenciones JCC no se improvisan.** Si una situación documental (dónde vive un documento, cómo se llama, qué hogar le toca) no está cubierta por lo que tienes en contexto, **consulta el doc de arriba** antes de fijar una convención; si no puedes acceder, es decisión de **mesa común**.
 - **Reconciliación al arrancar.** Antes de seguir, contrasta la "Fase actual" de arriba con los artefactos reales del repo (¿qué SPEC existen?, ¿qué flujos están implementados/verificados?). Si no cuadran, **dilo**. Si el índice global declara un merge/PR pendiente que ya ocurrió, **actualízalo**: el handoff es foto pre-merge; el estado definitivo de merge vive en el índice global. Canta también las contradicciones internas de este CLAUDE.md (afirmaciones de épocas distintas que convivan) y el trabajo posterior al último handoff sin bitácora.
@@ -15,7 +15,10 @@ https://raw.githubusercontent.com/Xenix-Solutions/jcc-metodologia-claude-code/ma
 ### Backlog
 
 <!-- Pendientes durables (decidido no-ahora), una línea cada uno; se PODA: lo hecho o caducado se borra (su historia vive en los handoffs). -->
-_(sin pendientes durables)_
+- **Modelo de precio del Marketplace sin cerrar** (decisión de negocio, Agustín+Jesús): a Microsoft se le dijo *pay-as-you-go* y ellos proponen *flat rate + metered*; el DESIGN §4 del ciclo 3 deja el metering fuera de v1. **No bloquea a SPEC-03** — la doc confirma que nacer *flat rate* permite añadir metering después (auditoría §3.5) — pero sí al paso G del runbook.
+- **2ª reunión Microsoft ISV Success pospuesta ~1 mes** (cancelada el 29-jul, se retoma tras vacaciones): reciclar [`BRIEF-…-29.md`](docs/cambios/20260716_profesionalizacion-marketplace/ciclo-3-marketplace-transactable/BRIEF-reunion-isv-success-2026-07-29.md) en el brief de la nueva fecha (varias preguntas ya respondidas por doc; la de auto-activation pasa a confirmación de una decisión ya tomada).
+- **Antes del go-live: quitar o gatear el parámetro `systemPrompt` de `POST /sessions/:id/distill`** (decisión 29-jul, mesa común). Hoy no lo consume ninguna UI, pero en un SaaS de pago permite a un cliente inyectar su propio system prompt (anula nuestros prompts, que son el núcleo del valor). Va con la retirada de `GET /api/prompts`, también sin consumidor.
+- **Secreto residual de Easy Auth en Azure:** el App Setting `MICROSOFT_PROVIDER_AUTHENTICATION_SECRET` sobrevive al ciclo 1; antes de borrarlo, confirmar que Easy Auth está desactivado a nivel de plataforma.
 
 ## Commands
 
@@ -27,9 +30,13 @@ npm run seed-prompts  # Sync distillation prompts from src/prompts/<family>/<mod
 npm test           # Run unit tests (node --test test/**/*.test.js); pure logic only, no DB/network
 ```
 
+> ⚠️ **Deploys are automatic: `.github/workflows/azure-deploy.yml` runs `on: push` to `main`.** There is no separate "deploy" step to schedule — **pushing IS deploying to production**. So any **pending migration must be applied to the production DB BEFORE the push** that carries code depending on it; otherwise the app serves 500s until it is (this exact sequence took prod down for ~8 h on 23-jul — postmortem in the ciclo-3 `SPEC-01` ADDENDUM 2026-07-29). Migrating against Azure is **not** `npm run migrate` (that loads the local `.env` and would hit the dev DB): run `node scripts/migrate-db.js` with `SQL_SERVER`/`SQL_DATABASE` of production and `SQL_AUTH=entra-default`.
+
 All scripts load env with `--env-file-if-exists` (Node 24). Locally, `.env` holds the SQL connection (`SQL_*`), a dev identity (`DEV_USER_*`), and the Azure processor config (`AZURE_OPENAI_*`, `LLM_PROVIDER`, `LLM_MODEL`); Azure uses App Settings instead (no `.env`). **A SQL Server database is required** (local: `db-speech-to-prompt`); on first setup run `npm run migrate` then `npm run seed-prompts`.
 
-No build step **for the backend**. **The ciclo-2b frontend lives in `web/`** (React + Vite + TypeScript + Tailwind v4 + shadcn/ui): `cd web && npm install`, then `npm run dev` (HMR on :5173, `/api` proxied to :3000), `npm run build` (→ `web/dist`), `npm run lint` (oxlint). From the repo root, `npm run build:web` builds it. **Typed API client (SPEC-02):** the contract is documented spec-first in **`openapi/speech-to-prompt.yaml`** (OpenAPI 3.1, source of truth); `cd web && npm run gen:api` regenerates `web/src/api/schema.d.ts` from it (runs `openapi-typescript` via **`npx`** — a codegen-only CLI, NOT a dep; the peer wants TS 5 and the project is on TS 6). The generated `schema.d.ts` is **committed**; `gen:api` is run **by hand** when the YAML changes — it is **not** part of `build` or CI. The client (`web/src/api/client.ts`, `openapi-fetch`, `baseUrl:/api/v1`) has a no-op token seam wired to MSAL in SPEC-03. Express serves `web/dist` at **`/app`** (ruta temporal de 2b) while `/` keeps serving the legacy `public/` frontend until the final cutover. **Minimal unit tests** for non-trivial pure logic (`npm test` → `node --test`, files in `test/`); no full suite yet. The **legacy** frontend (`public/`) uses native ES modules served directly by Express — changes to `public/` are live on browser refresh.
+No build step **for the backend**. **The frontend lives in `web/`** (React + Vite + TypeScript + Tailwind v4 + shadcn/ui): `cd web && npm install`, then `npm run dev` (HMR on :5173, `/api` proxied to :3000), `npm run build` (→ `web/dist`), `npm run lint` (oxlint). From the repo root, `npm run build:web` builds it. **Express serves the built `web/dist` at `/`** (`server.js`); `/app` — the temporary path of sub-ciclo 2b — is only a 302 redirect kept for old bookmarks. **There is no `public/` directory: the legacy vanilla frontend was removed in the ciclo-2 cutover** (SPEC-07, 22-jul); it lives only in git history.
+
+**Typed API client** (ciclo 2 `SPEC-02_api-tipada` — *not* the ciclo-3 `SPEC-02_fulfillment-secretless`; the two cycles number their specs independently): the contract is documented spec-first in **`openapi/speech-to-prompt.yaml`** (OpenAPI 3.1, source of truth); `cd web && npm run gen:api` regenerates `web/src/api/schema.d.ts` from it (runs `openapi-typescript` via **`npx`** — a codegen-only CLI, NOT a dep; the peer wants TS 5 and the project is on TS 6). The generated `schema.d.ts` is **committed**; `gen:api` is run **by hand** when the YAML changes — it is **not** part of `build` or CI. The client (`web/src/api/client.ts`, `openapi-fetch`, `baseUrl:/api/v1`) takes its bearer token through a single seam, `setTokenProvider`, which `web/src/auth/AuthProvider.tsx` fills with MSAL in Azure and with `null` under the local dev bypass (ciclo 2 SPEC-03). **Minimal unit tests** for non-trivial pure logic (`npm test` → `node --test`, files in `test/`); no full suite yet.
 
 ## Architecture
 
@@ -57,6 +64,12 @@ Browser (textarea, merged transcript) → POST → /api/sessions/:id/distill
 
 `/api/sessions/:id/transcribe` still exists as a back-compat alias of `/segments`.
 
+**Two path prefixes, same routers.** `server.js` mounts every router twice, with identical
+`identity` ordering: unversioned **`/api/*`** and **`/api/v1/*`** (ciclo 2 `SPEC-02_api-tipada`).
+The SPA consumes only `/api/v1` through its typed client; the unversioned mount existed for the
+legacy frontend and, since the cutover, has no in-repo consumer (retiring it is pending
+cross-cutting cleanup). Paths in this document are written unversioned for brevity — both work.
+
 ### Provider abstraction (firm architectural requirement)
 
 All LLM and STT integrations go through abstract base classes:
@@ -79,7 +92,9 @@ STT providers: `groq`, `azure-whisper`.
 > correctly, so `GroqProvider.transcribe` requests that and **reconstructs the text
 > from `words[]`** (joining + fixing spacing around punctuation), with a fallback to
 > `text` if no words are returned. Same API cost/latency. Re-running **Reprocesar**
-> on old sessions re-transcribes their on-disk audio through this fixed path.
+> re-transcribes a session's **stored** audio (Blob in Azure, file store locally) through this
+> fixed path — but note the button only renders for sessions with audio and **no** transcription
+> (`History.tsx:224`), so it is not a general "re-run STT" control.
 > (Azure OpenAI Whisper does **not** have this bug; its `text` is used directly.)
 
 ### Single source of truth for paths
@@ -115,9 +130,9 @@ raw one (the raw `.webm` reports no duration).
 > double-count elapsed time, which fired a false "silent audio" warning. See
 > `audio-recorder.js#getElapsedSeconds`.
 
-### Distillation modes + editable system prompt
+### Distillation modes + system prompts
 
-Distillation has **four modes**, chosen on the review screen (phase 3); **limpio** is the default selection:
+Distillation has **four modes**, chosen on the **Destilado** screen (`web/src/routes/Distill.tsx`); **limpio** is the default selection:
 
 - **completo** — structured first-person initiator brief. Original behavior.
 - **ligero** — light cleanup + polish, no titles/summary, preserves all ideas.
@@ -126,15 +141,20 @@ Distillation has **four modes**, chosen on the review screen (phase 3); **limpio
 
 **Prompts are per model FAMILY × mode, stored in the DB** (`dbo.model_prompts`; families `openai`/`claude`/`gemini`). The git-versioned origin is `src/prompts/<family>/<mode>.md`; `npm run seed-prompts` upserts them into the DB, which is the runtime source (editable by SQL now, by a backoffice later). `src/services/prompts.js` reads/caches them; `src/prompts/index.js` now only exports `DISTILL_MODES`, `resolveMode()` and `FALLBACK_PROMPTS`. `routes/distill.js` loads the prompt for `(active model's family, mode)`.
 
-**Model selection + gating** (`dbo.llm_models` via `src/services/models.js`): each model maps to a family and carries `enabled`/`is_default`. The default LLM is **`azure-openai` / `gpt-4.1`**; a request routed to a disabled model is rejected (`400 MODEL_DISABLED`). **Claude is kept (its prompt family + a registry row) but disabled**: it's an Azure Marketplace model, not billable against the subscription credit, so the distiller moved to **Azure OpenAI GPT** (first-party, credit-billable). `routes/prompts.js` (`GET /api/prompts`) serves the active family's prompts to the front.
+**Model selection + gating** (`dbo.llm_models` via `src/services/models.js`): each model maps to a family and carries `enabled`/`is_default`. The default LLM is **`azure-openai` / `gpt-4.1`**; a request routed to a disabled model is rejected (`400 MODEL_DISABLED`). **Claude is kept (its prompt family + a registry row) but disabled**: it's an Azure Marketplace model, not billable against the subscription credit, so the distiller moved to **Azure OpenAI GPT** (first-party, credit-billable).
 
-The front can **override the system prompt per distillation** (phase-3 inline editor): the
-edited text is sent in the `distill` body and used if non-empty (else the family/mode default).
-**Editing never writes the stored prompts** — the override lives only in the request and in the
-session record. The exact prompt used is persisted as `distill_prompt_used` alongside
-`distill_mode`. Reopening a session seeds the phase-3 editor with the stored prompt (via
-`app.js` state), so re-distilling reuses/tunes it. The editor state (mode + per-mode text)
-lives in `app.js` `state` because phase modules are re-rendered on every navigation.
+**No UI edits the system prompt.** `POST /sessions/:id/distill` still accepts an optional
+`systemPrompt` that overrides the family/mode default for that one request
+(`src/routes/distill.js:55-57`; never writes `dbo.model_prompts`), and the prompt actually used is
+persisted as `distill_prompt_used` alongside `distill_mode`. But **the front sends only `mode`**
+(`Distill.tsx:44`): the inline editor was part of the legacy `public/` frontend and disappeared with
+it in the ciclo-2 cutover (22-jul), and `GET /api/prompts` (`src/routes/prompts.js`, still mounted)
+has no consumer. **Decision of 29-jul: the editor is retired, not pending recovery** — prompt
+shaping is what ciclo 4 `destilado-destino` will design properly (destino × formato), and prompt
+tuning goes through git (`src/prompts/<family>/<mode>.md` → `npm run seed-prompts`) or SQL, which
+is where a tuned prompt has to end up anyway. The leftover `systemPrompt` parameter must be
+**removed or gated before go-live** (see Backlog): on a paid SaaS it lets a customer substitute
+our prompts.
 
 The prompts are calibrated for the user profile: Spanish-speaking software architect who
 code-switches heavily with English technical terms and dictates spoken acronyms (e.g. "ele

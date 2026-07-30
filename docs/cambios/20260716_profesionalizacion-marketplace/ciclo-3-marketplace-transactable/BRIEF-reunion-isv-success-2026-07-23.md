@@ -11,7 +11,9 @@
 
 ## 1. Elevator pitch — qué estamos construyendo
 
-**Speech-to-prompt** convierte **dictado de voz en prompts de alta calidad para LLMs**. El profesional dicta (o importa audio) por segmentos → se transcribe → revisa → **destila** con uno de 4 modos → obtiene un **prompt limpio y estructurado**, listo para pegar en el modelo destino que elija. Guarda su histórico y ve el coste de cada operación.
+**Speech-to-prompt** convierte **dictado de voz en prompts de alta calidad para LLMs**. El profesional dicta (o importa audio) por segmentos → se transcribe → revisa → **destila** con uno de 4 modos → obtiene un **prompt limpio y estructurado**, listo para pegar en el modelo destino que elija. Guarda su histórico y ve el coste de cada operación.[^coste]
+
+[^coste]: **Corrección 29-jul (H-10 de la [auditoría](../AUDITORIA-integridad-documental-2026-07-28.md)):** «ve el coste de cada operación» describía una capacidad que el producto **no tiene**. El coste se registra en `usage_events` desde junio, pero **no es visible en ninguna pantalla** desde el cutover del 22-jul (la pantalla Resultado muestra el hueco «Próximamente»; el frontend legacy que sí lo mostraba se retiró el día antes de esta reunión) — y, con el hallazgo del [ANALISIS §2](../ANALISIS-costes-por-sesion.md), el coste que se mostrase hoy **subestimaría ~70 %** por no medirse la duración del audio. Es una capacidad del **ciclo 5** (`uso-y-costes`). Si se reutiliza este pitch, decir «registra el consumo por operación» o quitarlo.
 
 - **Para quién:** profesional individual que trabaja con IA (arquitectos, consultores, product, legal…) y quiere pasar de "hablar" a "un buen prompt" sin fricción, también en **móvil (PWA instalable)**.
 - **Diferencial:** los *system prompts* de destilación afinados (español con tecnicismos en inglés, siglas dictadas) + la futura **selección de modelo destino** con ajustes de formato (ciclo 4, funcionalidad estrella).
@@ -94,7 +96,7 @@ Convertir la herramienta en un **producto SaaS transactable en Microsoft Marketp
 
 **No tratado (sigue abierto):**
 
-- **[P7] Credencial federada / secretless del fulfillment** — la pregunta no llegó a plantearse. *Resuelto por nuestra cuenta el 27-jul contra la documentación de Microsoft: es viable en same-tenant (el bloqueo `AADSTS700236` es exclusivo de cross-tenant). Ver `SPEC-02_fulfillment-secretless.md` §2.2. Se llevará al 29-jul como validación, no como bloqueo.*
+- **[P7] Credencial federada / secretless del fulfillment** — la pregunta no llegó a plantearse. *Resuelto por nuestra cuenta el 27-jul contra la documentación de Microsoft: es viable en same-tenant (el bloqueo `AADSTS700236` es exclusivo de cross-tenant). Ver `SPEC-02_fulfillment-secretless.md` §2.2. Se llevará como validación, no como bloqueo, a la 2ª reunión — **que estaba fijada el 29-jul y se pospuso ~1 mes**; confirmado además contra fuente primaria en la auditoría §3.2 (28-jul).*
 - **[P1–P3] Programa, créditos Azure, Marketplace Rewards, Engagement Manager.**
 - **[P4] Qué revisa exactamente la certificación y plazos reales.**
 - **[P6] Autoservicio desde el día 1 vs. alta manual.**
